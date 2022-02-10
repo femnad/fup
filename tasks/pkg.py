@@ -19,9 +19,9 @@ def get_installer(dist_id):
     return id_to_installer[dist_id]
 
 
-def install():
+def install(cfg: tasks.config.Config):
     dist_id = host.get_fact(LinuxDistribution)['release_meta']['ID']
-    pkgs = tasks.config.get_packages(dist_id)
+    pkgs = tasks.config.get_packages(cfg, dist_id)
 
     installer = get_installer(dist_id)
 

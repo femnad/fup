@@ -1,7 +1,7 @@
-from pyinfra.operations import apt
-
-
 import tasks.pkg
 import tasks.config
+import tasks.archives
 
-tasks.pkg.install()
+config = tasks.config.get_config()
+tasks.pkg.install(config)
+tasks.archives.extract(config)
