@@ -66,11 +66,18 @@ def http_request(url, method, output_file):
     conn = get_connection(url)
     path = f'{url.path}'
     if url.query:
-        path += '?{url.query}'
+        path += f'?{url.query}'
     if url.fragment:
-        path += '#{url.fragment}'
+        path += f'#{url.fragment}'
     conn.request(method, path)
     resp = conn.getresponse()
+    if resp.status == 302:
+        redirect_url = resp.headers['Location']
+        http_request(redirect_url, method, output_file)
+        return
+    elif resp.status != 200:
+        body = resp.read().decode('utf-8')
+        raise Exception(f'Error during HTTP request: {resp.status} {body}')
 
     with open(output_file, 'wb') as o:
         while chunk := resp.read(CHUNK_SIZE):
