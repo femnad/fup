@@ -4,6 +4,9 @@ from typing import List, Dict
 import os
 
 
+BASE_PACKAGES_KEY = 'base'
+
+
 @dataclass
 class Settings:
     archive_dir: str
@@ -35,7 +38,7 @@ def get_config():
 
 
 def get_packages(cfg, dist_id):
-    package_set = set()
+    package_set = set(cfg.packages.get(BASE_PACKAGES_KEY, []))
 
     for oss, packages in cfg.packages.items():
         oss = oss.split('|')
