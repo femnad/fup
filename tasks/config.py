@@ -7,13 +7,21 @@ import os
 @dataclass
 class Settings:
     archive_dir: str
-    vars: Dict[str, str]
+
+
+@dataclass
+class Archive:
+    url: str
+    unless: str = ''
+    version_fn: str = ''
+    version: str = ''
+    symlink: str = ''
 
 
 @dataclass
 class Config:
     packages: Dict[str, List[str]]
-    archives: List[Dict[str, str]]
+    archives: List[Archive]
     settings: Settings
 
 
@@ -22,6 +30,7 @@ def get_config():
         cfg_dict = yaml.load(f, Loader=yaml.SafeLoader)
         cfg = Config(**cfg_dict)
         cfg.settings = Settings(**cfg_dict['settings'])
+        cfg.archives = [Archive(**a) for a in cfg.archives]
         return cfg
 
 
