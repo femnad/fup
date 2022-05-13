@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 import yaml
-from typing import List, Dict
+from typing import List, Dict, Union
 import os
-
 
 BASE_PACKAGES_KEY = 'base'
 
@@ -13,10 +12,20 @@ class Settings:
 
 
 @dataclass
+class UnlessCmd:
+    cmd: str
+    post: str = None
+
+
+@dataclass
+class UnlessFile:
+    ls: str
+
+
+@dataclass
 class Archive:
     url: str
-    unless: str = ''
-    version_fn: str = ''
+    unless: Union[UnlessCmd, UnlessFile] = None
     version: str = ''
     symlink: str = ''
 

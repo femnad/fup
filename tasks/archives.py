@@ -14,16 +14,17 @@ from typing import Dict
 
 CHUNK_SIZE = 8192
 CONTENT_DISPOSITION_FILENAME_REGEX = re.compile(r'filename=(.*)')
+UNLESS_TYPES = [tasks.config.UnlessCmd, tasks.config.UnlessFile]
 
 
-def expand(url: str, context: Dict[str, str]):
+def expand(s: str, context: Dict[str, str]):
     cur_dlr_index = -1
     parsing_var = False
 
     varmap = {}
     cur_var = ''
 
-    for i, c in enumerate(url):
+    for i, c in enumerate(s):
         if c == '$':
             cur_dlr_index = i
             continue
@@ -40,9 +41,9 @@ def expand(url: str, context: Dict[str, str]):
             cur_var += c
 
     for var, val in varmap.items():
-        url = url.replace(f'${{{var}}}', str(val))
+        s = s.replace(f'${{{var}}}', str(val))
 
-    return url
+    return s
 
 
 def get_filename_from_content_disposition(content_disposition):
@@ -60,14 +61,14 @@ def get_connection(parsed_url: urllib.parse.ParseResult):
 
 
 def http_request(url, method, output_file):
-    url = urllib.parse.urlparse(url)
-    conn = get_connection(url)
+    parsed_url = urllib.parse.urlparse(url)
+    conn = get_connection(parsed_url)
 
-    path = f'{url.path}'
-    if url.query:
-        path += f'?{url.query}'
-    if url.fragment:
-        path += f'#{url.fragment}'
+    path = f'{parsed_url.path}'
+    if parsed_url.query:
+        path += f'?{parsed_url.query}'
+    if parsed_url.fragment:
+        path += f'#{parsed_url.fragment}'
 
     conn.request(method, path)
     resp = conn.getresponse()
@@ -78,7 +79,7 @@ def http_request(url, method, output_file):
         return
     elif resp.status != 200:
         body = resp.read().decode('utf-8')
-        raise Exception(f'Error during HTTP request: {resp.status} {body}')
+        raise Exception(f'Error during HTTP request to {url}: {resp.status} {body}')
 
     with open(output_file, 'wb') as o:
         while chunk := resp.read(CHUNK_SIZE):
@@ -125,23 +126,59 @@ def get_version(output, version_fn):
     return output
 
 
-def should_extract(archive: tasks.config.Archive):
-    if not archive.unless:
-        return False
+def do_get_unless(unless, cls):
+    try:
+        return cls(**unless)
+    except TypeError:
+        return
 
-    proc = subprocess.run(archive.unless, shell=True, capture_output=True, text=True)
-    if proc.returncode > 0:
+
+def should_extract_cmd(archive: tasks.config.Archive, _, unless: tasks.config.UnlessCmd):
+    proc = subprocess.run(unless.cmd, shell=True, capture_output=True, text=True)
+    if proc.returncode != 0:
         return True
 
-    if not archive.version_fn:
+    if not unless.post:
         return False
 
     output = proc.stdout.strip()
-    current_version = get_version(output, archive.version_fn)
+    current_version = get_version(output, unless.post)
     if current_version == archive.version:
         return False
 
     return True
+
+
+def should_extract_ls(archive: tasks.config.Archive, settings, unless: tasks.config.UnlessFile):
+    context = {k: v for k, v in archive.__dict__.items() if isinstance(v, str)}
+    context.update(settings.__dict__)
+    ls_target = expand(unless.ls, context)
+    ls_target = os.path.expanduser(ls_target)
+    return not os.path.exists(ls_target)
+
+
+UNLESS_FN_MAPPING = {
+    tasks.config.UnlessCmd: should_extract_cmd,
+    tasks.config.UnlessFile: should_extract_ls,
+}
+
+
+def get_unless(unless):
+    for unless_type in UNLESS_TYPES:
+        if found_unless := do_get_unless(unless, unless_type):
+            return found_unless
+
+    raise Exception(f'Cannot determine unless type for {unless}')
+
+
+def should_extract(archive: tasks.config.Archive, settings):
+    if not archive.unless:
+        return True
+
+    unless = get_unless(archive.unless)
+    unless_fn = UNLESS_FN_MAPPING[type(unless)]
+
+    return unless_fn(archive, settings, unless)
 
 
 def expand_archive(archive: tasks.config.Archive):
@@ -160,8 +197,11 @@ def symlink_archive(archive: tasks.config.Archive, archive_dir: str):
         src = os.path.join(archive_dir, src)
         src = os.path.expanduser(src)
         dst = os.path.expanduser(f'~/bin/{name}')
-        if os.path.exists(dst):
+
+        # Remove if target is a broken symlink
+        if os.path.lexists(dst):
             os.unlink(dst)
+
         os.symlink(src, dst)
 
 
@@ -169,7 +209,9 @@ def extract(cfg):
     extract_dir = os.path.expanduser(cfg.settings.archive_dir)
     for archive in cfg.archives:
         archive = expand_archive(archive)
-        if not should_extract(archive):
+
+        if not should_extract(archive, cfg.settings):
             continue
+
         extract_archive(url=archive.url, extract_dir=extract_dir)
         symlink_archive(archive, cfg.settings.archive_dir)
