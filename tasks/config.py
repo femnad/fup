@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 import yaml
-from typing import List, Dict, Union
 import os
-
-BASE_PACKAGES_KEY = 'base'
+import re
+from typing import List, Dict, Union
 
 
 @dataclass
@@ -46,12 +45,13 @@ def get_config():
         return cfg
 
 
-def get_packages(cfg, dist_id):
-    package_set = set(cfg.packages.get(BASE_PACKAGES_KEY, []))
-
-    for oss, packages in cfg.packages.items():
-        oss = oss.split('|')
-        if dist_id in oss:
+def get_packages(cfg, current_dist_id):
+    package_set = set()
+    for dist_id, packages in cfg.packages.items():
+        is_re = re.escape(dist_id) != dist_id
+        if is_re and (_ := re.match(dist_id, current_dist_id)):
+            package_set.update(packages)
+        elif dist_id == current_dist_id:
             package_set.update(packages)
 
-    return package_set
+    return sorted(package_set)
