@@ -90,7 +90,7 @@ def download(url, target):
     http_request(url, 'GET', target)
 
 
-def do_extract_archive(state, host, url, dest):
+def do_extract_archive(url, dest):
     tmpfile = f'/tmp/{uuid.uuid4()}'
     download(url, tmpfile)
     with tarfile.open(tmpfile) as tf:
@@ -99,7 +99,7 @@ def do_extract_archive(state, host, url, dest):
 
 
 @operation
-def extract_archive(url=None, extract_dir=None, state=None, host=None):
+def extract_archive(url=None, extract_dir=None):
     yield FunctionCommand(do_extract_archive, [url, extract_dir], {})
 
 

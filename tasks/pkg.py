@@ -25,4 +25,4 @@ def install(cfg: tasks.config.Config):
 
     installer = get_installer(dist_id)
 
-    installer.packages(packages=pkgs, sudo=True)
+    installer.packages(packages=pkgs, _sudo=True)
