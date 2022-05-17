@@ -8,6 +8,7 @@ from typing import List, Dict, Union
 @dataclass
 class Settings:
     archive_dir: str
+    clone_dir: str
 
 
 @dataclass
@@ -34,6 +35,7 @@ class Config:
     packages: Dict[str, List[str]]
     archives: List[Archive]
     settings: Settings
+    recipes: Dict
 
 
 def get_config():
