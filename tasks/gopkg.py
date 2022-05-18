@@ -7,7 +7,7 @@ from tasks.config import GoPkg
 
 
 def install_pkg(go_pkg: GoPkg):
-    pkg = f'{go_pkg.host}/{go_pkg.name}'
+    pkg = f'{go_pkg.host}/{go_pkg.name}@{go_pkg.version}'
     yield StringCommand(f'go install {pkg}')
 
 

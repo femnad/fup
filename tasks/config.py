@@ -90,6 +90,7 @@ class GoPkg:
     name: str
     unless: Union[UnlessCmd, UnlessFile] = None
     host: str = 'github.com'
+    version: str = 'latest'
 
 
 @dataclass
