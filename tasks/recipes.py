@@ -94,7 +94,7 @@ class Quicklisp:
 
     def run(self):
         for p in self.pkg:
-            run_command(f"sbcl --eval '(ql:quickload {p})' --non-interactive")
+            run_command(f"sbcl --eval '(ql:quickload \"{p}\")' --non-interactive")
 
 
 @dataclass
