@@ -93,7 +93,8 @@ class Quicklisp:
     pkg: list = field(default_factory=list)
 
     def run(self):
-        pass
+        for p in self.pkg:
+            run_command(f"sbcl --eval '(ql:quickload {p})' --non-interactive")
 
 
 @dataclass
