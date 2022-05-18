@@ -1,11 +1,18 @@
 from dataclasses import dataclass, field
 import os
 import subprocess
-from typing import Union
+from typing import Dict, List, Union
 
 from pyinfra.api import FunctionCommand, operation
 from tasks.config import UnlessCmd, UnlessFile
 import tasks.archives
+
+
+@dataclass
+class Recipe:
+    task: str
+    unless: Union[UnlessCmd, UnlessFile]
+    steps: List[Dict]
 
 
 def run_command(cmd, pwd=None, sudo=False):
@@ -115,7 +122,7 @@ def try_get_step(step, cls):
 def get_step_class(content, settings):
     for cls in STEP_CLASSES:
         content = {
-            k: tasks.archives.expand(v, settings.__dict__) if isinstance(v, str) else v
+            k: tasks.context.expand(v, settings.__dict__) if isinstance(v, str) else v
             for k, v in content.items()
         }
         if step := try_get_step(content, cls):
@@ -132,9 +139,13 @@ def do_run_recipe(steps, settings):
 
 @operation
 def run_recipe(recipe, settings):
-    yield FunctionCommand(do_run_recipe, [recipe['steps'], settings], {})
+    unless = tasks.archives.get_unless(recipe.unless)
+    if not unless.unless():
+        return
+    yield FunctionCommand(do_run_recipe, [recipe.steps, settings], {})
 
 
 def run(config):
     for recipe in config.recipes:
+        recipe = Recipe(**recipe)
         run_recipe(recipe, config.settings)

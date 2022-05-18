@@ -5,45 +5,17 @@ import subprocess
 import tarfile
 import uuid
 import urllib
+from typing import Dict
 
 from pyinfra.api import FunctionCommand, operation
 from pyinfra.operations import files
 
 import tasks.config
-from typing import Dict
+import tasks.context
 
 CHUNK_SIZE = 8192
 CONTENT_DISPOSITION_FILENAME_REGEX = re.compile(r'filename=(.*)')
 UNLESS_TYPES = [tasks.config.UnlessCmd, tasks.config.UnlessFile]
-
-
-def expand(s: str, context: Dict[str, str]):
-    cur_dlr_index = -1
-    parsing_var = False
-
-    varmap = {}
-    cur_var = ''
-
-    for i, c in enumerate(s):
-        if c == '$':
-            cur_dlr_index = i
-            continue
-        elif c == '{' and i == cur_dlr_index + 1:
-            parsing_var = True
-            continue
-        elif c == '}':
-            parsing_var = False
-            value = context[cur_var]
-            varmap[cur_var] = value
-            cur_var = ''
-            cur_dlr_index = -1
-        elif parsing_var:
-            cur_var += c
-
-    for var, val in varmap.items():
-        s = s.replace(f'${{{var}}}', str(val))
-
-    return s
 
 
 def get_filename_from_content_disposition(content_disposition):
@@ -103,29 +75,6 @@ def extract_archive(url=None, extract_dir=None):
     yield FunctionCommand(do_extract_archive, [url, extract_dir], {})
 
 
-def get_fn(operation: str, parameter: int):
-    if operation == 'head':
-        return lambda x: x.split('\n')[parameter]
-    elif operation == 'split':
-        return lambda x: x.split()[parameter]
-    else:
-        raise Exception(f'Unknown operation {operation}')
-
-
-def get_version(output, version_fn):
-    ops = []
-
-    for op in version_fn.split('|'):
-        operation, parameter = op.strip().split()
-        parameter = int(parameter)
-        ops.append(get_fn(operation, parameter))
-
-    for op in ops:
-        output = op(output)
-
-    return output
-
-
 def do_get_unless(unless, cls):
     try:
         return cls(**unless)
@@ -134,27 +83,13 @@ def do_get_unless(unless, cls):
 
 
 def should_extract_cmd(archive: tasks.config.Archive, _, unless: tasks.config.UnlessCmd):
-    proc = subprocess.run(unless.cmd, shell=True, capture_output=True, text=True)
-    if proc.returncode != 0:
-        return True
-
-    if not unless.post:
-        return False
-
-    output = proc.stdout.strip()
-    current_version = get_version(output, unless.post)
-    if current_version == archive.version:
-        return False
-
-    return True
+    return unless.unless(archive.version)
 
 
 def should_extract_ls(archive: tasks.config.Archive, settings, unless: tasks.config.UnlessFile):
     context = {k: v for k, v in archive.__dict__.items() if isinstance(v, str)}
     context.update(settings.__dict__)
-    ls_target = expand(unless.ls, context)
-    ls_target = os.path.expanduser(ls_target)
-    return not os.path.exists(ls_target)
+    return unless.unless(context)
 
 
 UNLESS_FN_MAPPING = {
@@ -183,8 +118,8 @@ def should_extract(archive: tasks.config.Archive, settings):
 
 def expand_archive(archive: tasks.config.Archive):
     var_map = {'version': archive.version}
-    archive.url = expand(archive.url, var_map)
-    archive.symlink = [expand(s, var_map) for s in archive.symlink]
+    archive.url = tasks.context.expand(archive.url, var_map)
+    archive.symlink = [tasks.context.expand(s, var_map) for s in archive.symlink]
     return archive
 
 
