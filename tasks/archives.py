@@ -53,6 +53,10 @@ def http_request(url, method, output_file):
         body = resp.read().decode('utf-8')
         raise Exception(f'Error during HTTP request to {url}: {resp.status} {body}')
 
+    output_dir = os.path.dirname(output_file)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     with open(output_file, 'wb') as o:
         while chunk := resp.read(CHUNK_SIZE):
             o.write(chunk)
