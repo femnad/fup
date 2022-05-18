@@ -86,6 +86,13 @@ class CargoCrate:
 
 
 @dataclass
+class GoPkg:
+    name: str
+    unless: Union[UnlessCmd, UnlessFile] = None
+    host: str = 'github.com'
+
+
+@dataclass
 class Template:
     src: str
     dest: str
@@ -98,6 +105,7 @@ class Config:
     settings: Settings = Settings()
     recipes: Dict = field(default_factory=dict)
     cargo: List[CargoCrate] = field(default_factory=list)
+    gopkg: List[GoPkg] = field(default_factory=list)
     templates: List[Template] = field(default_factory=list)
 
 
