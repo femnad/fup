@@ -1,0 +1,12 @@
+[Unit]
+Description=Run i3lock on suspend
+Before=sleep.target
+
+[Service]
+ExecStart={{ home }}/bin/lock-me-maybe
+User={{ user_ }}
+Type=Forking
+Environment=DISPLAY={{ display }}
+
+[Install]
+WantedBy=sleep.target

@@ -86,12 +86,19 @@ class CargoCrate:
 
 
 @dataclass
+class Template:
+    src: str
+    dest: str
+    context: Dict[str, str] = field(default_factory=dict)
+
+@dataclass
 class Config:
     packages: Dict[str, List[str]] = field(default_factory=dict)
     archives: List[Archive] = field(default_factory=list)
     settings: Settings = Settings()
     recipes: Dict = field(default_factory=dict)
     cargo: List[CargoCrate] = field(default_factory=list)
+    templates: List[Template] = field(default_factory=list)
 
 
 def get_config():
