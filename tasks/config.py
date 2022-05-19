@@ -111,6 +111,11 @@ class Service:
 
 
 @dataclass
+class GithubUserKeys:
+    user: str
+
+
+@dataclass
 class Config:
     packages: Dict[str, List[str]] = field(default_factory=dict)
     archives: List[Archive] = field(default_factory=list)
@@ -120,6 +125,7 @@ class Config:
     gopkg: List[GoPkg] = field(default_factory=list)
     templates: List[Template] = field(default_factory=list)
     services: List[Service] = field(default_factory=list)
+    github_user_keys: GithubUserKeys = field(default_factory=lambda: GithubUserKeys(''))
 
 
 def get_config():

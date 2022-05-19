@@ -16,6 +16,7 @@ import tasks.context
 CHUNK_SIZE = 8192
 CONTENT_DISPOSITION_FILENAME_REGEX = re.compile(r'filename=(.*)')
 UNLESS_TYPES = [tasks.config.UnlessCmd, tasks.config.UnlessFile]
+USER_AGENT = 'github.com/femnad/fup'
 
 
 def get_filename_from_content_disposition(content_disposition):
@@ -32,7 +33,7 @@ def get_connection(parsed_url: urllib.parse.ParseResult):
     return http.client.HTTPConnection(parsed_url.netloc)
 
 
-def http_request(url, method, output_file):
+def http_request(url, method, output_file=None):
     parsed_url = urllib.parse.urlparse(url)
     conn = get_connection(parsed_url)
 
@@ -42,7 +43,7 @@ def http_request(url, method, output_file):
     if parsed_url.fragment:
         path += f'#{parsed_url.fragment}'
 
-    conn.request(method, path)
+    conn.request(method, path, headers={'User-Agent': USER_AGENT})
     resp = conn.getresponse()
 
     if resp.status == 302:
@@ -53,9 +54,15 @@ def http_request(url, method, output_file):
         body = resp.read().decode('utf-8')
         raise Exception(f'Error during HTTP request to {url}: {resp.status} {body}')
 
-    output_dir = os.path.dirname(output_file)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if output_file:
+        output_dir = os.path.dirname(output_file)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+    else:
+        buffer = ''
+        while chunk := resp.read(CHUNK_SIZE):
+            buffer += chunk.decode('utf-8')
+        return buffer
 
     with open(output_file, 'wb') as o:
         while chunk := resp.read(CHUNK_SIZE):

@@ -6,6 +6,7 @@ import tasks.cargo
 import tasks.gopkg
 import tasks.templates
 import tasks.services
+import tasks.github_keys
 
 config = tasks.config.get_config()
 tasks.pkg.install(config)
@@ -19,3 +20,5 @@ tasks.gopkg.run(config)
 tasks.templates.run(config)
 
 tasks.services.run(config)
+
+tasks.github_keys.run(config)
