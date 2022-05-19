@@ -4,7 +4,6 @@ Before=sleep.target
 
 [Service]
 ExecStart=/usr/local/bin/user-bin-delegate {{ user_ }} lmm
-User={{ user_ }}
 Type=forking
 Environment=DISPLAY={{ display }}
 
