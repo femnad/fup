@@ -2,7 +2,7 @@
 Description=Xidlehook daemon
 
 [Service]
-ExecStart={{ home }}/.cargo/bin/xidlehook --not-when-fullscreen --timer 3600 '/{{ home }}/bin/lmm' ''
+ExecStart={{ home }}/.cargo/bin/xidlehook --not-when-fullscreen --timer 3600 '{{ home }}/bin/lmm' ''
 Environment=DISPLAY={{ display }}
 Restart=always
 RestartSec=5
