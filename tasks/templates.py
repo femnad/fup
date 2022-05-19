@@ -4,7 +4,6 @@ from pyinfra.operations import files
 
 from tasks.config import Template
 
-FILE_PERMISSIONS = '0755'
 TEMPLATED_FILES_SUFFIX = 'files'
 
 
@@ -12,7 +11,7 @@ def template_file(template: Template, should_sudo):
     src = f'{TEMPLATED_FILES_SUFFIX}/{template.src}'
     context = {k: os.getenv(v) for k, v in template.context.items()}
 
-    files.template(src=src, dest=template.dest, mode=FILE_PERMISSIONS, _sudo=should_sudo, **context)
+    files.template(src=src, dest=template.dest, mode=template.mode, _sudo=should_sudo, **context)
 
 
 def run(config):

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euEo pipefail
+
+SHELL=/usr/bin/bash
+
+function main() {
+    if [ $# -lt 2 ]
+    then
+        bin=$(basename $(realpath $0))
+        echo "usage: ${bin} <user> <user-bin>"
+        exit 1
+    fi
+
+    user="$1"
+    user_bin="$2"
+    shift 2
+
+    user_home=$(getent passwd $user | cut -d: -f6)
+
+    cmd="${user_home}/bin/${user_bin}"
+    for arg in "$@"
+    do
+        cmd="${cmd} ${arg}"
+    done
+
+    su $user -c "${cmd}" -s "${SHELL}"
+}
+
+main $@

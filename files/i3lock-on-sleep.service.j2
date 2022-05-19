@@ -3,7 +3,7 @@ Description=Run i3lock on suspend
 Before=sleep.target
 
 [Service]
-ExecStart={{ home }}/bin/lmm
+ExecStart=/usr/local/bin/user-bin-delegate {{ user }} lmm
 User={{ user_ }}
 Type=forking
 Environment=DISPLAY={{ display }}
