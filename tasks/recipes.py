@@ -11,11 +11,11 @@ import tasks.archives
 @dataclass
 class Recipe:
     task: str
-    unless: Union[UnlessCmd, UnlessFile]
-    steps: List[Dict]
+    unless: Union[UnlessCmd, UnlessFile] = None
+    steps: List[Dict] = field(default_factory=list)
 
 
-def run_command(cmd, pwd=None, sudo=False):
+def run_command(cmd, pwd=None, sudo=False, raise_on_error=True):
     prev_dir = None
 
     if sudo:
@@ -28,10 +28,10 @@ def run_command(cmd, pwd=None, sudo=False):
 
     proc = subprocess.run(cmd, shell=True, text=True, capture_output=True)
 
-    if proc.returncode == 0:
+    if proc.returncode == 0 or not raise_on_error:
         if prev_dir:
             os.chdir(prev_dir)
-        return
+        return proc.stdout.strip()
 
     output = {}
     if proc.stdout:
@@ -39,6 +39,7 @@ def run_command(cmd, pwd=None, sudo=False):
     if proc.stderr:
         output['stderr'] = proc.stderr.strip()
     msg = '\n'.join([f'{k}: {v}' for k, v in output.items()])
+
     raise Exception(f'Error running command {cmd}\n{msg}')
 
 
@@ -141,8 +142,9 @@ def do_run_recipe(steps, settings):
 @operation
 def run_recipe(recipe, settings):
     unless = tasks.archives.get_unless(recipe.unless)
-    if not unless.unless():
+    if unless and not unless.unless():
         return
+
     yield FunctionCommand(do_run_recipe, [recipe.steps, settings], {})
 
 

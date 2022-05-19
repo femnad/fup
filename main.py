@@ -5,6 +5,7 @@ import tasks.recipes
 import tasks.cargo
 import tasks.gopkg
 import tasks.templates
+import tasks.services
 
 config = tasks.config.get_config()
 tasks.pkg.install(config)
@@ -16,3 +17,5 @@ tasks.cargo.run(config)
 tasks.gopkg.run(config)
 
 tasks.templates.run(config)
+
+tasks.services.run(config)

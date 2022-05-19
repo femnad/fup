@@ -5,7 +5,7 @@ Before=sleep.target
 [Service]
 ExecStart={{ home }}/bin/lock-me-maybe
 User={{ user_ }}
-Type=Forking
+Type=forking
 Environment=DISPLAY={{ display }}
 
 [Install]

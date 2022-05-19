@@ -83,6 +83,7 @@ class Archive:
 class CargoCrate:
     name: str
     unless: Union[UnlessCmd, UnlessFile] = None
+    bins: bool = False
 
 
 @dataclass
@@ -99,6 +100,15 @@ class Template:
     dest: str
     context: Dict[str, str] = field(default_factory=dict)
 
+
+@dataclass
+class Service:
+    name: str
+    user: bool = True
+    start: bool = True
+    enable: bool = True
+
+
 @dataclass
 class Config:
     packages: Dict[str, List[str]] = field(default_factory=dict)
@@ -108,6 +118,7 @@ class Config:
     cargo: List[CargoCrate] = field(default_factory=list)
     gopkg: List[GoPkg] = field(default_factory=list)
     templates: List[Template] = field(default_factory=list)
+    services: List[Service] = field(default_factory=list)
 
 
 def get_config():

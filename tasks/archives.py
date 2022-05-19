@@ -103,6 +103,9 @@ UNLESS_FN_MAPPING = {
 
 
 def get_unless(unless):
+    if not unless:
+        return
+
     for unless_type in UNLESS_TYPES:
         if found_unless := do_get_unless(unless, unless_type):
             return found_unless
