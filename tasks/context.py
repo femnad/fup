@@ -1,7 +1,11 @@
+import os
 from typing import Dict
 
 
 def expand(s: str, context: Dict[str, str]):
+    home = os.getenv('HOME')
+    s = s.replace('~/', f'{home}/')
+
     cur_dlr_index = -1
     parsing_var = False
 

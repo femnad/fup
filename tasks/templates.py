@@ -1,15 +1,18 @@
 from dataclasses import dataclass
 from hashlib import sha1
 import os
+import socket
 import uuid
-from typing import Union
+from typing import Dict, Union
 
 from pyinfra.api import operation, FunctionCommand
 from pyinfra.api.util import get_template
 
 from tasks.config import Template
+from tasks.context import expand
 from tasks.recipes import run_command
 
+DEFAULT_KEY = '*'
 HASH_READ_BUFFER = 8192
 TEMPLATED_FILES_SUFFIX = 'files'
 
@@ -90,7 +93,22 @@ def render_template(template: Template) -> str:
     return get_template(template.src).render(context)
 
 
-def maybe_template_file(template: Template) -> Union[None, UpdateOp]:
+def resolve_context_value(v, host_facts):
+    if not isinstance(v, str):
+        return v
+
+    hostname = socket.gethostname()
+    host_context = {}
+
+    for fact, host_pairs in host_facts.items():
+        default = host_pairs[DEFAULT_KEY]
+        host_context[fact] = host_pairs.get(hostname, default)
+
+    return expand(v, host_context)
+
+
+def maybe_template_file(template: Template, host_facts: Dict = {}) -> Union[None, UpdateOp]:
+    template.context = {k: resolve_context_value(v, host_facts) for k, v in template.context.items()}
     output = render_template(template)
     dest = template.dest
 
@@ -113,10 +131,10 @@ def maybe_template_file(template: Template) -> Union[None, UpdateOp]:
 
 
 @operation
-def template_file(template: Template):
+def template_file(template: Template, host_facts):
     template.src = f'{TEMPLATED_FILES_SUFFIX}/{template.src}'
 
-    if update_op := maybe_template_file(template):
+    if update_op := maybe_template_file(template, host_facts):
         yield FunctionCommand(do_template_file, [update_op], {})
 
 
@@ -124,4 +142,4 @@ def run(config):
     for template in config.templates:
         template = Template(**template)
         template.dest = os.path.expanduser(template.dest)
-        template_file(template)
+        template_file(template, config.settings.host_facts)
