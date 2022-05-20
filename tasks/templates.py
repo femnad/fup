@@ -1,5 +1,6 @@
 import os
 
+from pyinfra.api import operation, FunctionCommand
 from pyinfra.operations import files
 
 from tasks.config import Template
@@ -7,11 +8,15 @@ from tasks.config import Template
 TEMPLATED_FILES_SUFFIX = 'files'
 
 
-def template_file(template: Template, should_sudo):
-    src = f'{TEMPLATED_FILES_SUFFIX}/{template.src}'
+def do_template(template, should_sudo):
     context = {k: os.getenv(v) for k, v in template.context.items()}
+    files.template(src=template.src, dest=template.dest, mode=template.mode, _sudo=should_sudo, **context)
 
-    files.template(src=src, dest=template.dest, mode=template.mode, _sudo=should_sudo, **context)
+
+@operation
+def template_file(template: Template, should_sudo):
+    template.src = f'{TEMPLATED_FILES_SUFFIX}/{template.src}'
+    yield FunctionCommand(do_template, [template, should_sudo], {})
 
 
 def run(config):

@@ -1,0 +1,13 @@
+[Unit]
+Description={{ description }}
+
+[Service]
+ExecStart={{ exec }}
+{%- for env_pair in environment %}
+{%- for k, v in env_pair.items() %}
+Environment={{ k }}={{ v }}
+{%- endfor %}
+{%- endfor %}
+
+[Install]
+WantedBy=default.target

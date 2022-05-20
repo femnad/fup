@@ -108,6 +108,9 @@ class Service:
     user: bool = True
     start: bool = True
     enable: bool = True
+    description: str = ''
+    exec_: str = ''
+    env: List[Dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
