@@ -144,11 +144,20 @@ def do_run_recipe(steps, settings):
 
 
 def should_run(recipe):
-    if not recipe.when:
+    when = recipe.when
+
+    if not when:
         return True
 
-    fact_class = ''.join([w.capitalize() for w in recipe.when.split('-')])
-    return host.get_fact(getattr(facts.base, fact_class))
+    negate = False
+    if ' ' in when and when.startswith('not '):
+        negate = True
+        when = when.split()[-1]
+
+    fact_class = ''.join([w.capitalize() for w in when.split('-')])
+    result = host.get_fact(getattr(facts.base, fact_class))
+
+    return not result if negate else result
 
 
 @operation
