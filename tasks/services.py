@@ -46,7 +46,6 @@ def get_service_file(service: Service):
 
 
 def maybe_daemon_reload(service, op):
-    breakpoint()
     if op.changed:
         daemon_reload = get_systemctl_command(service, 'daemon-reload', no_service=True)
         yield StringCommand(daemon_reload)

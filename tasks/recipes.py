@@ -4,6 +4,9 @@ import subprocess
 from typing import Dict, List, Union
 
 from pyinfra.api import FunctionCommand, operation
+from pyinfra import host
+
+import facts.base
 from tasks.config import UnlessCmd, UnlessFile
 import tasks.archives
 
@@ -13,6 +16,7 @@ class Recipe:
     task: str
     unless: Union[UnlessCmd, UnlessFile] = None
     steps: List[Dict] = field(default_factory=list)
+    when: str = ''
 
 
 def run_command(cmd, pwd=None, sudo=False, raise_on_error=True):
@@ -139,8 +143,19 @@ def do_run_recipe(steps, settings):
         s.run()
 
 
+def should_run(recipe):
+    if not recipe.when:
+        return True
+
+    fact_class = ''.join([w.capitalize() for w in recipe.when.split('-')])
+    return host.get_fact(getattr(facts.base, fact_class))
+
+
 @operation
 def run_recipe(recipe, settings):
+    if not should_run(recipe):
+        return
+
     unless = tasks.archives.get_unless(recipe.unless)
     if unless and not unless.unless():
         return
