@@ -27,6 +27,9 @@ def get_temp_file():
 
 
 def get_file_hash(filename):
+    if not os.path.exists(filename):
+        return
+
     h = sha1()
 
     with open(filename, 'rb') as f:
@@ -72,11 +75,11 @@ def do_template_file(update_op: UpdateOp):
 
     if update_op.should_update_file:
         temp_file = get_temp_file()
-        yield FunctionCommand(update_file, [temp_file, output, dest, should_sudo], {})
-        yield FunctionCommand(remove_file, [temp_file, should_sudo], {})
+        update_file(temp_file, output, dest, should_sudo)
+        remove_file(temp_file, should_sudo)
 
     if update_op.should_update_mode:
-        yield FunctionCommand(update_mode, [dest, template.mode, should_sudo], {})
+        update_mode(dest, template.mode, should_sudo)
 
 
 def render_template(template: Template) -> str:
@@ -89,13 +92,14 @@ def render_template(template: Template) -> str:
 
 def maybe_template_file(template: Template) -> Union[None, UpdateOp]:
     output = render_template(template)
+    dest = template.dest
 
-    prev_hash = get_file_hash(template.dest)
+    prev_hash = get_file_hash(dest)
     new_hash = get_hash(output)
-    prev_mode = get_mode(template.dest)
+    prev_mode = None if not os.path.exists(dest) else get_mode(template.dest)
 
-    should_update_file = prev_hash != new_hash
-    should_update_mode = prev_mode != template.mode
+    should_update_file = prev_hash is None or prev_hash != new_hash
+    should_update_mode = prev_mode is None or prev_mode != template.mode
 
     if not (should_update_file or should_update_mode):
         return

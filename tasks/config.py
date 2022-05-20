@@ -12,6 +12,7 @@ import tasks.context
 class Settings:
     archive_dir: str = '~'
     clone_dir: str = '~'
+    host_facts: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
 
 @dataclass
@@ -110,6 +111,7 @@ class ServiceUnit:
     type: str = ''
     wanted_by: str = 'default'
     environment: List[Dict[str, str]] = field(default_factory=list)
+    service_options: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
