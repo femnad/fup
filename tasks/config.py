@@ -119,6 +119,12 @@ class GithubUserKeys:
 
 
 @dataclass
+class Repo:
+    name: str
+    host: str = 'github.com'
+
+
+@dataclass
 class Config:
     packages: Dict[str, List[str]] = field(default_factory=dict)
     archives: List[Archive] = field(default_factory=list)
@@ -130,6 +136,7 @@ class Config:
     services: List[Service] = field(default_factory=list)
     github_user_keys: GithubUserKeys = field(default_factory=dict)
     accept_host_keys: List[str] = field(default_factory=list)
+    repos: List[Repo] = field(default_factory=list)
 
 
 def get_config():

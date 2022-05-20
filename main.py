@@ -8,6 +8,7 @@ import tasks.templates
 import tasks.services
 import tasks.github_keys
 import tasks.accept_host_keys
+import tasks.clone_repos
 
 config = tasks.config.get_config()
 
@@ -20,3 +21,4 @@ tasks.cargo.run(config)
 tasks.gopkg.run(config)
 tasks.templates.run(config)
 tasks.services.run(config)
+tasks.clone_repos.run(config)
