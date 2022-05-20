@@ -47,13 +47,20 @@ def get_service_file(service: Service):
     return f'/etc/systemd/system/{service.name}.service'
 
 
+def maybe_daemon_reload(service, op):
+    breakpoint()
+    if op.changed:
+        daemon_reload = get_systemctl_command(service, 'daemon-reload', no_service=True)
+        yield StringCommand(daemon_reload)
+
+
 def template_service(service: Service):
     context = {'exec': service.exec_, 'description': service.description, 'environment': service.env}
     dest = get_service_file(service)
     op = files.template(src=SERVICE_TEMPLATE, dest=dest, mode=SERVICE_FILE_MODE, **context)
     if op.changed:
         daemon_reload = get_systemctl_command(service, 'daemon-reload', no_service=True)
-        yield StringCommand(daemon_reload)
+        run_command(daemon_reload)
 
 
 def init_service(service: Service):
