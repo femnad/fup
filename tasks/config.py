@@ -129,6 +129,7 @@ class Config:
     templates: List[Template] = field(default_factory=list)
     services: List[Service] = field(default_factory=list)
     github_user_keys: GithubUserKeys = field(default_factory=dict)
+    accept_host_keys: List[str] = field(default_factory=list)
 
 
 def get_config():

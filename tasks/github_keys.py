@@ -9,8 +9,8 @@ from pyinfra.api import FunctionCommand, operation
 AUTHORIZED_KEYS_FILE = os.path.expanduser('~/.ssh/authorized_keys')
 
 
-def write_lines(lines):
-    with open(AUTHORIZED_KEYS_FILE, 'a') as f:
+def write_lines(file, lines):
+    with open(file, 'a') as f:
         for line in lines:
             f.write(f'{line}\n')
 
@@ -34,7 +34,7 @@ def ensure_github_user_keys(cfg: GithubUserKeys):
     if not missing_keys:
         return
 
-    yield FunctionCommand(write_lines, [missing_keys], {})
+    yield FunctionCommand(write_lines, [AUTHORIZED_KEYS_FILE, missing_keys], {})
 
 
 def run(config):
