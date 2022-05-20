@@ -4,22 +4,25 @@ from typing import List, Union
 from pyinfra.api import FunctionCommand, StringCommand, operation
 from pyinfra.operations import files
 
-from tasks.config import Service
+from tasks.config import Service, Template
 from tasks.recipes import run_command
+from tasks.templates import do_template
 
-SERVICE_FILE_MODE = '0644'
-SERVICE_TEMPLATE = 'files/service.j2'
+SERVICE_FILE_MODE = "0644"
+SERVICE_TEMPLATE = "files/service.j2"
 
 
 def get_systemctl_command(service, command, readonly=False, no_service=False):
-    maybe_user = ' --user' if service.user else ''
-    maybe_sudo = '' if service.user or readonly else 'sudo '
-    maybe_service = '' if no_service else f' {service.name}'
+    maybe_user = " --user" if service.user else ""
+    maybe_sudo = "" if service.user or readonly else "sudo "
+    maybe_service = "" if no_service else f" {service.name}"
 
-    return f'{maybe_sudo}systemctl{maybe_user} {command}{maybe_service}'
+    return f"{maybe_sudo}systemctl{maybe_user} {command}{maybe_service}"
 
 
-def maybe_actuate(service: Service, check_cmd: str, actuation_cmd: str, actuated_state: str) -> Union[None, str]:
+def maybe_actuate(
+    service: Service, check_cmd: str, actuation_cmd: str, actuated_state: str
+) -> Union[None, str]:
     if not getattr(service, actuation_cmd):
         return
 
@@ -31,32 +34,41 @@ def maybe_actuate(service: Service, check_cmd: str, actuation_cmd: str, actuated
 
 
 def maybe_enable(service: Service):
-    return maybe_actuate(service, 'is-enabled', 'enable', 'enabled')
+    return maybe_actuate(service, "is-enabled", "enable", "enabled")
 
 
 def maybe_start(service: Service):
-    return maybe_actuate(service, 'is-active', 'start', 'active')
+    return maybe_actuate(service, "is-active", "start", "active")
 
 
 def get_service_file(service: Service):
     if service.user:
-        return os.path.expanduser(f'~/.config/systemd/user/{service.name}.service')
+        return os.path.expanduser(f"~/.config/systemd/user/{service.name}.service")
 
-    return f'/etc/systemd/system/{service.name}.service'
+    return f"/etc/systemd/system/{service.name}.service"
 
 
 def maybe_daemon_reload(service, op):
     if op.changed:
-        daemon_reload = get_systemctl_command(service, 'daemon-reload', no_service=True)
+        daemon_reload = get_systemctl_command(service, "daemon-reload", no_service=True)
         yield StringCommand(daemon_reload)
 
 
 def template_service(service: Service):
-    context = {'exec': service.exec_, 'description': service.description, 'environment': service.env}
+    context = {
+        "exec": service.exec_,
+        "description": service.description,
+        "environment": service.env,
+    }
     dest = get_service_file(service)
-    op = files.template(src=SERVICE_TEMPLATE, dest=dest, mode=SERVICE_FILE_MODE, **context)
+
+    template = Template(
+        src=SERVICE_TEMPLATE, dest=dest, mode=SERVICE_FILE_MODE, context=context
+    )
+    op = do_template(template)
+
     if op.changed:
-        daemon_reload = get_systemctl_command(service, 'daemon-reload', no_service=True)
+        daemon_reload = get_systemctl_command(service, "daemon-reload", no_service=True)
         run_command(daemon_reload)
 
 

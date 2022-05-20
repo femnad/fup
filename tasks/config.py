@@ -98,8 +98,8 @@ class GoPkg:
 class Template:
     src: str
     dest: str
-    context: Dict[str, str] = field(default_factory=dict)
     mode: str = '0644'
+    context: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
