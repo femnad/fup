@@ -5,7 +5,6 @@ from tasks.archives import http_request
 from tasks.config import GithubUserKeys
 
 from pyinfra.api import FunctionCommand, operation
-from pyinfra.operations import files
 
 AUTHORIZED_KEYS_FILE = os.path.expanduser('~/.ssh/authorized_keys')
 

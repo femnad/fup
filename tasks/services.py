@@ -1,9 +1,7 @@
 import os
 from typing import List, Union
-import uuid
 
-from pyinfra.api import FileUploadCommand, FunctionCommand, StringCommand, operation
-from pyinfra.api.util import get_template
+from pyinfra.api import FunctionCommand, StringCommand, operation
 from pyinfra.operations import files
 
 from tasks.config import Service

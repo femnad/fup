@@ -1,14 +1,11 @@
 import http.client
 import os
 import re
-import subprocess
 import tarfile
 import uuid
 import urllib
-from typing import Dict
 
 from pyinfra.api import FunctionCommand, operation
-from pyinfra.operations import files
 
 import tasks.config
 import tasks.context
