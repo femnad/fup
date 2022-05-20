@@ -103,14 +103,23 @@ class Template:
 
 
 @dataclass
+class ServiceUnit:
+    exec: str
+    description: str
+    before: str = ''
+    type: str = ''
+    wanted_by: str = 'default'
+    environment: List[Dict[str, str]] = field(default_factory=list)
+
+
+@dataclass
 class Service:
     name: str
     user: bool = True
     start: bool = True
     enable: bool = True
-    description: str = ''
-    exec_: str = ''
-    env: List[Dict[str, str]] = field(default_factory=list)
+    unit: ServiceUnit = None
+    context: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass

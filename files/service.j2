@@ -1,8 +1,14 @@
 [Unit]
 Description={{ description }}
+{%- if before is defined %}
+Before={{ before }}.target
+{%- endif %}
 
 [Service]
 ExecStart={{ exec }}
+{%- if type is defined %}
+Type={{ type }}
+{%- endif %}
 {%- for env_pair in environment %}
 {%- for k, v in env_pair.items() %}
 Environment={{ k }}={{ v }}
@@ -10,4 +16,4 @@ Environment={{ k }}={{ v }}
 {%- endfor %}
 
 [Install]
-WantedBy=default.target
+WantedBy={{ wanted_by }}.target

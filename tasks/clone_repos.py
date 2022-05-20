@@ -4,7 +4,6 @@ from typing import List
 from tasks.config import Repo
 from tasks.recipes import run_command
 
-
 from pyinfra.api import StringCommand, operation
 
 
