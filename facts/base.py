@@ -12,3 +12,11 @@ class GitReady(FactBase):
 
     def process(self, output):
         return len(output) > 0
+
+
+class SshPullReady(FactBase):
+
+    command = 'pass'
+
+    def process(self, output):
+        return len(output) > 0
