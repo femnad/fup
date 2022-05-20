@@ -9,10 +9,11 @@ from pyinfra.api import FunctionCommand, operation
 
 import tasks.config
 import tasks.context
+import tasks.unless
 
 CHUNK_SIZE = 8192
 CONTENT_DISPOSITION_FILENAME_REGEX = re.compile(r'filename=(.*)')
-UNLESS_TYPES = [tasks.config.UnlessCmd, tasks.config.UnlessFile]
+UNLESS_TYPES = [tasks.unless.UnlessCmd, tasks.unless.UnlessFile]
 USER_AGENT = 'github.com/femnad/fup'
 
 
@@ -90,19 +91,19 @@ def do_get_unless(unless, cls):
         return
 
 
-def should_extract_cmd(archive: tasks.config.Archive, _, unless: tasks.config.UnlessCmd):
+def should_extract_cmd(archive: tasks.config.Archive, _, unless: tasks.unless.UnlessCmd):
     return unless.unless(archive.version)
 
 
-def should_extract_ls(archive: tasks.config.Archive, settings, unless: tasks.config.UnlessFile):
+def should_extract_ls(archive: tasks.config.Archive, settings, unless: tasks.unless.UnlessFile):
     context = {k: v for k, v in archive.__dict__.items() if isinstance(v, str)}
     context.update(settings.__dict__)
     return unless.unless(context)
 
 
 UNLESS_FN_MAPPING = {
-    tasks.config.UnlessCmd: should_extract_cmd,
-    tasks.config.UnlessFile: should_extract_ls,
+    tasks.unless.UnlessCmd: should_extract_cmd,
+    tasks.unless.UnlessFile: should_extract_ls,
 }
 
 

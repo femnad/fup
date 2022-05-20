@@ -1,8 +1,17 @@
+import copy
 import os
+import socket
 from typing import Dict
 
+import tasks.config
 
-def expand(s: str, context: Dict[str, str]):
+DEFAULT_KEY = '*'
+
+
+def expand(s: str, context: Dict[str, str] = {}):
+    updated_context = copy.deepcopy(context)
+
+    config = tasks.config.get_config()
     home = os.getenv('HOME')
     s = s.replace('~/', f'{home}/')
 
@@ -11,6 +20,14 @@ def expand(s: str, context: Dict[str, str]):
 
     varmap = {}
     cur_var = ''
+
+    lookups = []
+
+    hostname = socket.gethostname()
+
+    for fact, host_pairs in config.settings.host_facts.items():
+        default = host_pairs[DEFAULT_KEY]
+        updated_context[fact] = host_pairs.get(hostname, default)
 
     for i, c in enumerate(s):
         if c == '$':
@@ -21,12 +38,20 @@ def expand(s: str, context: Dict[str, str]):
             continue
         elif c == '}':
             parsing_var = False
-            value = context[cur_var]
-            varmap[cur_var] = value
+            lookups.append(cur_var)
             cur_var = ''
             cur_dlr_index = -1
         elif parsing_var:
             cur_var += c
+
+    for lookup in lookups:
+        if lookup in updated_context:
+            value = updated_context[lookup]
+            varmap[lookup] = value
+        elif value := os.getenv(lookup):
+            varmap[lookup] = value
+        else:
+            raise Exception(f'Cannot determine value of variable `{lookup}`')
 
     for var, val in varmap.items():
         s = s.replace(f'${{{var}}}', str(val))

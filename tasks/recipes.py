@@ -7,7 +7,7 @@ from pyinfra.api import FunctionCommand, operation
 from pyinfra import host
 
 import facts.base
-from tasks.config import UnlessCmd, UnlessFile
+from tasks.unless import UnlessCmd, UnlessFile
 import tasks.archives
 
 

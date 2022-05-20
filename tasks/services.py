@@ -53,23 +53,20 @@ def maybe_daemon_reload(service, op):
         yield StringCommand(daemon_reload)
 
 
-def template_service(service: Service, host_facts):
+def template_service(service: Service):
     dest = get_service_file(service)
 
-    context = copy.deepcopy(service.context)
-    context.update({k: v for k, v in service.unit.__dict__.items()})
-
-    template = Template(src=SERVICE_TEMPLATE, dest=dest, mode=SERVICE_FILE_MODE, context=context)
-    if update_op := maybe_template_file(template, host_facts):
+    template = Template(src=SERVICE_TEMPLATE, dest=dest, mode=SERVICE_FILE_MODE, context=service.unit.__dict__)
+    if update_op := maybe_template_file(template):
         do_template_file(update_op)
         daemon_reload = get_systemctl_command(service, 'daemon-reload', no_service=True)
         yield StringCommand(daemon_reload)
 
 
-def init_service(service: Service, host_facts):
+def init_service(service: Service):
     if service.unit:
         service.unit = ServiceUnit(**service.unit)
-        yield from template_service(service, host_facts)
+        yield from template_service(service)
 
     if enable_cmd := maybe_enable(service):
         yield StringCommand(enable_cmd)
@@ -79,11 +76,11 @@ def init_service(service: Service, host_facts):
 
 
 @operation
-def init_services(services: List[Service], host_facts):
+def init_services(services: List[Service]):
     for service in services:
-        yield from init_service(service, host_facts)
+        yield from init_service(service)
 
 
 def run(config):
     services = [Service(**s) for s in config.services]
-    init_services(services, config.settings.host_facts)
+    init_services(services)

@@ -12,7 +12,6 @@ from tasks.config import Template
 from tasks.context import expand
 from tasks.recipes import run_command
 
-DEFAULT_KEY = '*'
 HASH_READ_BUFFER = 8192
 TEMPLATED_FILES_SUFFIX = 'files'
 
@@ -93,22 +92,28 @@ def render_template(template: Template) -> str:
     return get_template(template.src).render(context)
 
 
-def resolve_context_value(v, host_facts):
-    if not isinstance(v, str):
-        return v
-
-    hostname = socket.gethostname()
-    host_context = {}
-
-    for fact, host_pairs in host_facts.items():
-        default = host_pairs[DEFAULT_KEY]
-        host_context[fact] = host_pairs.get(hostname, default)
-
-    return expand(v, host_context)
+def do_resolve(v):
+    if isinstance(v, str):
+        return expand(v)
+    elif isinstance(v, list):
+        return [do_resolve(sv) for sv in v]
+    elif isinstance(v, dict):
+        return {sk: do_resolve(sv) for sk, sv in v.items()}
+    return v
 
 
-def maybe_template_file(template: Template, host_facts: Dict = {}) -> Union[None, UpdateOp]:
-    template.context = {k: resolve_context_value(v, host_facts) for k, v in template.context.items()}
+def resolve_context(context: Dict):
+    resolved = {}
+
+    for k, v in context.items():
+        resolved[k] = do_resolve(v)
+
+    return resolved
+
+
+def maybe_template_file(template: Template, context={}) -> Union[None, UpdateOp]:
+    context = resolve_context(template.context)
+    template.context = context
     output = render_template(template)
     dest = template.dest
 
@@ -131,10 +136,10 @@ def maybe_template_file(template: Template, host_facts: Dict = {}) -> Union[None
 
 
 @operation
-def template_file(template: Template, host_facts):
+def template_file(template: Template):
     template.src = f'{TEMPLATED_FILES_SUFFIX}/{template.src}'
 
-    if update_op := maybe_template_file(template, host_facts):
+    if update_op := maybe_template_file(template):
         yield FunctionCommand(do_template_file, [update_op], {})
 
 
@@ -142,4 +147,4 @@ def run(config):
     for template in config.templates:
         template = Template(**template)
         template.dest = os.path.expanduser(template.dest)
-        template_file(template, config.settings.host_facts)
+        template_file(template)
