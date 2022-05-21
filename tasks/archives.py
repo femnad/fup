@@ -35,9 +35,11 @@ def get_extractor(url):
     file_type = mimetypes.guess_type(url)
 
     if file_type is None or file_type[0] is None:
-        raise Exception(f'Cannot determine file type for {url}')
+        file_type = ('application/x-tar', 'gzip')
 
     file_type = file_type[0]
+    assert file_type is not None
+
     if file_type not in EXTRACTORS:
         raise Exception(f'Unable to extract {file_type}')
 
