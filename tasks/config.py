@@ -11,8 +11,10 @@ import tasks.unless
 class Settings:
     archive_dir: str = '~'
     clone_dir: str = '~'
-    virtualenv_dir: str = '~'
+    github_user: str = ''
     host_facts: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    self_clone_dir: str = '~'
+    virtualenv_dir: str = '~'
 
 
 @dataclass
