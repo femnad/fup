@@ -87,18 +87,19 @@ class PipPkg:
 
 @dataclass
 class Config:
-    packages: Dict[str, List[str]] = field(default_factory=dict)
-    archives: List[Archive] = field(default_factory=list)
-    settings: Settings = Settings()
-    recipes: Dict = field(default_factory=dict)
-    cargo: List[CargoCrate] = field(default_factory=list)
-    gopkg: List[GoPkg] = field(default_factory=list)
-    templates: List[Template] = field(default_factory=list)
-    services: List[Service] = field(default_factory=list)
-    github_user_keys: GithubUserKeys = field(default_factory=dict)
     accept_host_keys: List[str] = field(default_factory=list)
-    repos: List[Repo] = field(default_factory=list)
+    archives: List[Archive] = field(default_factory=list)
+    cargo: List[CargoCrate] = field(default_factory=list)
+    github_user_keys: GithubUserKeys = field(default_factory=dict)
+    gopkg: List[GoPkg] = field(default_factory=list)
+    packages: Dict[str, List[str]] = field(default_factory=dict)
     pip_pkgs: List[PipPkg] = field(default_factory=list)
+    preflight: Dict = field(default_factory=dict)
+    recipes: Dict = field(default_factory=dict)
+    repos: List[Repo] = field(default_factory=list)
+    services: List[Service] = field(default_factory=list)
+    settings: Settings = Settings()
+    templates: List[Template] = field(default_factory=list)
 
 
 def get_config():

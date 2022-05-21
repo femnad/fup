@@ -7,12 +7,14 @@ import tasks.github_keys
 import tasks.gopkg
 import tasks.pip
 import tasks.pkg
+import tasks.preflight
 import tasks.recipes
 import tasks.services
 import tasks.templates
 
 config = tasks.config.get_config()
 
+tasks.preflight.run(config)
 tasks.pkg.install(config)
 tasks.archives.extract(config)
 tasks.github_keys.run(config)
