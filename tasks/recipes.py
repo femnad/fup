@@ -66,11 +66,15 @@ class Cmd:
     cmd: str
     pwd: str = ''
     sudo: bool = False
+    unless: Union[UnlessCmd, UnlessFile] = None
 
     def sh(self, cmd):
         run_command(cmd, pwd=self.pwd, sudo=self.sudo)
 
     def run(self):
+        if not tasks.archives.get_unless(self.unless).unless():
+            return
+
         if '\n' not in self.cmd:
             self.sh(self.cmd)
             return
@@ -115,6 +119,7 @@ class Git:
             return
         run_command(f'git clone {self.repo} {target}')
 
+
 @dataclass
 class Symlink:
     name: str
@@ -127,26 +132,29 @@ class Symlink:
         os.symlink(src=target, dst=link)
 
 
-STEP_CLASSES = {Download, Cmd, Rename, Quicklisp, Git}
+STEP_CLASSES = {
+    'cmd': Cmd,
+    'download': Download,
+    'git': Git,
+    'quicklisp': Quicklisp,
+    'rename': Rename,
+    'symlink': Symlink,
+}
 
 
-def try_get_step(step, cls):
-    try:
-        return cls(**step)
-    except TypeError:
-        return
+def get_step_class(step_content, settings):
+    step_name = step_content['name']
 
+    if step_name not in STEP_CLASSES:
+        raise Exception(f'Cannot find step class for {step_name}')
 
-def get_step_class(content, settings):
-    for cls in STEP_CLASSES:
-        content = {
-            k: tasks.context.expand(v, settings.__dict__) if isinstance(v, str) else v
-            for k, v in content.items()
-        }
-        if step := try_get_step(content, cls):
-            return step
+    step_class = STEP_CLASSES[step_name]
+    content = {
+        k: tasks.context.expand(v, settings.__dict__) if isinstance(v, str) else v
+        for k, v in step_content.items()
+    }
 
-    raise Exception(f'Cannot determine step type for {content}')
+    return step_class(**content)
 
 
 def do_run_recipe(steps, settings):
