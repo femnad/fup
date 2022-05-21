@@ -94,11 +94,11 @@ class PipPkg:
 
 
 @dataclass
-class EnsureLine:
-    name: str
-    file: str
-    text: str
-    replace: str
+class EnsureLine(Whenable):
+    name: str = ''
+    file: str = ''
+    text: str = ''
+    replace: str = ''
 
 
 @dataclass

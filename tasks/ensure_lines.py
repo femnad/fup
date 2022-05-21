@@ -3,6 +3,7 @@ import os
 from pyinfra.operations import files
 
 from tasks.config import EnsureLine
+import tasks.when
 
 
 def replace(ensure_line: EnsureLine, should_sudo: bool):
@@ -29,5 +30,9 @@ def run(config):
 
     for line in config.ensure_lines:
         line = EnsureLine(**line)
+
+        if not tasks.when.should_run(line.when):
+            continue
+
         should_sudo = not line.file.startswith(user_home)
         ensure(line, should_sudo)
