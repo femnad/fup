@@ -11,6 +11,7 @@ import tasks.unless
 class Settings:
     archive_dir: str = '~'
     clone_dir: str = '~'
+    virtualenv_dir: str = '~'
     host_facts: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
 
@@ -79,6 +80,12 @@ class Repo:
 
 
 @dataclass
+class PipPkg:
+    name: str
+    reqs: List[str] = field(default_factory=list)
+
+
+@dataclass
 class Config:
     packages: Dict[str, List[str]] = field(default_factory=dict)
     archives: List[Archive] = field(default_factory=list)
@@ -91,6 +98,7 @@ class Config:
     github_user_keys: GithubUserKeys = field(default_factory=dict)
     accept_host_keys: List[str] = field(default_factory=list)
     repos: List[Repo] = field(default_factory=list)
+    pip_pkgs: List[PipPkg] = field(default_factory=list)
 
 
 def get_config():

@@ -92,13 +92,13 @@ def do_get_unless(unless, cls):
 
 
 def should_extract_cmd(archive: tasks.config.Archive, _, unless: tasks.unless.UnlessCmd):
-    return unless.unless(archive.version)
+    return unless.should_proceed(archive.version)
 
 
 def should_extract_ls(archive: tasks.config.Archive, settings, unless: tasks.unless.UnlessFile):
     context = {k: v for k, v in archive.__dict__.items() if isinstance(v, str)}
     context.update(settings.__dict__)
-    return unless.unless(context)
+    return unless.should_proceed(context)
 
 
 UNLESS_FN_MAPPING = {

@@ -20,7 +20,7 @@ class Recipe:
     when: str = ''
 
 
-def run_command(cmd, pwd=None, sudo=False, raise_on_error=True):
+def run_command(cmd, pwd=None, sudo=False, raise_on_error=True, env=None):
     prev_dir = None
 
     if sudo:
@@ -31,7 +31,7 @@ def run_command(cmd, pwd=None, sudo=False, raise_on_error=True):
         prev_dir = os.getcwd()
         os.chdir(pwd)
 
-    proc = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+    proc = subprocess.run(cmd, shell=True, text=True, capture_output=True, env=env)
 
     if proc.returncode == 0 or not raise_on_error:
         if prev_dir:

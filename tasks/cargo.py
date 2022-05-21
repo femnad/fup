@@ -7,7 +7,7 @@ from tasks.config import CargoCrate
 @operation
 def install_crate(crate: CargoCrate):
     unless = get_unless(crate.unless)
-    if not unless.unless():
+    if not unless.should_proceed():
         return
     maybe_bins = ' --bins' if crate.bins else ''
     yield StringCommand(f'cargo install {crate.name}{maybe_bins}')

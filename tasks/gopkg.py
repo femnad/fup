@@ -15,7 +15,7 @@ def install_pkg(go_pkg: GoPkg):
 def install_pkgs(go_pkgs: List[GoPkg]):
     for pkg in go_pkgs:
         unless = get_unless(pkg.unless)
-        if not unless.unless():
+        if not unless.should_proceed():
             continue
 
         yield from install_pkg(pkg)
