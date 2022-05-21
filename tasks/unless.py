@@ -10,9 +10,10 @@ import tasks.context
 class UnlessFile:
     ls: str
 
-    def unless(self, context: Dict = None):
+    def should_proceed(self, context: Dict = None):
         if not context:
             context = {}
+
         ls_target = tasks.context.expand(self.ls, context)
         ls_target = os.path.expanduser(ls_target)
         return not os.path.exists(ls_target)
@@ -44,7 +45,7 @@ class UnlessCmd:
 
         return output
 
-    def unless(self, version: str = ''):
+    def should_proceed(self, version: str = ''):
         proc = subprocess.run(self.cmd, shell=True, capture_output=True, text=True)
         if proc.returncode != 0:
             return True

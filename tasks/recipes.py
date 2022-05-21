@@ -72,7 +72,7 @@ class Cmd:
         run_command(cmd, pwd=self.pwd, sudo=self.sudo)
 
     def run(self):
-        if not tasks.archives.get_unless(self.unless).unless():
+        if (unless := tasks.archives.get_unless(self.unless)) and not unless.should_proceed():
             return
 
         if '\n' not in self.cmd:
@@ -129,6 +129,12 @@ class Symlink:
     def run(self):
         link = expand(self.link)
         target = expand(self.target)
+        # use `lexists` to detect broken links
+        if os.path.lexists(link):
+            if os.path.realpath(link) == target:
+                return
+            else:
+                os.unlink(link)
         os.symlink(src=target, dst=link)
 
 
@@ -184,7 +190,7 @@ def run_recipe(recipe, settings):
         return
 
     unless = tasks.archives.get_unless(recipe.unless)
-    if unless and not unless.unless():
+    if unless and not unless.should_proceed():
         return
 
     yield FunctionCommand(do_run_recipe, [recipe.steps, settings], {})
