@@ -37,7 +37,7 @@ def ensure_github_user_keys(cfg: GithubUserKeys):
     keys = json.loads(keys)
     missing_keys = set([key['key'] for key in keys])
 
-    if not os.path.exists(AUTHORIZED_KEYS_FILE):
+    if os.path.exists(AUTHORIZED_KEYS_FILE):
         missing_keys = get_missing_keys(missing_keys)
     else:
         missing_keys = keys()
