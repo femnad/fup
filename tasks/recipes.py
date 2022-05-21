@@ -6,6 +6,8 @@ from pyinfra.api import FunctionCommand, operation
 
 import tasks.archives
 import tasks.config
+import tasks.http
+
 from tasks.context import expand
 from tasks.ops import run_command
 from tasks.templates import do_template_file, maybe_template_file
@@ -29,7 +31,7 @@ class Download:
 
     def run(self):
         target = os.path.expanduser(self.target)
-        tasks.archives.download(self.url, target)
+        tasks.http.download(self.url, target)
 
 
 @dataclass
