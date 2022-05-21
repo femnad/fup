@@ -1,8 +1,8 @@
 import json
 import os
 
-from tasks.archives import http_request
 from tasks.config import GithubUserKeys
+import tasks.http
 
 from pyinfra.api import FunctionCommand, operation
 
@@ -21,7 +21,7 @@ def ensure_github_user_keys(cfg: GithubUserKeys):
         return
 
     url = f'https://api.github.com/users/{cfg.user}/keys'
-    keys = http_request(url, 'GET', output_file=None)
+    keys = tasks.http.http_request(url, 'GET', output_file=None)
     keys = json.loads(keys)
     missing_keys = set([key['key'] for key in keys])
 

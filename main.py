@@ -14,12 +14,11 @@ import tasks.services
 import tasks.templates
 
 config = tasks.config.get_config()
-#config.settings = tasks.config.Settings(**config.settings)
 
 tasks.preflight.run(config)
 
-tasks.archives.extract(config)
-tasks.pkg.install(config)
+tasks.archives.run(config)
+tasks.pkg.run(config)
 
 tasks.accept_host_keys.run(config)
 tasks.cargo.run(config)

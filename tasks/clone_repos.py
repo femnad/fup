@@ -18,7 +18,6 @@ def get_clone_dir(repo: Repo, settings: Settings):
 def clone_repos(repos: List[Repo], settings: Settings):
     for repo in repos:
         clone_dir = get_clone_dir(repo, settings)
-        breakpoint()
         url = f'https://{repo.host}/{repo.name}.git'
 
         yield from git.repo(src=url, dest=clone_dir)

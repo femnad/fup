@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import os
+import re
 import subprocess
 from typing import Dict
 
@@ -33,9 +34,10 @@ class UnlessCmd:
     post: str = None
 
     POST_FNS = {
-        'head': lambda x, p: x.split('\n')[p],
-        'split': lambda x, p: x.split()[p],
+        'head': lambda x, p: x.split('\n')[int(p)],
+        'split': lambda x, p: x.split()[int(p)],
         'contains': contains,
+        'match': lambda x, p: re.match(x, p),
     }
 
     def get_fn(self, operation: str, parameter: int):
@@ -49,7 +51,6 @@ class UnlessCmd:
 
         for op in version_fn.split('|'):
             operation, parameter = op.strip().split()
-            parameter = int(parameter)
             ops.append(self.get_fn(operation, parameter))
 
         for op in ops:

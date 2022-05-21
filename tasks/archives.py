@@ -1,87 +1,63 @@
-import http.client
+import mimetypes
 import os
-import re
 import tarfile
 import uuid
-import urllib
+import zipfile
 
 from pyinfra.api import FunctionCommand, operation
 
 import tasks.config
 import tasks.context
+import tasks.http
 import tasks.unless
 
-CHUNK_SIZE = 8192
-CONTENT_DISPOSITION_FILENAME_REGEX = re.compile(r'filename=(.*)')
 UNLESS_TYPES = [tasks.unless.UnlessCmd, tasks.unless.UnlessFile]
-USER_AGENT = 'github.com/femnad/fup'
 
 
-def get_filename_from_content_disposition(content_disposition):
-    if not content_disposition:
-        return
-
-    if match := CONTENT_DISPOSITION_FILENAME_REGEX.match(content_disposition):
-        return match.group(1)
-
-
-def get_connection(parsed_url: urllib.parse.ParseResult):
-    if parsed_url.scheme == 'https':
-        return http.client.HTTPSConnection(parsed_url.netloc)
-    return http.client.HTTPConnection(parsed_url.netloc)
-
-
-def http_request(url, method, output_file=None):
-    parsed_url = urllib.parse.urlparse(url)
-    conn = get_connection(parsed_url)
-
-    path = f'{parsed_url.path}'
-    if parsed_url.query:
-        path += f'?{parsed_url.query}'
-    if parsed_url.fragment:
-        path += f'#{parsed_url.fragment}'
-
-    conn.request(method, path, headers={'User-Agent': USER_AGENT})
-    resp = conn.getresponse()
-
-    if resp.status == 302:
-        redirect_url = resp.headers['Location']
-        http_request(redirect_url, method, output_file)
-        return
-    elif resp.status != 200:
-        body = resp.read().decode('utf-8')
-        raise Exception(f'Error during HTTP request to {url}: {resp.status} {body}')
-
-    if output_file:
-        output_dir = os.path.dirname(output_file)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-    else:
-        buffer = ''
-        while chunk := resp.read(CHUNK_SIZE):
-            buffer += chunk.decode('utf-8')
-        return buffer
-
-    with open(output_file, 'wb') as o:
-        while chunk := resp.read(CHUNK_SIZE):
-            o.write(chunk)
-
-
-def download(url, target):
-    http_request(url, 'GET', target)
-
-
-def do_extract_archive(url, dest):
-    tmpfile = f'/tmp/{uuid.uuid4()}'
-    download(url, tmpfile)
-    with tarfile.open(tmpfile) as tf:
+def extract_tar(f, dest):
+    with tarfile.open(f) as tf:
         tf.extractall(dest)
+
+
+def extract_zip(f, dest):
+    with zipfile.ZipFile(f) as zf:
+        zf.extractall(dest)
+
+
+EXTRACTORS = {
+    'application/x-tar': extract_tar,
+    'application/zip': extract_zip,
+}
+
+
+def get_extractor(url):
+    file_type = mimetypes.guess_type(url)
+    if file_type is None or file_type[0] is None:
+        raise Exception(f'Cannot determine file type for {url}')
+
+    file_type = file_type[0]
+    if file_type not in EXTRACTORS:
+        raise Exception(f'Unable to extract {file_type}')
+
+    return EXTRACTORS[file_type]
+
+
+def do_extract_archive(archive: tasks.config.Archive, dest):
+    url = archive.url
+    tmpfile = f'/tmp/{uuid.uuid4()}'
+    tasks.http.download(url, tmpfile)
+
+    extractor_fn = get_extractor(url)
+    extractor_fn(tmpfile, dest)
+
+    if archive:
+        pass
+
     os.unlink(tmpfile)
 
 
-@operation
-def extract_archive(url=None, extract_dir=None):
-    yield FunctionCommand(do_extract_archive, [url, extract_dir], {})
+def extract_archive(archive, extract_dir):
+    do_extract_archive(archive, extract_dir)
 
 
 def do_get_unless(unless, cls):
@@ -152,14 +128,33 @@ def symlink_archive(archive: tasks.config.Archive, archive_dir: str):
         os.symlink(src, dst)
 
 
-def extract(cfg):
-    extract_dir = os.path.expanduser(cfg.settings.archive_dir)
-    for archive in cfg.archives:
-        archive = tasks.config.Archive(**archive)
-        archive = expand_archive(archive)
+def change_file_mode(filename, mode):
+    os.chmod(filename, 0o755)
 
-        if not should_extract(archive, cfg.settings):
-            continue
 
-        extract_archive(url=archive.url, extract_dir=extract_dir)
-        symlink_archive(archive, cfg.settings.archive_dir)
+@operation
+def extract(archive: tasks.config.Archive, settings: tasks.config.Settings, extract_dir: str):
+    bin_file = None
+    archive = tasks.config.Archive(**archive)
+    archive = expand_archive(archive)
+
+    if not should_extract(archive, settings):
+        return
+
+    if archive.binary:
+        extract_dir = os.path.expanduser(f'{extract_dir}/{archive.binary}')
+        bin_file = f'{extract_dir}/{archive.binary}'
+        archive.symlink = [f'{archive.binary}/{archive.binary}']
+
+    yield FunctionCommand(extract_archive, [archive, extract_dir], {})
+    if archive.symlink:
+        yield FunctionCommand(symlink_archive, [archive, settings.archive_dir], {})
+
+    if bin_file:
+        yield FunctionCommand(change_file_mode, [bin_file, 0o755], {})
+
+
+def run(config):
+    extract_dir = os.path.expanduser(config.settings.archive_dir)
+    for archive in config.archives:
+        extract(archive, config.settings, extract_dir)

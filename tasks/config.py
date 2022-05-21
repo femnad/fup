@@ -20,9 +20,10 @@ class Settings:
 @dataclass
 class Archive:
     url: str
+    binary: str = ''
+    symlink: str = ''
     unless: Union[tasks.unless.UnlessCmd, tasks.unless.UnlessFile] = None
     version: str = ''
-    symlink: str = ''
 
 
 @dataclass
