@@ -86,11 +86,20 @@ class PipPkg:
 
 
 @dataclass
+class EnsureLine:
+    name: str
+    file: str
+    text: str
+    replace: str
+
+
+@dataclass
 class Config:
     accept_host_keys: List[str] = field(default_factory=list)
     archives: List[Archive] = field(default_factory=list)
     cargo: List[CargoCrate] = field(default_factory=list)
-    github_user_keys: GithubUserKeys = field(default_factory=dict)
+    ensure_lines: List[EnsureLine] = field(default_factory=list)
+    github_user_keys: Dict[str, str] = field(default_factory=dict)
     gopkg: List[GoPkg] = field(default_factory=list)
     packages: Dict[str, List[str]] = field(default_factory=dict)
     pip_pkgs: List[PipPkg] = field(default_factory=list)
@@ -98,7 +107,7 @@ class Config:
     recipes: Dict = field(default_factory=dict)
     repos: List[Repo] = field(default_factory=list)
     services: List[Service] = field(default_factory=list)
-    settings: Settings = Settings()
+    settings: Dict = field(default_factory=dict)
     templates: List[Template] = field(default_factory=list)
 
 
@@ -106,8 +115,7 @@ def get_config():
     with open(os.path.expanduser('~/.config/fup/fup.yml')) as f:
         cfg_dict = yaml.load(f, Loader=yaml.SafeLoader)
         cfg = Config(**cfg_dict)
-        cfg.settings = Settings(**cfg_dict['settings'])
-        cfg.archives = [Archive(**a) for a in cfg.archives]
+        cfg.settings = Settings(**cfg.settings)
         return cfg
 
 

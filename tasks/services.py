@@ -3,7 +3,6 @@ import os
 from typing import List, Union
 
 from pyinfra.api import FunctionCommand, StringCommand, operation
-from pyinfra.operations import files
 
 from tasks.config import Service, ServiceUnit, Template
 from tasks.ops import run_command

@@ -155,6 +155,7 @@ def symlink_archive(archive: tasks.config.Archive, archive_dir: str):
 def extract(cfg):
     extract_dir = os.path.expanduser(cfg.settings.archive_dir)
     for archive in cfg.archives:
+        archive = tasks.config.Archive(**archive)
         archive = expand_archive(archive)
 
         if not should_extract(archive, cfg.settings):

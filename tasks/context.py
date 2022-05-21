@@ -12,6 +12,7 @@ def expand(s: str, context: Dict[str, str] = {}):
     updated_context = copy.deepcopy(context)
 
     config = tasks.config.get_config()
+
     home = os.getenv('HOME')
     s = s.replace('~/', f'{home}/')
 
