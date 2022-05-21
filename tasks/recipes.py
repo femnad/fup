@@ -1,14 +1,16 @@
 from dataclasses import dataclass, field
 import os
-import subprocess
 from typing import Dict, List, Union
 
 from pyinfra.api import FunctionCommand, operation
 from pyinfra import host
 
-import tasks.archives
 import facts.base
+import tasks.archives
+import tasks.config
 from tasks.context import expand
+from tasks.ops import run_command
+from tasks.templates import do_template_file, maybe_template_file
 from tasks.unless import UnlessCmd, UnlessFile
 
 
@@ -18,34 +20,6 @@ class Recipe:
     unless: Union[UnlessCmd, UnlessFile] = None
     steps: List[Dict] = field(default_factory=list)
     when: str = ''
-
-
-def run_command(cmd, pwd=None, sudo=False, raise_on_error=True, env=None):
-    prev_dir = None
-
-    if sudo:
-        cmd = f'sudo {cmd}'
-
-    if pwd:
-        pwd = os.path.expanduser(pwd)
-        prev_dir = os.getcwd()
-        os.chdir(pwd)
-
-    proc = subprocess.run(cmd, shell=True, text=True, capture_output=True, env=env)
-
-    if proc.returncode == 0 or not raise_on_error:
-        if prev_dir:
-            os.chdir(prev_dir)
-        return proc.stdout.strip()
-
-    output = {}
-    if proc.stdout:
-        output['stdout'] = proc.stdout.strip()
-    if proc.stderr:
-        output['stderr'] = proc.stderr.strip()
-    msg = '\n'.join([f'{k}: {v}' for k, v in output.items()])
-
-    raise Exception(f'Error running command {cmd}\n{msg}')
 
 
 @dataclass
@@ -138,6 +112,20 @@ class Symlink:
         os.symlink(src=target, dst=link)
 
 
+@dataclass
+class Template:
+    name: str
+    target: str
+    mode: str = '0644'
+    content: str = ''
+
+    def run(self):
+        target = expand(self.target)
+        template = tasks.config.Template(dest=target, mode=self.mode)
+        if update_op := maybe_template_file(template, output=self.content):
+            do_template_file(update_op)
+
+
 STEP_CLASSES = {
     'cmd': Cmd,
     'download': Download,
@@ -145,6 +133,7 @@ STEP_CLASSES = {
     'quicklisp': Quicklisp,
     'rename': Rename,
     'symlink': Symlink,
+    'template': Template,
 }
 
 

@@ -5,22 +5,21 @@ from pyinfra.api import FunctionCommand, operation
 
 from tasks.config import PipPkg
 from tasks.context import expand
-from tasks.recipes import run_command
-
-VIRTUALENV_ENV_KEY = 'VIRTUAL_ENV'
+from tasks.ops import run_command
 
 
 def install_package(pkg, virtualenv_base):
-    virtualenv = f'{virtualenv_base}/{pkg.name}'
-    env = {VIRTUALENV_ENV_KEY: virtualenv}
+    virtualenv = f"{virtualenv_base}/{pkg.name}"
 
     if not os.path.exists(virtualenv):
-        run_command(f'virtualenv {virtualenv}')
+        run_command(f"virtualenv {virtualenv}")
 
-    run_command(f'pip install {pkg.name}', env=env)
+    pip = f"{virtualenv}/bin/pip"
+
+    run_command(f"{pip} install {pkg.name}")
 
     for req in pkg.reqs:
-        run_command(f'pip install {req}', env=env)
+        run_command(f"{pip} install {req}")
 
 
 @operation

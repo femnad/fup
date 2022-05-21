@@ -41,3 +41,10 @@ class IsLaptop(FactBase):
 
     def process(self, output):
         return not output[0].endswith('rate information unavailable')
+
+
+class IsFedora(FactBase):
+    command = 'cat /etc/os-release'
+
+    def process(self, output):
+        return output[2].split('=')[-1] == 'fedora'

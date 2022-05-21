@@ -19,18 +19,30 @@ class UnlessFile:
         return not os.path.exists(ls_target)
 
 
+def contains(output, needle):
+    for line in output.split('\n'):
+        if needle in line:
+            return True
+
+    return False
+
+
 @dataclass
 class UnlessCmd:
     cmd: str
     post: str = None
 
+    POST_FNS = {
+        'head': lambda x, p: x.split('\n')[p],
+        'split': lambda x, p: x.split()[p],
+        'contains': contains,
+    }
+
     def get_fn(self, operation: str, parameter: int):
-        if operation == 'head':
-            return lambda x: x.split('\n')[parameter]
-        elif operation == 'split':
-            return lambda x: x.split()[parameter]
-        else:
+        if operation not in self.POST_FNS:
             raise Exception(f'Unknown operation {operation}')
+
+        return lambda x: self.POST_FNS[operation](x, parameter)
 
     def get_version(self, output, version_fn):
         ops = []

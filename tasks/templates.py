@@ -10,7 +10,7 @@ from pyinfra.api.util import get_template
 
 from tasks.config import Template
 from tasks.context import expand
-from tasks.recipes import run_command
+from tasks.ops import run_command
 
 HASH_READ_BUFFER = 8192
 TEMPLATED_FILES_SUFFIX = 'files'
@@ -111,10 +111,11 @@ def resolve_context(context: Dict):
     return resolved
 
 
-def maybe_template_file(template: Template, context={}) -> Union[None, UpdateOp]:
+def maybe_template_file(template: Template, context={}, output=None) -> Union[None, UpdateOp]:
     context = resolve_context(template.context)
     template.context = context
-    output = render_template(template)
+    if not output:
+        output = render_template(template)
     dest = template.dest
 
     prev_hash = get_file_hash(dest)

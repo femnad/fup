@@ -3,8 +3,7 @@ from typing import List
 
 from pyinfra.api import FunctionCommand, operation
 
-from tasks.recipes import run_command
-#from tasks.github_keys import write_lines
+from tasks.ops import run_command
 
 KNOWN_HOSTS = os.path.expanduser('~/.ssh/known_hosts')
 
