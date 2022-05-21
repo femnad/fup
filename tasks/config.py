@@ -27,6 +27,11 @@ class Archive:
 
 
 @dataclass
+class Whenable:
+    when: str = ''
+
+
+@dataclass
 class CargoCrate:
     name: str
     unless: Union[tasks.unless.UnlessCmd, tasks.unless.UnlessFile] = None
@@ -42,8 +47,8 @@ class GoPkg:
 
 
 @dataclass
-class Template:
-    dest: str
+class Template(Whenable):
+    dest: str = ''
     src: str = ''
     mode: str = '0644'
     context: Dict[str, str] = field(default_factory=dict)
@@ -74,11 +79,6 @@ class Service:
 @dataclass
 class GithubUserKeys:
     user: str = ''
-
-
-@dataclass
-class Whenable:
-    when: str = ''
 
 
 @dataclass

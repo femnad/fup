@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from hashlib import sha1
 import os
-import socket
 import uuid
 from typing import Dict, Union
 
@@ -11,6 +10,7 @@ from pyinfra.api.util import get_template
 from tasks.config import Template
 from tasks.context import expand
 from tasks.ops import run_command
+import tasks.when
 
 HASH_READ_BUFFER = 8192
 TEMPLATED_FILES_SUFFIX = 'files'
@@ -147,5 +147,9 @@ def template_file(template: Template):
 def run(config):
     for template in config.templates:
         template = Template(**template)
+
+        if not tasks.when.should_run(template.when):
+            continue
+
         template.dest = os.path.expanduser(template.dest)
         template_file(template)

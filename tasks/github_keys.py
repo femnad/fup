@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 
@@ -15,6 +16,17 @@ def write_lines(file, lines):
             f.write(f'{line}\n')
 
 
+def get_missing_keys(missing_keys):
+    output = copy.copy(missing_keys)
+
+    with open(AUTHORIZED_KEYS_FILE, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line in missing_keys:
+                output.remove(line)
+
+    return output
+
 @operation
 def ensure_github_user_keys(cfg: GithubUserKeys):
     if not cfg.user:
@@ -24,6 +36,11 @@ def ensure_github_user_keys(cfg: GithubUserKeys):
     keys = tasks.http.http_request(url, 'GET', output_file=None)
     keys = json.loads(keys)
     missing_keys = set([key['key'] for key in keys])
+
+    if not os.path.exists(AUTHORIZED_KEYS_FILE):
+        missing_keys = get_missing_keys(missing_keys)
+    else:
+        missing_keys = keys()
 
     with open(AUTHORIZED_KEYS_FILE, 'r') as f:
         for line in f:
