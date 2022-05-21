@@ -23,7 +23,7 @@ class SshPullReady(FactBase):
 
 
 class NeovimReady(FactBase):
-    command = 'find ~/.config/nvim/plugged'
+    command = 'find ~/.config/nvim/plugged || true'
 
     def process(self, output):
         return len(output) > 0
