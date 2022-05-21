@@ -39,14 +39,6 @@ def ensure_github_user_keys(cfg: GithubUserKeys):
 
     if os.path.exists(AUTHORIZED_KEYS_FILE):
         missing_keys = get_missing_keys(missing_keys)
-    else:
-        missing_keys = keys()
-
-    with open(AUTHORIZED_KEYS_FILE, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if line in missing_keys:
-                missing_keys.remove(line)
 
     if not missing_keys:
         return
