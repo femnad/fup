@@ -37,9 +37,12 @@ class InTmux(FactBase):
 
 
 class IsLaptop(FactBase):
-    command = 'acpi'
+    command = 'acpi || true'
 
     def process(self, output):
+        if not output:
+            return False
+
         return not output[0].endswith('rate information unavailable')
 
 
