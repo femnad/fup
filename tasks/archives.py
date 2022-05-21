@@ -31,7 +31,9 @@ EXTRACTORS = {
 
 
 def get_extractor(url):
+    url = tasks.http.resolve_redirect(url, 'GET')
     file_type = mimetypes.guess_type(url)
+
     if file_type is None or file_type[0] is None:
         raise Exception(f'Cannot determine file type for {url}')
 

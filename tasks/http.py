@@ -22,7 +22,7 @@ def get_connection(parsed_url: urllib.parse.ParseResult):
     return http.client.HTTPConnection(parsed_url.netloc)
 
 
-def http_request(url, method, output_file=None):
+def get_response(url, method):
     parsed_url = urllib.parse.urlparse(url)
     conn = get_connection(parsed_url)
 
@@ -33,12 +33,23 @@ def http_request(url, method, output_file=None):
         path += f'#{parsed_url.fragment}'
 
     conn.request(method, path, headers={'User-Agent': USER_AGENT})
-    resp = conn.getresponse()
+    return conn.getresponse()
+
+
+def resolve_redirect(url, method):
+    resp = get_response(url, method)
+
+    if resp.status == 302:
+        return resp.headers['Location']
+    return url
+
+
+def http_request(url, method, output_file=None):
+    resp = get_response(url, method)
 
     if resp.status == 302:
         redirect_url = resp.headers['Location']
-        http_request(redirect_url, method, output_file)
-        return
+        return http_request(redirect_url, method, output_file)
     elif resp.status != 200:
         body = resp.read().decode('utf-8')
         raise Exception(f'Error during HTTP request to {url}: {resp.status} {body}')
