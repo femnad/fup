@@ -6,9 +6,10 @@ from typing import Dict, List, Union
 from pyinfra.api import FunctionCommand, operation
 from pyinfra import host
 
-import facts.base
-from tasks.unless import UnlessCmd, UnlessFile
 import tasks.archives
+import facts.base
+from tasks.context import expand
+from tasks.unless import UnlessCmd, UnlessFile
 
 
 @dataclass
@@ -114,6 +115,17 @@ class Git:
             return
         run_command(f'git clone {self.repo} {target}')
 
+@dataclass
+class Symlink:
+    name: str
+    link: str
+    target: str
+
+    def run(self):
+        link = expand(self.link)
+        target = expand(self.target)
+        os.symlink(src=target, dst=link)
+
 
 STEP_CLASSES = {Download, Cmd, Rename, Quicklisp, Git}
 
@@ -143,9 +155,7 @@ def do_run_recipe(steps, settings):
         s.run()
 
 
-def should_run(recipe):
-    when = recipe.when
-
+def should_run(when):
     if not when:
         return True
 
@@ -162,7 +172,7 @@ def should_run(recipe):
 
 @operation
 def run_recipe(recipe, settings):
-    if not should_run(recipe):
+    if not should_run(recipe.when):
         return
 
     unless = tasks.archives.get_unless(recipe.unless)

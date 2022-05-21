@@ -27,3 +27,17 @@ class NeovimReady(FactBase):
 
     def process(self, output):
         return len(output) > 0
+
+
+class InTmux(FactBase):
+    command = 'echo $TMUX'
+
+    def process(self, output):
+        return output[0].startswith('/tmp/tmux')
+
+
+class IsLaptop(FactBase):
+    command = 'acpi'
+
+    def process(self, output):
+        return not output[0].endswith('rate information unavailable')

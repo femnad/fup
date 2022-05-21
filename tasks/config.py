@@ -64,6 +64,7 @@ class Service:
     enable: bool = True
     unit: ServiceUnit = None
     context: Dict[str, str] = field(default_factory=dict)
+    when: str = ''
 
 
 @dataclass

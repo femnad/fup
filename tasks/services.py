@@ -6,7 +6,7 @@ from pyinfra.api import FunctionCommand, StringCommand, operation
 from pyinfra.operations import files
 
 from tasks.config import Service, ServiceUnit, Template
-from tasks.recipes import run_command
+from tasks.recipes import run_command, should_run
 from tasks.templates import do_template_file, maybe_template_file
 
 SERVICE_FILE_MODE = '0644'
@@ -78,6 +78,9 @@ def init_service(service: Service):
 @operation
 def init_services(services: List[Service]):
     for service in services:
+        if not should_run(service.when):
+            continue
+
         yield from init_service(service)
 
 
