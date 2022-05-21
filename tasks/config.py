@@ -77,8 +77,13 @@ class GithubUserKeys:
 
 
 @dataclass
-class Repo:
-    name: str
+class Whenable:
+    when: str = ''
+
+
+@dataclass
+class Repo(Whenable):
+    name: str = ''
     host: str = 'github.com'
 
 

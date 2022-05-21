@@ -3,9 +3,7 @@ import os
 from typing import Dict, List, Union
 
 from pyinfra.api import FunctionCommand, operation
-from pyinfra import host
 
-import facts.base
 import tasks.archives
 import tasks.config
 from tasks.context import expand
@@ -158,24 +156,9 @@ def do_run_recipe(steps, settings):
         s.run()
 
 
-def should_run(when):
-    if not when:
-        return True
-
-    negate = False
-    if ' ' in when and when.startswith('not '):
-        negate = True
-        when = when.split()[-1]
-
-    fact_class = ''.join([w.capitalize() for w in when.split('-')])
-    result = host.get_fact(getattr(facts.base, fact_class))
-
-    return not result if negate else result
-
-
 @operation
 def run_recipe(recipe, settings):
-    if not should_run(recipe.when):
+    if not tasks.when.should_run(recipe.when):
         return
 
     unless = tasks.archives.get_unless(recipe.unless)
