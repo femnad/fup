@@ -1,5 +1,11 @@
 import os
 import subprocess
+from typing import List
+
+
+def run_commands(cmds: List[str], pwd=None, sudo=False, raise_on_error=True, env=None):
+    for cmd in cmds:
+        run_command(cmd, pwd, sudo, raise_on_error, env)
 
 
 def run_command(cmd, pwd=None, sudo=False, raise_on_error=True, env=None):

@@ -9,7 +9,7 @@ from pyinfra.api.util import get_template
 
 from tasks.config import Template
 from tasks.context import expand
-from tasks.ops import run_command
+import tasks.ops
 import tasks.when
 
 HASH_READ_BUFFER = 8192
@@ -53,18 +53,19 @@ def get_mode(filename):
 
 
 def update_mode(filename, mode, should_sudo):
-    run_command(f'chmod {mode} {filename}', sudo=should_sudo)
+    tasks.ops.run_command(f'chmod {mode} {filename}', sudo=should_sudo)
 
 
 def update_file(temp_file, output, dest, should_sudo):
     with open(temp_file, 'w') as f:
         f.write(output)
 
-    run_command(f'cp {temp_file} {dest}', sudo=should_sudo)
+    dest_dir = os.path.dirname(dest)
+    tasks.ops.run_commands([f'mkdir -p {dest_dir}', f'cp {temp_file} {dest}'], sudo=should_sudo)
 
 
 def remove_file(filename, should_sudo):
-    run_command(f'rm {filename}', sudo=should_sudo)
+    tasks.ops.run_command(f'rm {filename}', sudo=should_sudo)
 
 
 def do_template_file(update_op: UpdateOp):
