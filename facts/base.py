@@ -16,7 +16,7 @@ class GitReady(FactBase):
 
 class SshPullReady(FactBase):
 
-    command = 'pass'
+    command = 'find ~/.password-store || true'
 
     def process(self, output):
         return len(output) > 0
