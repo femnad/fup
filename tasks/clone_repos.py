@@ -19,7 +19,7 @@ def get_clone_url(repo: Repo, settings: Settings):
     repo_owner, _ = repo.name.split('/')[-2:]
 
     if repo_owner == settings.github_user:
-        return 'git@{repo.host}/{repo.name}.git'
+        return f'git@{repo.host}:{repo.name}.git'
 
     return f'https://{repo.host}/{repo.name}.git'
 
