@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 import yaml
 import os
-import re
 from typing import List, Dict, Union
 
 import tasks.unless
@@ -117,6 +116,7 @@ class Config:
     services: List[Service] = field(default_factory=list)
     settings: Dict = field(default_factory=dict)
     templates: List[Template] = field(default_factory=list)
+    unwanted_packages: Dict[str, List[str]] = field(default_factory=dict)
 
 
 def get_config():
@@ -125,15 +125,3 @@ def get_config():
         cfg = Config(**cfg_dict)
         cfg.settings = Settings(**cfg.settings)
         return cfg
-
-
-def get_packages(cfg, current_dist_id):
-    package_set = set()
-    for dist_id, packages in cfg.packages.items():
-        is_re = re.escape(dist_id) != dist_id
-        if is_re and (_ := re.match(dist_id, current_dist_id)):
-            package_set.update(packages)
-        elif dist_id == current_dist_id:
-            package_set.update(packages)
-
-    return sorted(package_set)

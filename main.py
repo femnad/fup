@@ -17,10 +17,10 @@ config = tasks.config.get_config()
 
 tasks.preflight.run(config)
 
-tasks.archives.run(config)
 tasks.pkg.run(config)
 
 tasks.accept_host_keys.run(config)
+tasks.archives.run(config)
 tasks.cargo.run(config)
 tasks.clone_repos.run(config)
 tasks.ensure_lines.run(config)
