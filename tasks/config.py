@@ -117,6 +117,7 @@ class Config:
     settings: Dict = field(default_factory=dict)
     templates: List[Template] = field(default_factory=list)
     unwanted_packages: Dict[str, List[str]] = field(default_factory=dict)
+    unwanted_dirs: List[str] = field(default_factory=list)
 
 
 def get_config():

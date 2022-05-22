@@ -12,6 +12,7 @@ import tasks.preflight
 import tasks.recipes
 import tasks.services
 import tasks.templates
+import tasks.unwanted_dirs
 
 config = tasks.config.get_config()
 
@@ -30,3 +31,4 @@ tasks.pip.run(config)
 tasks.recipes.run(config)
 tasks.services.run(config)
 tasks.templates.run(config)
+tasks.unwanted_dirs.run(config)
