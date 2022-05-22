@@ -53,7 +53,7 @@ class Cmd:
             self.sh(self.cmd)
             return
 
-        for cmd in self.cmd.split('\n'):
+        for cmd in self.cmd.strip().split('\n'):
             self.sh(cmd)
 
 

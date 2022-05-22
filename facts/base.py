@@ -46,8 +46,20 @@ class IsLaptop(FactBase):
         return not output[0].endswith('rate information unavailable')
 
 
-class IsFedora(FactBase):
+class IsOS(FactBase):
     command = 'cat /etc/os-release'
 
     def process(self, output):
-        return output[2].split('=')[-1] == 'fedora'
+        for l in output:
+            if l == f'ID={self.os}':
+                return True
+
+        return False
+
+
+class IsFedora(IsOS):
+    os = 'fedora'
+
+
+class IsUbuntu(IsOS):
+    os = 'ubuntu'
