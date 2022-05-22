@@ -14,6 +14,15 @@ class GitReady(FactBase):
         return len(output) > 0
 
 
+class SshReady(FactBase):
+
+    hostname = socket.gethostname()
+    command = f'ssh-add -l | grep {hostname} || true'
+
+    def process(self, output):
+        return len(output) > 0
+
+
 class SshPullReady(FactBase):
 
     command = 'find ~/.password-store || true'

@@ -12,6 +12,10 @@ INSTALLERS = {
 }
 
 
+def get_dist_id():
+    return host.get_fact(LinuxDistribution)['release_meta']['ID']
+
+
 def get_packages(current_dist_id, packages):
     package_set = set()
     for dist_id, packages in packages.items():
@@ -34,7 +38,7 @@ def get_installer(dist_id):
 
 
 def run(cfg: tasks.config.Config):
-    dist_id = host.get_fact(LinuxDistribution)['release_meta']['ID']
+    dist_id = get_dist_id()
 
     pkgs = get_packages(dist_id, cfg.packages)
     unwanted_pkgs = get_packages(dist_id, cfg.unwanted_packages)
