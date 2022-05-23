@@ -37,7 +37,11 @@ def get_clone_url(repo: tasks.config.Repo, settings: tasks.config.Settings):
 
 
 def maybe_add_remote(path, remote, url):
+    if tasks.ops.run_command(f'git remote get-url {remote}', pwd=path, raise_on_error=False):
+        return
+
     tasks.ops.run_command(f'git remote add {remote} {url}', pwd=path)
+
 
 @operation
 def clone_repos(repos: List[tasks.config.Repo], settings: tasks.config.Settings):
