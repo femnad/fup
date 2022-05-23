@@ -3,10 +3,11 @@ from typing import List
 
 from pyinfra import host
 from pyinfra.operations import git
-from pyinfra.api import operation
+from pyinfra.api import operation, FunctionCommand
 
 import facts.base
 import tasks.config
+import tasks.ops
 import tasks.when
 
 
@@ -35,6 +36,9 @@ def get_clone_url(repo: tasks.config.Repo, settings: tasks.config.Settings):
     return f'https://{repo.host}/{repo.name}.git'
 
 
+def maybe_add_remote(path, remote, url):
+    tasks.ops.run_command(f'git remote add {remote} {url}', pwd=path)
+
 @operation
 def clone_repos(repos: List[tasks.config.Repo], settings: tasks.config.Settings):
     for repo in repos:
@@ -47,7 +51,13 @@ def clone_repos(repos: List[tasks.config.Repo], settings: tasks.config.Settings)
         clone_dir = get_clone_dir(repo, settings)
         url = get_clone_url(repo, settings)
 
-        yield from git.repo(src=url, dest=clone_dir)
+        yield from git.repo(src=url,
+                            dest=clone_dir,
+                            update_submodules=repo.submodule,
+                            recursive_submodules=repo.recursive_submodule)
+
+        for remote, url in repo.remotes.items():
+            yield FunctionCommand(maybe_add_remote, [clone_dir, remote, url], {})
 
 
 def run(config):
