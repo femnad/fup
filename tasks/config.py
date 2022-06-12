@@ -1,9 +1,16 @@
+import argparse
 from dataclasses import dataclass, field
 import yaml
 import os
+import re
+import sys
 from typing import List, Dict, Union
 
+import tasks.http
 import tasks.unless
+
+DEFAULT_CONFIG_FILE = '~/.config/fup/fup.yml'
+CONFIG_FILE_ENV = 'FUP_CONFIG_FILE'
 
 
 @dataclass
@@ -125,8 +132,25 @@ class Config:
     unwanted_dirs: List[str] = field(default_factory=list)
 
 
+def get_config_file() -> str:
+    return os.getenv(CONFIG_FILE_ENV, DEFAULT_CONFIG_FILE)
+
+
+def read_remote_config(config_file: str):
+    return tasks.http.http_request(config_file, 'GET', return_response_object=True)
+
+
+def get_config_body():
+    config_file = get_config_file()
+
+    if re.match('^http(s)://.*', config_file):
+        return read_remote_config(config_file)
+
+    return open(os.path.realpath(config_file))
+
+
 def get_config():
-    with open(os.path.expanduser('~/.config/fup/fup.yml')) as f:
+    with get_config_body() as f:
         cfg_dict = yaml.load(f, Loader=yaml.SafeLoader)
         cfg = Config(**cfg_dict)
         cfg.settings = Settings(**cfg.settings)

@@ -44,7 +44,7 @@ def resolve_redirect(url, method):
     return url
 
 
-def http_request(url, method, output_file=None):
+def http_request(url, method, output_file=None, return_response_object=False):
     resp = get_response(url, method)
 
     if resp.status == 302:
@@ -53,6 +53,9 @@ def http_request(url, method, output_file=None):
     elif resp.status != 200:
         body = resp.read().decode('utf-8')
         raise Exception(f'Error during HTTP request to {url}: {resp.status} {body}')
+
+    if return_response_object:
+        return resp
 
     if output_file:
         output_dir = os.path.dirname(output_file)
