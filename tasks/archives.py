@@ -9,6 +9,7 @@ from pyinfra.api import FunctionCommand, operation
 import tasks.config
 import tasks.context
 import tasks.http
+import tasks.ops
 import tasks.unless
 
 UNLESS_TYPES = [tasks.unless.UnlessCmd, tasks.unless.UnlessFile]
@@ -54,14 +55,21 @@ def do_extract_archive(archive: tasks.config.Archive, dest):
     extractor_fn = get_extractor(url)
     extractor_fn(tmpfile, dest)
 
-    if archive:
-        pass
-
     os.unlink(tmpfile)
+
+
+def maybe_execute_after(archive, extract_dir):
+    if not archive.execute_after:
+        return
+
+    cmds = archive.execute_after.strip().split('\n')
+    cmds = [tasks.context.expand(c, {'version': archive.version}) for c in cmds]
+    tasks.ops.run_commands(cmds, pwd=extract_dir)
 
 
 def extract_archive(archive, extract_dir):
     do_extract_archive(archive, extract_dir)
+    maybe_execute_after(archive, extract_dir)
 
 
 def do_get_unless(unless, cls):

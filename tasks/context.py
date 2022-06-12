@@ -26,6 +26,11 @@ def expand(s: str, context: Dict[str, str] = {}):
 
     hostname = socket.gethostname()
 
+    for k, v in config.settings.__dict__.items():
+        if not isinstance(v, str):
+            continue
+        updated_context[k] = os.path.expanduser(v)
+
     for fact, host_pairs in config.settings.host_facts.items():
         default = host_pairs[DEFAULT_KEY]
         updated_context[fact] = host_pairs.get(hostname, default)
@@ -46,6 +51,9 @@ def expand(s: str, context: Dict[str, str] = {}):
             cur_var += c
 
     for lookup in lookups:
+        if not lookup:
+            continue
+
         if lookup in updated_context:
             value = updated_context[lookup]
             varmap[lookup] = value

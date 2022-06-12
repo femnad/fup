@@ -20,6 +20,7 @@ class Settings:
 class Archive:
     url: str
     binary: str = ''
+    execute_after: str = ''
     symlink: str = ''
     unless: Union[tasks.unless.UnlessCmd, tasks.unless.UnlessFile] = None
     version: str = ''
