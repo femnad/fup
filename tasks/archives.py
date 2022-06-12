@@ -15,13 +15,25 @@ import tasks.unless
 UNLESS_TYPES = [tasks.unless.UnlessCmd, tasks.unless.UnlessFile]
 
 
-def extract_tar(f, dest):
-    with tarfile.open(f) as tf:
+def do_set_permissions(file_iterator):
+    for f in file_iterator:
+        if f.isdir():
+            f.mode = 0o755
+        elif f.isfile():
+            f.mode = 0o644
+
+
+def extract_tar(file_name, dest, set_permissions=False):
+    with tarfile.open(file_name) as tf:
+        if set_permissions:
+            do_set_permissions(tf)
         tf.extractall(dest)
 
 
-def extract_zip(f, dest):
+def extract_zip(f, dest, set_permissions=False):
     with zipfile.ZipFile(f) as zf:
+        if set_permissions:
+            do_set_permissions(zf)
         zf.extractall(dest)
 
 
@@ -53,7 +65,7 @@ def do_extract_archive(archive: tasks.config.Archive, dest):
     tasks.http.download(url, tmpfile)
 
     extractor_fn = get_extractor(url)
-    extractor_fn(tmpfile, dest)
+    extractor_fn(tmpfile, dest, archive.set_permissions)
 
     os.unlink(tmpfile)
 
