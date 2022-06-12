@@ -9,7 +9,7 @@ from typing import List, Dict, Union
 import tasks.http
 import tasks.unless
 
-DEFAULT_CONFIG_FILE = '~/.config/fup/fup.yml'
+DEFAULT_CONFIG_FILE = os.path.expanduser('~/.config/fup/fup.yml')
 CONFIG_FILE_ENV = 'FUP_CONFIG_FILE'
 
 
