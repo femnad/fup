@@ -93,6 +93,7 @@ class GithubUserKeys:
 class Repo(Whenable):
     name: str = ''
     host: str = 'github.com'
+    ref: str = ''
     submodule: bool = False
     recursive_submodule: bool = False
     remotes: Dict = field(default_factory=dict)

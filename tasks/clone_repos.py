@@ -43,6 +43,10 @@ def maybe_add_remote(path, remote, url):
     tasks.ops.run_command(f'git remote add {remote} {url}', pwd=path)
 
 
+def checkout_ref(path, ref):
+    tasks.ops.run_command(f'git checkout {ref}', pwd=path)
+
+
 @operation
 def clone_repos(repos: List[tasks.config.Repo], settings: tasks.config.Settings):
     for repo in repos:
@@ -59,6 +63,9 @@ def clone_repos(repos: List[tasks.config.Repo], settings: tasks.config.Settings)
                             dest=clone_dir,
                             update_submodules=repo.submodule,
                             recursive_submodules=repo.recursive_submodule)
+
+        if repo.ref:
+            yield FunctionCommand(checkout_ref, [clone_dir, repo.ref], {})
 
         for remote, url in repo.remotes.items():
             yield FunctionCommand(maybe_add_remote, [clone_dir, remote, url], {})
