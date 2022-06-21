@@ -1,12 +1,12 @@
 [Unit]
 Description={{ description }}
-{%- if before is defined %}
+{%- if before %}
 Before={{ before }}.target
 {%- endif %}
 
 [Service]
 ExecStart={{ exec }}
-{%- if type is defined %}
+{%- if type %}
 Type={{ type }}
 {%- endif %}
 {%- for env_pair in environment %}

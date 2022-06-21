@@ -78,7 +78,7 @@ class NvimVersionLt7(FactBase):
     command = 'nvim --version'
 
     def process(self, output):
-        first = output.split('\n')[0]
+        first = output[0]
         version = first.split()[-1]
-        minor_version = version.split().split('.')[1]
+        minor_version = version.split()[-1].split('.')[1]
         return int(minor_version) < 7
