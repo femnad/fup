@@ -96,7 +96,7 @@ def should_extract_cmd(archive: tasks.config.Archive, _, unless: tasks.unless.Un
 
 
 def should_extract_ls(archive: tasks.config.Archive, settings, unless: tasks.unless.UnlessFile):
-    context = {k: v for k, v in archive.__dict__.items() if isinstance(v, str)}
+    context = {k: v for k, v in archive.__dict__.items() if type(v) in [int, float, str]}
     context.update(settings.__dict__)
     return unless.should_proceed(context)
 

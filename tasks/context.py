@@ -27,7 +27,7 @@ def expand(s: str, context: Dict[str, str] = {}):
     hostname = socket.gethostname()
 
     for k, v in config.settings.__dict__.items():
-        if not isinstance(v, str):
+        if type(v) not in [int, float, str]:
             continue
         updated_context[k] = os.path.expanduser(v)
 
