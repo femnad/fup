@@ -11,6 +11,7 @@ import tasks.context
 import tasks.http
 import tasks.ops
 import tasks.unless
+import tasks.when
 
 UNLESS_TYPES = [tasks.unless.UnlessCmd, tasks.unless.UnlessFile]
 
@@ -61,6 +62,9 @@ def get_extractor(url):
 
 def do_extract_archive(archive: tasks.config.Archive, dest):
     url = archive.url
+    if not url:
+        raise Exception(f'No URL given for archive {archive}')
+
     tmpfile = f'/tmp/{uuid.uuid4()}'
     tasks.http.download(url, tmpfile)
 
@@ -161,6 +165,9 @@ def extract(archive: tasks.config.Archive, settings: tasks.config.Settings, extr
     bin_file = None
     archive = tasks.config.Archive(**archive)
     archive = expand_archive(archive)
+
+    if not tasks.when.should_run(archive.when):
+        return
 
     if not should_extract(archive, settings):
         return

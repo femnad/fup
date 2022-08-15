@@ -24,19 +24,19 @@ class Settings:
 
 
 @dataclass
-class Archive:
-    url: str
+class Whenable:
+    when: str = ''
+
+
+@dataclass
+class Archive(Whenable):
+    url: str = ''
     binary: str = ''
     execute_after: str = ''
     set_permissions: bool = False
     symlink: str = ''
     unless: Union[tasks.unless.UnlessCmd, tasks.unless.UnlessFile] = None
     version: str = ''
-
-
-@dataclass
-class Whenable:
-    when: str = ''
 
 
 @dataclass
