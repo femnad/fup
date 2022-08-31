@@ -34,6 +34,7 @@ class UnlessCmd:
     post: str = None
 
     POST_FNS = {
+        'cut': lambda x, p: x[int(p):],
         'head': lambda x, p: x.split('\n')[int(p)],
         'split': lambda x, p: x.split()[int(p)],
         'contains': contains,
