@@ -28,6 +28,14 @@ def contains(output, needle):
     return False
 
 
+def split(s, index):
+    split = s.split()
+    index = int(index)
+    if len(split) < index + 1:
+        raise Exception(f"Invalid split for string {s} and index {index}")
+    return split[index]
+
+
 @dataclass
 class UnlessCmd:
     cmd: str
@@ -36,7 +44,7 @@ class UnlessCmd:
     POST_FNS = {
         'cut': lambda x, p: x[int(p):],
         'head': lambda x, p: x.split('\n')[int(p)],
-        'split': lambda x, p: x.split()[int(p)],
+        'split': split,
         'contains': contains,
         'match': lambda x, p: re.match(x, p),
     }
