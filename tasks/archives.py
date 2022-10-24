@@ -177,6 +177,9 @@ def extract(archive: tasks.config.Archive, settings: tasks.config.Settings, extr
         bin_file = f'{extract_dir}/{archive.binary}'
         archive.symlink = [f'{archive.binary}/{archive.binary}']
 
+    if archive.target:
+        extract_dir = os.path.join(extract_dir, archive.target)
+
     yield FunctionCommand(extract_archive, [archive, extract_dir], {})
     if archive.symlink:
         yield FunctionCommand(symlink_archive, [archive, settings.archive_dir], {})

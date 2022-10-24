@@ -35,6 +35,7 @@ class Archive(Whenable):
     execute_after: str = ''
     set_permissions: bool = False
     symlink: str = ''
+    target: str = ''
     unless: Union[tasks.unless.UnlessCmd, tasks.unless.UnlessFile] = None
     version: str = ''
 
