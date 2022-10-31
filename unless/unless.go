@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -12,9 +13,20 @@ import (
 
 func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
 	tokens := strings.Split(s, separator)
-	if i > len(tokens) {
+	lenTokens := len(tokens)
+
+	if i > lenTokens {
 		return "", fmt.Errorf("invalid %s index for input %s and index %d", fnName, s, i)
 	}
+
+	if i < 0 {
+		iAbs := int(math.Abs(float64(i)))
+		if iAbs > lenTokens-1 {
+			return "", fmt.Errorf("invalid negative %s index for input %s and index %d", fnName, s, i)
+		}
+		i = lenTokens - iAbs
+	}
+
 	return tokens[i], nil
 }
 

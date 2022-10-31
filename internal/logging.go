@@ -9,7 +9,7 @@ var Log = logging.MustGetLogger("fup")
 
 func InitLogging(level int) {
 	format := logging.MustStringFormatter(
-		`%{color}%{time:2006-01-02 15:04:05} %{level:.5s} %{message} %{color:reset}`,
+		`%{color}%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message} %{color:reset}`,
 	)
 	stderrLogs := logging.NewLogBackend(os.Stderr, "", 0)
 	formattedLogs := logging.NewBackendFormatter(stderrLogs, format)

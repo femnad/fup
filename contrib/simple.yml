@@ -1,5 +1,5 @@
 settings:
-  archive_dir: ~/fup
+  extract_dir: ~/fup
   host_facts:
     lock_period:
       '*': 600
@@ -24,3 +24,10 @@ archives:
       post: 'head 0 | split 1 | cut 1'
     version: 1.3.3
     binary: terraform
+  - url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+    unless:
+      cmd: gcloud --version
+      post: 'head 0 | split -1'
+    version: 405.0.0
+    symlink:
+      - google-cloud-sdk/bin/gcloud

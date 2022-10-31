@@ -7,10 +7,11 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"path"
 )
 
 type Settings struct {
-	ArchiveDir string                    `yaml:"archive_dir"`
+	ExtractDir string                    `yaml:"extract_dir"`
 	HostFacts  map[string]map[string]any `yaml:"host_facts"`
 }
 
@@ -44,12 +45,21 @@ func (a Archive) String() string {
 	return a.Url
 }
 
-func (a Archive) ExpandArchive(property string) string {
+func (a Archive) expand(property string) string {
 	if property == "version" {
 		return a.Version
 	}
 
 	return ""
+}
+
+func (a Archive) ExpandURL() string {
+	return os.Expand(a.Url, a.expand)
+}
+
+func (a Archive) ShortURL() string {
+	_, basename := path.Split(a.ExpandURL())
+	return basename
 }
 
 type Config struct {

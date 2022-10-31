@@ -12,7 +12,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/femnad/fup/base"
 )
@@ -22,25 +21,21 @@ const (
 	dirMode    = 0755
 )
 
-func expandUser(path string) string {
-	return strings.Replace(path, "~", os.Getenv("HOME"), 1)
-}
-
 func processDownload(archive base.Archive, archiveDir string, processor func(closer io.ReadCloser, target string) error) error {
 	url := archive.Url
 	if url == "" {
 		return fmt.Errorf("no URL given for archive %v", archive)
 	}
 
-	url = os.Expand(url, archive.ExpandArchive)
-	internal.Log.Notice("Downloading %s", url)
+	url = archive.ExpandURL()
+	internal.Log.Noticef("Downloading %s", url)
 
 	respBody, err := remote.ReadResponseBody(url)
 	if err != nil {
 		return err
 	}
 
-	dirName := expandUser(archiveDir)
+	dirName := internal.ExpandUser(archiveDir)
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
 		return err
@@ -98,6 +93,7 @@ func untar(tarfile io.ReadCloser, target string) error {
 		if err = os.MkdirAll(dir, dirMode); err != nil {
 			return err
 		}
+
 		file, err := os.OpenFile(outputPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
 		if err != nil {
 			return err
