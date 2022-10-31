@@ -20,38 +20,43 @@ func (p Provisioner) Apply() {
 
 func createSymlink(symlink, extractDir string) {
 	symlinkTarget := path.Join(extractDir, symlink)
+	symlinkTarget = internal.ExpandUser(symlinkTarget)
+
 	_, symlinkBasename := path.Split(symlink)
 	symlinkName := path.Join(binPath, symlinkBasename)
-	err := os.Symlink(symlinkTarget, symlinkName)
+	symlinkName = internal.ExpandUser(symlinkName)
+
+	_, err := os.Stat(symlinkName)
+	if err == nil {
+		internal.Log.Debugf("Symlink %s already exists", symlinkName)
+		return
+	}
+
+	err = os.Symlink(symlinkTarget, symlinkName)
 	if err != nil {
 		internal.Log.Errorf("Error creating symlink target=%s, name=%s: %v", symlinkTarget, symlinkName, err)
 	}
 }
 
 func extractArchive(archive base.Archive, extractDir string) {
-	if !precheck.ShouldRun(archive.Unless, archive.Version) {
+	if precheck.ShouldSkip(archive.Unless, archive.Version) {
 		internal.Log.Infof("Skipping download: %s", archive.ShortURL())
 		return
 	}
 
 	err := Extract(archive, extractDir)
 	if err != nil {
-		internal.Log.Errorf("Error downloading archive %s: %v", archive.Url, err)
+		internal.Log.Errorf("Error downloading archive %s: %v", archive.ExpandURL(), err)
 		return
 	}
 
 	for _, symlink := range archive.Symlink {
-		createSymlink(extractDir, symlink)
+		createSymlink(symlink, extractDir)
 	}
 }
 
 func (p Provisioner) extractArchives() {
 	for _, archive := range p.Config.Archives {
-		if !precheck.ShouldRun(archive.Unless, archive.Version) {
-			internal.Log.Infof("Skipping download: %s", archive.ShortURL())
-			continue
-		}
-
 		extractArchive(archive, p.Config.Settings.ExtractDir)
 	}
 }

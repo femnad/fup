@@ -31,3 +31,9 @@ archives:
     version: 405.0.0
     symlink:
       - google-cloud-sdk/bin/gcloud
+  - url: https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64/en-US/firefox-${version}.tar.bz2
+    unless:
+      cmd: firefox --version
+    version: 106.0.3
+    symlink:
+      - firefox/firefox

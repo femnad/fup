@@ -9,7 +9,7 @@ import (
 )
 
 var args struct {
-	File     string `arg:"required,-f,--file"`
+	File     string `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
 	LogLevel int    `arg:"-l,--loglevel" default:"4"`
 }
 

@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -18,12 +19,12 @@ type Settings struct {
 type Unless struct {
 	Cmd  string `yaml:"cmd"`
 	Post string `yaml:"post"`
-	Ls   string `yaml:"ls"`
+	Stat string `yaml:"stat"`
 }
 
 func (u Unless) String() string {
-	if u.Ls != "" {
-		return fmt.Sprintf("ls %s", u.Ls)
+	if u.Stat != "" {
+		return fmt.Sprintf("ls %s", u.Stat)
 	}
 
 	s := u.Cmd
@@ -118,5 +119,6 @@ func decodeConfig(filename string) (Config, error) {
 }
 
 func ReadConfig(filename string) (Config, error) {
+	filename = internal.ExpandUser(filename)
 	return decodeConfig(filename)
 }

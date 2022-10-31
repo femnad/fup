@@ -2,6 +2,7 @@ package provision
 
 import (
 	"archive/tar"
+	"compress/bzip2"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/femnad/fup/base"
 )
@@ -21,13 +23,11 @@ const (
 	dirMode    = 0755
 )
 
-func processDownload(archive base.Archive, archiveDir string, processor func(closer io.ReadCloser, target string) error) error {
-	url := archive.Url
+func processDownload(archive base.Archive, archiveDir string, processor func(io.ReadCloser, base.Archive, string) error) error {
+	url := archive.ExpandURL()
 	if url == "" {
 		return fmt.Errorf("no URL given for archive %v", archive)
 	}
-
-	url = archive.ExpandURL()
 	internal.Log.Noticef("Downloading %s", url)
 
 	respBody, err := remote.ReadResponseBody(url)
@@ -45,7 +45,7 @@ func processDownload(archive base.Archive, archiveDir string, processor func(clo
 		dirName = filepath.Join(dirName, archive.Binary)
 	}
 
-	return processor(respBody, dirName)
+	return processor(respBody, archive, dirName)
 }
 
 func mkdirAll(dir string, mode os.FileMode) error {
@@ -57,8 +57,26 @@ func mkdirAll(dir string, mode os.FileMode) error {
 	return nil
 }
 
+func getReader(tarfile io.ReadCloser, archive base.Archive) (io.Reader, error) {
+	url := archive.ExpandURL()
+
+	if strings.HasSuffix(url, ".tar") {
+		return tarfile, nil
+	} else if strings.HasSuffix(url, ".tar.gz") {
+		gzipReader, err := gzip.NewReader(tarfile)
+		if err != nil {
+			return nil, err
+		}
+		return gzipReader, nil
+	} else if strings.HasSuffix(url, ".tar.bz2") {
+		return bzip2.NewReader(tarfile), nil
+	}
+
+	return nil, fmt.Errorf("unable to determine tar reader for URL %s", url)
+}
+
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(tarfile io.ReadCloser, target string) error {
+func untar(tarfile io.ReadCloser, archive base.Archive, target string) error {
 	defer func() {
 		err := tarfile.Close()
 		if err != nil {
@@ -66,12 +84,12 @@ func untar(tarfile io.ReadCloser, target string) error {
 		}
 	}()
 
-	gzipReader, err := gzip.NewReader(tarfile)
+	reader, err := getReader(tarfile, archive)
 	if err != nil {
 		return err
 	}
 
-	tarReader := tar.NewReader(gzipReader)
+	tarReader := tar.NewReader(reader)
 	for {
 		header, err := tarReader.Next()
 		if errors.Is(err, io.EOF) {
@@ -117,7 +135,7 @@ func Extract(archive base.Archive, archiveDir string) error {
 	return processDownload(archive, archiveDir, untar)
 }
 
-func download(closer io.ReadCloser, target string) error {
+func download(closer io.ReadCloser, archive base.Archive, target string) error {
 	f, err := os.Create(target)
 	if err != nil {
 		return fmt.Errorf("error creating target %s: %w", target, err)

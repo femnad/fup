@@ -66,6 +66,9 @@ func applyProc(proc, output string) (string, error) {
 	proc = strings.TrimSpace(proc)
 	postOutput := output
 	fnInvocation := strings.Split(proc, " ")
+	if len(fnInvocation) != 2 {
+		return postOutput, fmt.Errorf("error parsing postproc functions args for %s", proc)
+	}
 	fnName := fnInvocation[0]
 
 	fnArg, err := strconv.Atoi(fnInvocation[1])
@@ -102,11 +105,17 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 	return postOutput, nil
 }
 
-func shouldRun(unless base.Unless, version string) bool {
+func shouldSkip(unless base.Unless, version string) bool {
 	cmds := strings.Split(unless.Cmd, " ")
 	cmd := exec.Command(cmds[0], cmds[1:]...)
 	output, err := cmd.Output()
 	if err != nil {
+		// Command wasn't successfully run, should not skip.
+		return false
+	}
+
+	if unless.Post == "" {
+		// No post processor configuration but command has succeeded so should skip the operation.
 		return true
 	}
 
@@ -114,21 +123,23 @@ func shouldRun(unless base.Unless, version string) bool {
 	postProc, err = postProcOutput(unless, postProc)
 	if err != nil {
 		internal.Log.Errorf("Error running postproc function: %v", err)
-		return true
+		// Post processor function failed, best not to skip the operation.
+		return false
 	}
 
-	return postProc != version
+	return postProc == version
 }
 
-func ShouldRun(unless base.Unless, version string) bool {
-	if unless.Ls != "" {
-		_, err := os.Stat(unless.Ls)
-		return err != nil
+func ShouldSkip(unless base.Unless, version string) bool {
+	if unless.Stat != "" {
+		_, err := os.Stat(unless.Stat)
+		return err == nil
 	}
 
 	if unless.Cmd == "" {
-		return true
+		// No stat or command checks, should not skip.
+		return false
 	}
 
-	return shouldRun(unless, version)
+	return shouldSkip(unless, version)
 }
