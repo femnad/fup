@@ -5,9 +5,9 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/femnad/fup/remote"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,20 +20,6 @@ const (
 	bufferSize = 8192
 	dirMode    = 0755
 )
-
-var (
-	okStatuses = []int{http.StatusOK}
-)
-
-// Yoinked from https://gosamples.dev/generics-slice-contains/.
-func contains[T comparable](elems []T, needle T) bool {
-	for _, elem := range elems {
-		if needle == elem {
-			return true
-		}
-	}
-	return false
-}
 
 func expandUser(path string) string {
 	return strings.Replace(path, "~", os.Getenv("HOME"), 1)
@@ -48,21 +34,9 @@ func processDownload(archive base.Archive, archiveDir string, processor func(clo
 	url = os.Expand(url, archive.ExpandArchive)
 	log.Printf("Downloading %s", url)
 
-	cl := http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	respBody, err := remote.ReadResponseBody(url)
 	if err != nil {
 		return err
-	}
-
-	resp, err := cl.Do(req)
-	if err != nil {
-		return err
-	}
-
-	statusCode := resp.StatusCode
-	if !contains(okStatuses, statusCode) {
-		log.Printf("Skipping archive download, got response %d from URL %s", statusCode, url)
-		return nil
 	}
 
 	dirName := expandUser(archiveDir)
@@ -75,7 +49,7 @@ func processDownload(archive base.Archive, archiveDir string, processor func(clo
 		dirName = filepath.Join(dirName, archive.Binary)
 	}
 
-	return processor(resp.Body, dirName)
+	return processor(respBody, dirName)
 }
 
 func mkdirAll(dir string, mode os.FileMode) error {
