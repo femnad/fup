@@ -40,6 +40,10 @@ type Archive struct {
 	Binary  string   `yaml:"binary"`
 }
 
+func (a Archive) String() string {
+	return a.Url
+}
+
 func (a Archive) ExpandArchive(property string) string {
 	if property == "version" {
 		return a.Version

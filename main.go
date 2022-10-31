@@ -3,16 +3,19 @@ package main
 import (
 	"github.com/alexflint/go-arg"
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/provision"
 	"log"
 )
 
 var args struct {
-	File string `arg:"required,-f,--file"`
+	File     string `arg:"required,-f,--file"`
+	LogLevel int    `arg:"-l,--loglevel" default:"4"`
 }
 
 func main() {
 	arg.MustParse(&args)
+	internal.InitLogging(args.LogLevel)
 	config, err := base.ReadConfig(args.File)
 	if err != nil {
 		log.Fatalf("%v\n", err)

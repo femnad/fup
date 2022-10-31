@@ -3,7 +3,7 @@ package precheck
 import (
 	"fmt"
 	"github.com/femnad/fup/base"
-	"log"
+	"github.com/femnad/fup/internal"
 	"os"
 	"os/exec"
 	"strconv"
@@ -86,7 +86,7 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 		}
 	}
 
-	log.Printf("postproc returned `%s` for `%s`", postOutput, unless)
+	internal.Log.Debugf("postproc returned `%s` for `%s`", postOutput, unless)
 	return postOutput, nil
 }
 
@@ -101,7 +101,7 @@ func shouldRun(unless base.Unless, version string) bool {
 	postProc := strings.TrimSpace(string(output))
 	postProc, err = postProcOutput(unless, postProc)
 	if err != nil {
-		log.Printf("Error running postproc function: %v", err)
+		internal.Log.Errorf("Error running postproc function: %v", err)
 		return true
 	}
 

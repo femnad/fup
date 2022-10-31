@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/alexflint/go-arg v1.4.3
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	gopkg.in/yaml.v3 v3.0.1
 )
 

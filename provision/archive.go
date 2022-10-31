@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
 	"io"
 	"log"
@@ -32,7 +33,7 @@ func processDownload(archive base.Archive, archiveDir string, processor func(clo
 	}
 
 	url = os.Expand(url, archive.ExpandArchive)
-	log.Printf("Downloading %s", url)
+	internal.Log.Notice("Downloading %s", url)
 
 	respBody, err := remote.ReadResponseBody(url)
 	if err != nil {
