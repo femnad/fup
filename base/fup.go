@@ -1,6 +1,7 @@
 package base
 
 import (
+	"fmt"
 	"github.com/femnad/fup/remote"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -17,6 +18,18 @@ type Unless struct {
 	Cmd  string `yaml:"cmd"`
 	Post string `yaml:"post"`
 	Ls   string `yaml:"ls"`
+}
+
+func (u Unless) String() string {
+	if u.Ls != "" {
+		return fmt.Sprintf("ls %s", u.Ls)
+	}
+
+	s := u.Cmd
+	if u.Post != "" {
+		s += " | " + u.Post
+	}
+	return s
 }
 
 type Archive struct {
