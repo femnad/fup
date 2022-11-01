@@ -2,13 +2,14 @@ package precheck
 
 import (
 	"fmt"
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/internal"
 	"math"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/internal"
 )
 
 func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
@@ -105,7 +106,9 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 	return postOutput, nil
 }
 
-func shouldSkip(unless base.Unless, version string) bool {
+func shouldSkip(archive base.Archive) bool {
+	unless := archive.Unless
+
 	cmds := strings.Split(unless.Cmd, " ")
 	cmd := exec.Command(cmds[0], cmds[1:]...)
 	output, err := cmd.Output()
@@ -127,19 +130,33 @@ func shouldSkip(unless base.Unless, version string) bool {
 		return false
 	}
 
-	return postProc == version
+	return postProc == archive.Version
 }
 
-func ShouldSkip(unless base.Unless, version string) bool {
-	if unless.Stat != "" {
-		_, err := os.Stat(unless.Stat)
+func ShouldSkip(archive base.Archive, settings base.Settings) bool {
+	stat := archive.Unless.Stat
+	fmt.Println(stat)
+	stat = os.Expand(stat, func(s string) string {
+		if s == "extract_dir" {
+			extractDir := settings.ExtractDir
+			return internal.ExpandUser(extractDir)
+		}
+		if s == "version" {
+			return archive.Version
+		}
+		return s
+	})
+
+	if stat != "" {
+		internal.Log.Debugf("Checking existence of %s", stat)
+		_, err := os.Stat(stat)
 		return err == nil
 	}
 
-	if unless.Cmd == "" {
+	if archive.Unless.Cmd == "" {
 		// No stat or command checks, should not skip.
 		return false
 	}
 
-	return shouldSkip(unless, version)
+	return shouldSkip(archive)
 }

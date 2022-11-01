@@ -2,13 +2,15 @@ package base
 
 import (
 	"fmt"
-	"github.com/femnad/fup/internal"
-	"github.com/femnad/fup/remote"
-	"gopkg.in/yaml.v3"
 	"io"
 	"net/url"
 	"os"
 	"path"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/remote"
 )
 
 type Settings struct {
@@ -63,8 +65,17 @@ func (a Archive) ShortURL() string {
 	return basename
 }
 
+func (a Archive) ExpandSymlinks() []string {
+	var expanded []string
+	for _, symlink := range a.Symlink {
+		expanded = append(expanded, a.expand(symlink))
+	}
+
+	return expanded
+}
+
 type Config struct {
-	Settings *Settings `yaml:"settings"`
+	Settings Settings  `yaml:"settings"`
 	Archives []Archive `yaml:"archives"`
 }
 

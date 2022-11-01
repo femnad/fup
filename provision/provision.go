@@ -1,11 +1,12 @@
 package provision
 
 import (
+	"os"
+	"path"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/unless"
-	"os"
-	"path"
 )
 
 const binPath = "~/bin"
@@ -38,25 +39,25 @@ func createSymlink(symlink, extractDir string) {
 	}
 }
 
-func extractArchive(archive base.Archive, extractDir string) {
-	if precheck.ShouldSkip(archive.Unless, archive.Version) {
+func extractArchive(archive base.Archive, settings base.Settings) {
+	if precheck.ShouldSkip(archive, settings) {
 		internal.Log.Infof("Skipping download: %s", archive.ShortURL())
 		return
 	}
 
-	err := Extract(archive, extractDir)
+	err := Extract(archive, settings.ExtractDir)
 	if err != nil {
-		internal.Log.Errorf("Error downloading archive %s: %v", archive.ExpandURL(), err)
+		internal.Log.Errorf("Error downloading archive %s: %v", archive.ShortURL(), err)
 		return
 	}
 
-	for _, symlink := range archive.Symlink {
-		createSymlink(symlink, extractDir)
+	for _, symlink := range archive.ExpandSymlinks() {
+		createSymlink(symlink, settings.ExtractDir)
 	}
 }
 
 func (p Provisioner) extractArchives() {
 	for _, archive := range p.Config.Archives {
-		extractArchive(archive, p.Config.Settings.ExtractDir)
+		extractArchive(archive, p.Config.Settings)
 	}
 }

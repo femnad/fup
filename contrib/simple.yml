@@ -37,3 +37,9 @@ archives:
     version: 106.0.3
     symlink:
       - firefox/firefox
+  - url: https://github.com/jeffvli/sonixd/releases/download/v${version}/Sonixd-${version}-linux-x64.tar.xz
+    version: 0.15.3
+    symlink:
+      - Sonixd-${version}-linux-x64/sonixd
+    unless:
+      stat: ${archive_dir}/Sonixd-${version}-linux-x64/sonixd
