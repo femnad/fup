@@ -42,4 +42,4 @@ archives:
     symlink:
       - Sonixd-${version}-linux-x64/sonixd
     unless:
-      stat: ${archive_dir}/Sonixd-${version}-linux-x64/sonixd
+      stat: ${extract_dir}/Sonixd-${version}-linux-x64/sonixd

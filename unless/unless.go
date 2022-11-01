@@ -135,7 +135,6 @@ func shouldSkip(archive base.Archive) bool {
 
 func ShouldSkip(archive base.Archive, settings base.Settings) bool {
 	stat := archive.Unless.Stat
-	fmt.Println(stat)
 	stat = os.Expand(stat, func(s string) string {
 		if s == "extract_dir" {
 			extractDir := settings.ExtractDir
