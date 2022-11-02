@@ -68,7 +68,7 @@ func (a Archive) ShortURL() string {
 func (a Archive) ExpandSymlinks() []string {
 	var expanded []string
 	for _, symlink := range a.Symlink {
-		expanded = append(expanded, a.expand(symlink))
+		expanded = append(expanded, os.Expand(symlink, a.expand))
 	}
 
 	return expanded

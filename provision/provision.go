@@ -33,6 +33,7 @@ func createSymlink(symlink, extractDir string) {
 		return
 	}
 
+	internal.Log.Debugf("Creating symlink target=%s, name=%s", symlinkTarget, symlinkName)
 	err = os.Symlink(symlinkTarget, symlinkName)
 	if err != nil {
 		internal.Log.Errorf("Error creating symlink target=%s, name=%s: %v", symlinkTarget, symlinkName, err)
