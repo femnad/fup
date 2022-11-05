@@ -5,6 +5,32 @@ settings:
       '*': 600
       natrium: 3600
 archives:
+  - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
+    version: 2.25.0
+    unless:
+      cmd: chezmoi --version
+      post: 'split 2 | cut 1 | cut -1'
+    binary: chezmoi
+  - url: https://update.code.visualstudio.com/${version}/linux-x64/stable
+    version: 1.72.2
+    unless:
+      cmd: code --version
+      post: head 0
+    symlink:
+      - VSCode-linux-x64/bin/code
+  - url: https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64/en-US/firefox-${version}.tar.bz2
+    unless:
+      cmd: firefox --version
+    version: 104.0.1
+    symlink:
+      - firefox/firefox
+  - url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+    unless:
+      cmd: gcloud --version
+      post: 'head 0 | split 3'
+    version: 408.0.1
+    symlink:
+      - google-cloud-sdk/bin/gcloud
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
     version: 2.18.1
     unless:
@@ -12,6 +38,37 @@ archives:
       post: 'head 0 | split 2'
     symlink:
       - gh_${version}_linux_amd64/bin/gh
+  - url: https://download.jetbrains.com/go/goland-${version}.tar.gz
+    version: 2022.2.2
+    symlink:
+      - GoLand-${version}/bin/goland.sh
+    unless:
+      stat: ${extract_dir}/GoLand-${version}/bin/goland.sh
+  - url: https://github.com/casey/just/releases/download/${version}/just-${version}-x86_64-unknown-linux-musl.tar.gz
+    version: 1.6.0
+    target: just
+    unless:
+      cmd: just -V
+      post: split 1
+    symlink:
+      - just/just
+  - url: https://github.com/neovim/neovim/releases/download/${version}/nvim-linux64.tar.gz
+    symlink:
+      - nvim-linux64/bin/nvim
+    unless:
+      cmd: nvim --version
+      post: 'head 0 | split 1'
+    version: v0.8.0
+    when: is-ubuntu
+  - url: https://github.com/jeffvli/sonixd/releases/download/v${version}/Sonixd-${version}-linux-x64.tar.xz
+    version: 0.15.3
+    symlink:
+      - Sonixd-${version}-linux-x64/sonixd
+    unless:
+      stat: ${extract_dir}/Sonixd-${version}-linux-x64/sonixd
+    set_permissions: true
+    execute_after: |
+      find ${archive_dir}/Sonixd-${version}-linux-x64/ -name sonixd -exec chmod 755 '{}' \;
   - url: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${version}/tectonic-${version}-x86_64-unknown-linux-gnu.tar.gz
     version: 0.11.0
     unless:
@@ -24,22 +81,3 @@ archives:
       post: 'head 0 | split 1 | cut 1'
     version: 1.3.3
     binary: terraform
-  - url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
-    unless:
-      cmd: gcloud --version
-      post: 'head 0 | split -1'
-    version: 405.0.0
-    symlink:
-      - google-cloud-sdk/bin/gcloud
-  - url: https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64/en-US/firefox-${version}.tar.bz2
-    unless:
-      cmd: firefox --version
-    version: 106.0.3
-    symlink:
-      - firefox/firefox
-  - url: https://github.com/jeffvli/sonixd/releases/download/v${version}/Sonixd-${version}-linux-x64.tar.xz
-    version: 0.15.3
-    symlink:
-      - Sonixd-${version}-linux-x64/sonixd
-    unless:
-      stat: ${extract_dir}/Sonixd-${version}-linux-x64/sonixd

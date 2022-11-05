@@ -12,7 +12,7 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
-func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
+func processString(fnName, separator, s string, i int, procFn func([]string, int) string) (string, error) {
 	tokens := strings.Split(s, separator)
 	lenTokens := len(tokens)
 
@@ -28,36 +28,52 @@ func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
 		i = lenTokens - iAbs
 	}
 
-	return tokens[i], nil
+	return procFn(tokens, i), nil
 }
 
-func cut(s string, i int) (string, error) {
-	tokens := strings.Split(s, "")
-	lenTokens := len(tokens)
-
-	if i > lenTokens {
-		return "", fmt.Errorf("invalid cut index for input %s and index %d", s, i)
+func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
+	processed, err := processString(fnName, separator, s, i, func(tokens []string, index int) string {
+		return tokens[i]
+	})
+	if err != nil {
+		return "", err
 	}
-	joined := strings.Join(tokens[i:lenTokens], "")
-	return joined, nil
+
+	return processed, nil
 }
 
-func head(s string, i int) (string, error) {
-	return delimitAndReturn("head", "\n", s, i)
+func Cut(s string, i int) (string, error) {
+	processed, err := processString("Cut", "", s, i, func(tokens []string, index int) string {
+		lenTokens := len(tokens)
+		if i > 0 {
+			return strings.Join(tokens[i:lenTokens], "")
+		}
+
+		return strings.Join(tokens[:index], "")
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return processed, nil
 }
 
-func split(s string, i int) (string, error) {
-	return delimitAndReturn("split", " ", s, i)
+func Head(s string, i int) (string, error) {
+	return delimitAndReturn("Head", "\n", s, i)
+}
+
+func Split(s string, i int) (string, error) {
+	return delimitAndReturn("Split", " ", s, i)
 }
 
 func getPostProcFn(op string) (func(string, int) (string, error), error) {
 	switch op {
 	case "cut":
-		return cut, nil
+		return Cut, nil
 	case "head":
-		return head, nil
+		return Head, nil
 	case "split":
-		return split, nil
+		return Split, nil
 	default:
 		return nil, fmt.Errorf("error locating post processing function for %s", op)
 	}
@@ -133,9 +149,8 @@ func shouldSkip(archive base.Archive) bool {
 	return postProc == archive.Version
 }
 
-func ShouldSkip(archive base.Archive, settings base.Settings) bool {
-	stat := archive.Unless.Stat
-	stat = os.Expand(stat, func(s string) string {
+func expandStat(archive base.Archive, settings base.Settings) string {
+	return os.Expand(archive.Unless.Stat, func(s string) string {
 		if s == "extract_dir" {
 			extractDir := settings.ExtractDir
 			return internal.ExpandUser(extractDir)
@@ -145,6 +160,10 @@ func ShouldSkip(archive base.Archive, settings base.Settings) bool {
 		}
 		return s
 	})
+}
+
+func ShouldSkip(archive base.Archive, settings base.Settings) bool {
+	stat := expandStat(archive, settings)
 
 	if stat != "" {
 		internal.Log.Debugf("Checking existence of %s", stat)
