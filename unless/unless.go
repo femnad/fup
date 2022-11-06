@@ -12,6 +12,11 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
+type Unlessable interface {
+	RunUnless() base.Unless
+	GetVersion() string
+}
+
 func processString(fnName, separator, s string, i int, procFn func([]string, int) string) (string, error) {
 	tokens := strings.Split(s, separator)
 	lenTokens := len(tokens)
@@ -106,7 +111,7 @@ func applyProc(proc, output string) (string, error) {
 	return postOutput, nil
 }
 
-func postProcOutput(unless base.Unless, output string) (string, error) {
+func doPostProcOutput(unless base.Unless, output string) (string, error) {
 	procs := strings.Split(unless.Post, "|")
 	postOutput := output
 	var err error
@@ -122,8 +127,18 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 	return postOutput, nil
 }
 
-func shouldSkip(archive base.Archive) bool {
-	unless := archive.Unless
+func postProcOutput(unless base.Unless, output []byte) (string, error) {
+	postProc := strings.TrimSpace(string(output))
+	if unless.Post == "" {
+		return postProc, nil
+	}
+
+	return doPostProcOutput(unless, postProc)
+}
+
+func shouldSkip(unlessable Unlessable) bool {
+	unless := unlessable.RunUnless()
+	version := unlessable.GetVersion()
 
 	cmds := strings.Split(unless.Cmd, " ")
 	cmd := exec.Command(cmds[0], cmds[1:]...)
@@ -133,37 +148,24 @@ func shouldSkip(archive base.Archive) bool {
 		return false
 	}
 
-	if unless.Post == "" {
-		// No post processor configuration but command has succeeded so should skip the operation.
+	if version == "" {
+		// No version specification but command has succeeded so should skip the operation.
 		return true
 	}
 
-	postProc := strings.TrimSpace(string(output))
-	postProc, err = postProcOutput(unless, postProc)
+	postProc, err := postProcOutput(unless, output)
 	if err != nil {
 		internal.Log.Errorf("Error running postproc function: %v", err)
 		// Post processor function failed, best not to skip the operation.
 		return false
 	}
 
-	return postProc == archive.Version
+	return postProc == unlessable.GetVersion()
 }
 
-func expandStat(archive base.Archive, settings base.Settings) string {
-	return os.Expand(archive.Unless.Stat, func(s string) string {
-		if s == "extract_dir" {
-			extractDir := settings.ExtractDir
-			return internal.ExpandUser(extractDir)
-		}
-		if s == "version" {
-			return archive.Version
-		}
-		return s
-	})
-}
-
-func ShouldSkip(archive base.Archive, settings base.Settings) bool {
-	stat := expandStat(archive, settings)
+func ShouldSkip(unlessable Unlessable) bool {
+	unless := unlessable.RunUnless()
+	stat := unless.Stat
 
 	if stat != "" {
 		internal.Log.Debugf("Checking existence of %s", stat)
@@ -171,10 +173,10 @@ func ShouldSkip(archive base.Archive, settings base.Settings) bool {
 		return err == nil
 	}
 
-	if archive.Unless.Cmd == "" {
+	if unless.Cmd == "" {
 		// No stat or command checks, should not skip.
 		return false
 	}
 
-	return shouldSkip(archive)
+	return shouldSkip(unlessable)
 }

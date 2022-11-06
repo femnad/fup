@@ -4,6 +4,28 @@ settings:
     lock_period:
       '*': 600
       natrium: 3600
+
+preflight:
+  - task: Enable RPM Fusion on Fedora
+    when: is-fedora
+    steps:
+      - name: shell
+        cmd: dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+        sudo: true
+    unless:
+      cmd: dnf list installed rpmfusion-free-release
+  - task: Add Spotify repo
+    when: is-ubuntu
+    unless:
+      cmd: dpkg-query --list spotify-client
+    steps:
+      - name: shell
+        sudo: true
+        cmd: |
+          curl -sS https://download.spotify.com/debian/pubkey_5E3C45D7B312C643.gpg | sudo apt-key add -
+          echo 'deb http://repository.spotify.com stable non-free' | sudo tee /etc/apt/sources.list.d/spotify.list
+          apt update
+
 archives:
   - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
     version: 2.25.0
@@ -21,7 +43,6 @@ archives:
   - url: https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64/en-US/firefox-${version}.tar.bz2
     unless:
       cmd: firefox --version
-    version: 104.0.1
     symlink:
       - firefox/firefox
   - url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz

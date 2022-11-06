@@ -7,6 +7,7 @@ import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/unless"
+	"github.com/femnad/fup/unless/when"
 )
 
 const binPath = "~/bin"
@@ -16,6 +17,7 @@ type Provisioner struct {
 }
 
 func (p Provisioner) Apply() {
+	p.runPreflightTasks()
 	p.extractArchives()
 }
 
@@ -41,7 +43,9 @@ func createSymlink(symlink, extractDir string) {
 }
 
 func extractArchive(archive base.Archive, settings base.Settings) {
-	if precheck.ShouldSkip(archive, settings) {
+	archive.Unless.Stat = archive.ExpandStat(settings)
+
+	if precheck.ShouldSkip(archive) {
 		internal.Log.Infof("Skipping download: %s", archive.ShortURL())
 		return
 	}
@@ -60,5 +64,26 @@ func extractArchive(archive base.Archive, settings base.Settings) {
 func (p Provisioner) extractArchives() {
 	for _, archive := range p.Config.Archives {
 		extractArchive(archive, p.Config.Settings)
+	}
+}
+
+func (p Provisioner) runPreflightTask(task base.Task) {
+	if !when.ShouldRun(task) {
+		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", task.Name, task.When)
+		return
+	}
+
+	if precheck.ShouldSkip(task) {
+		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", task.Name, task.Unless)
+		return
+	}
+
+	internal.Log.Debugf("Running task %s", task.Name)
+	task.Run()
+}
+
+func (p Provisioner) runPreflightTasks() {
+	for _, task := range p.Config.PreflightTasks {
+		p.runPreflightTask(task)
 	}
 }

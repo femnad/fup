@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"path"
 
 	"gopkg.in/yaml.v3"
 
@@ -36,47 +35,10 @@ func (u Unless) String() string {
 	return s
 }
 
-type Archive struct {
-	Url     string   `yaml:"url"`
-	Unless  Unless   `yaml:"unless"`
-	Version string   `yaml:"version"`
-	Symlink []string `yaml:"symlink"`
-	Binary  string   `yaml:"binary"`
-}
-
-func (a Archive) String() string {
-	return a.Url
-}
-
-func (a Archive) expand(property string) string {
-	if property == "version" {
-		return a.Version
-	}
-
-	return ""
-}
-
-func (a Archive) ExpandURL() string {
-	return os.Expand(a.Url, a.expand)
-}
-
-func (a Archive) ShortURL() string {
-	_, basename := path.Split(a.ExpandURL())
-	return basename
-}
-
-func (a Archive) ExpandSymlinks() []string {
-	var expanded []string
-	for _, symlink := range a.Symlink {
-		expanded = append(expanded, os.Expand(symlink, a.expand))
-	}
-
-	return expanded
-}
-
 type Config struct {
-	Settings Settings  `yaml:"settings"`
-	Archives []Archive `yaml:"archives"`
+	Settings       Settings  `yaml:"settings"`
+	Archives       []Archive `yaml:"archives"`
+	PreflightTasks []Task    `yaml:"preflight"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {
