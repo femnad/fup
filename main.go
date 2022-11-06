@@ -8,12 +8,17 @@ import (
 	"log"
 )
 
-var args struct {
+type args struct {
 	File     string `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
 	LogLevel int    `arg:"-l,--loglevel" default:"4"`
 }
 
+func (args) Version() string {
+    return "fup 0.1.0"
+}
+
 func main() {
+    var args args
 	arg.MustParse(&args)
 	internal.InitLogging(args.LogLevel)
 	config, err := base.ReadConfig(args.File)
