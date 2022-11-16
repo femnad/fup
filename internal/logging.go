@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"io"
 	"log"
 	"os"
 	"path"
@@ -10,8 +11,25 @@ import (
 
 var Log = logging.MustGetLogger("fup")
 
-func InitLogging(level int, logFile string) {
+const (
+	stderrLogLevel = logging.INFO
+	fileFormat     = `%{color}%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message} %{color:reset}`
+	stderrFormat   = `%{color}%{message}%{color:reset}`
+)
+
+func initBackend(format string, writer io.Writer, level logging.Level) logging.LeveledBackend {
+	backendFormat := logging.MustStringFormatter(format)
+	backend := logging.NewLogBackend(writer, "", 0)
+	formattedBackend := logging.NewBackendFormatter(backend, backendFormat)
+	leveledBackend := logging.AddModuleLevel(formattedBackend)
+
+	leveledBackend.SetLevel(level, "")
+	return leveledBackend
+}
+
+func InitLogging(logFile string, level int) {
 	dirName, _ := path.Split(logFile)
+
 	_, err := os.Stat(dirName)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(dirName, 0755)
@@ -27,14 +45,8 @@ func InitLogging(level int, logFile string) {
 		log.Fatalf("error opening log file: %v", err)
 	}
 
-	format := logging.MustStringFormatter(
-		`%{color}%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message} %{color:reset}`,
-	)
+	fileBackend := initBackend(fileFormat, f, logging.Level(level))
+	stderrBackend := initBackend(stderrFormat, os.Stderr, stderrLogLevel)
 
-	backendLogs := logging.NewLogBackend(f, "", 0)
-	formattedLogs := logging.NewBackendFormatter(backendLogs, format)
-	leveledLogs := logging.AddModuleLevel(formattedLogs)
-
-	leveledLogs.SetLevel(logging.Level(level), "")
-	logging.SetBackend(leveledLogs)
+	logging.SetBackend(fileBackend, stderrBackend)
 }

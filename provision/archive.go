@@ -33,7 +33,7 @@ func processDownload(archive base.Archive, archiveDir string, processor func(io.
 	if url == "" {
 		return fmt.Errorf("no URL given for archive %v", archive)
 	}
-	internal.Log.Noticef("Downloading %s", url)
+	internal.Log.Infof("Downloading %s", url)
 
 	respBody, err := remote.ReadResponseBody(url)
 	if err != nil {

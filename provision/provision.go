@@ -46,13 +46,13 @@ func extractArchive(archive base.Archive, settings base.Settings) {
 	archive.Unless.Stat = archive.ExpandStat(settings)
 
 	if precheck.ShouldSkip(archive) {
-		internal.Log.Infof("Skipping download: %s", archive.ShortURL())
+		internal.Log.Debugf("Skipping download: %s", archive.ExpandURL())
 		return
 	}
 
 	err := Extract(archive, settings.ExtractDir)
 	if err != nil {
-		internal.Log.Errorf("Error downloading archive %s: %v", archive.ShortURL(), err)
+		internal.Log.Errorf("Error downloading archive %s: %v", archive.ExpandURL(), err)
 		return
 	}
 
@@ -62,6 +62,7 @@ func extractArchive(archive base.Archive, settings base.Settings) {
 }
 
 func (p Provisioner) extractArchives() {
+	internal.Log.Notice("Extracting archives")
 	for _, archive := range p.Config.Archives {
 		extractArchive(archive, p.Config.Settings)
 	}

@@ -2,7 +2,6 @@ package base
 
 import (
 	"os"
-	"path"
 
 	"github.com/femnad/fup/internal"
 )
@@ -29,11 +28,6 @@ func (a Archive) expand(property string) string {
 
 func (a Archive) ExpandURL() string {
 	return os.Expand(a.Url, a.expand)
-}
-
-func (a Archive) ShortURL() string {
-	_, basename := path.Split(a.ExpandURL())
-	return basename
 }
 
 func (a Archive) ExpandSymlinks() []string {

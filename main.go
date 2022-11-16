@@ -25,7 +25,7 @@ func main() {
 	arg.MustParse(&args)
 
 	logFile := internal.ExpandUser(args.LogFile)
-	internal.InitLogging(args.LogLevel, logFile)
+	internal.InitLogging(logFile, args.LogLevel)
 
 	config, err := base.ReadConfig(args.File)
 	if err != nil {

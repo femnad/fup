@@ -49,11 +49,11 @@ archives:
     unless:
       cmd: gcloud --version
       post: 'head 0 | split 3'
-    version: 408.0.1
+    version: 409.0.0
     symlink:
       - google-cloud-sdk/bin/gcloud
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
-    version: 2.18.1
+    version: 2.20.2
     unless:
       cmd: gh version
       post: 'head 0 | split 2'
