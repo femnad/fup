@@ -50,12 +50,12 @@ func readLocalConfigFile(config string) (io.Reader, error) {
 }
 
 func readRemoteConfigFile(config string) (io.Reader, error) {
-	body, err := remote.ReadResponseBody(config)
+	response, err := remote.ReadResponseBody(config)
 	if err != nil {
 		return nil, err
 	}
 
-	return body, nil
+	return response.Body, nil
 }
 
 func getConfigReader(config string) (io.Reader, error) {

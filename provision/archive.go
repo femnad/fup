@@ -28,14 +28,19 @@ const (
 	tarFileRegex = `\.tar(\.(gz|bz2|xz))$`
 )
 
-func processDownload(archive base.Archive, archiveDir string, processor func(io.ReadCloser, base.Archive, string) error) error {
+func processDownload(archive base.Archive, archiveDir string) error {
 	url := archive.ExpandURL()
 	if url == "" {
 		return fmt.Errorf("no URL given for archive %v", archive)
 	}
 	internal.Log.Infof("Downloading %s", url)
 
-	respBody, err := remote.ReadResponseBody(url)
+	response, err := remote.ReadResponseBody(url)
+	if err != nil {
+		return err
+	}
+
+	extractFn, err := getExtractionFn(archive, response.ContentDisposition)
 	if err != nil {
 		return err
 	}
@@ -50,7 +55,7 @@ func processDownload(archive base.Archive, archiveDir string, processor func(io.
 		dirName = filepath.Join(dirName, archive.Binary)
 	}
 
-	return processor(respBody, archive, dirName)
+	return extractFn(response, dirName)
 }
 
 func mkdirAll(dir string, mode os.FileMode) error {
@@ -62,34 +67,37 @@ func mkdirAll(dir string, mode os.FileMode) error {
 	return nil
 }
 
-func getReader(tarfile io.ReadCloser, archive base.Archive) (io.Reader, error) {
-	url := archive.ExpandURL()
-
-	if strings.HasSuffix(url, ".tar") {
-		return tarfile, nil
+func getReader(response remote.Response) (io.Reader, error) {
+	filename := response.URL
+	if response.ContentDisposition != "" {
+		filename = response.ContentDisposition
 	}
 
-	if strings.HasSuffix(url, ".tar.gz") {
-		gzipReader, err := gzip.NewReader(tarfile)
+	if strings.HasSuffix(filename, ".tar") {
+		return response.Body, nil
+	}
+
+	if strings.HasSuffix(filename, ".tar.gz") {
+		gzipReader, err := gzip.NewReader(response.Body)
 		if err != nil {
 			return nil, err
 		}
 		return gzipReader, nil
 	}
 
-	if strings.HasSuffix(url, ".tar.bz2") {
-		return bzip2.NewReader(tarfile), nil
+	if strings.HasSuffix(filename, ".tar.bz2") {
+		return bzip2.NewReader(response.Body), nil
 	}
 
-	if strings.HasSuffix(url, ".tar.xz") {
-		xzReader, err := xz.NewReader(tarfile, 0)
+	if strings.HasSuffix(filename, ".tar.xz") {
+		xzReader, err := xz.NewReader(response.Body, 0)
 		if err != nil {
 			return nil, err
 		}
 		return xzReader, nil
 	}
 
-	return nil, fmt.Errorf("unable to determine tar reader for URL %s", url)
+	return nil, fmt.Errorf("unable to determine tar reader for URL %s", filename)
 }
 
 func extractCompressedFile(info os.FileInfo, outputPath string, reader io.Reader) error {
@@ -165,15 +173,15 @@ func unzipFile(info os.FileInfo, outputPath string, f *zip.File) error {
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(tarfile io.ReadCloser, archive base.Archive, target string) error {
+func untar(response remote.Response, target string) error {
 	defer func() {
-		err := tarfile.Close()
+		err := response.Body.Close()
 		if err != nil {
 			log.Fatalf("Error closing tarfile: %v", err)
 		}
 	}()
 
-	reader, err := getReader(tarfile, archive)
+	reader, err := getReader(response)
 	if err != nil {
 		return err
 	}
@@ -198,7 +206,7 @@ func untar(tarfile io.ReadCloser, archive base.Archive, target string) error {
 	return nil
 }
 
-func unzip(zipfile io.ReadCloser, archive base.Archive, target string) error {
+func unzip(response remote.Response, target string) error {
 	tempFile, err := os.CreateTemp("/tmp", "*.zip")
 	if err != nil {
 		return err
@@ -209,7 +217,8 @@ func unzip(zipfile io.ReadCloser, archive base.Archive, target string) error {
 	}
 
 	tempFilePath := tempFile.Name()
-	err = download(zipfile, archive, tempFilePath)
+
+	err = download(response.Body, tempFilePath)
 	if err != nil {
 		return err
 	}
@@ -235,30 +244,29 @@ func unzip(zipfile io.ReadCloser, archive base.Archive, target string) error {
 	return nil
 }
 
-func getExtractionFn(archive base.Archive) (func(io.ReadCloser, base.Archive, string) error, error) {
-	url := archive.ExpandURL()
+func getExtractionFn(archive base.Archive, contentDisposition string) (func(remote.Response, string) error, error) {
+	fileName := archive.ExpandURL()
+	if contentDisposition != "" {
+		fileName = contentDisposition
+	}
+
 	tarRegex := regexp.MustCompile(tarFileRegex)
-	if tarRegex.MatchString(url) {
+	if tarRegex.MatchString(fileName) {
 		return untar, nil
 	}
 
-	if strings.HasSuffix(url, ".zip") {
+	if strings.HasSuffix(fileName, ".zip") {
 		return unzip, nil
 	}
 
-	return nil, fmt.Errorf("unable find extraction method for URL %s", url)
+	return nil, fmt.Errorf("unable to find extraction method for URL %s", fileName)
 }
 
 func Extract(archive base.Archive, archiveDir string) error {
-	extractFn, err := getExtractionFn(archive)
-	if err != nil {
-		return err
-	}
-
-	return processDownload(archive, archiveDir, extractFn)
+	return processDownload(archive, archiveDir)
 }
 
-func download(closer io.ReadCloser, archive base.Archive, target string) error {
+func download(closer io.ReadCloser, target string) error {
 	f, err := os.Create(target)
 	if err != nil {
 		return fmt.Errorf("error creating target %s: %w", target, err)
@@ -293,8 +301,4 @@ func download(closer io.ReadCloser, archive base.Archive, target string) error {
 
 	return nil
 
-}
-
-func Download(archive base.Archive, archiveDir string) error {
-	return processDownload(archive, archiveDir, download)
 }
