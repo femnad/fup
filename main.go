@@ -13,7 +13,7 @@ import (
 type args struct {
 	File      string `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
 	LogFile   string `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
-	LogLevel  int    `arg:"-l,--loglevel" default:"4"`
+	LogLevel  int    `arg:"-l,--loglevel" default:"5"`
 	WriteLogs bool   `arg:"-w,--writelogs" default:"false"`
 }
 

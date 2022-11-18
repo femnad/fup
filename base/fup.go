@@ -18,9 +18,13 @@ type Settings struct {
 }
 
 type Unless struct {
-	Cmd  string `yaml:"cmd"`
-	Post string `yaml:"post"`
-	Stat string `yaml:"stat"`
+	Cmd      string              `yaml:"cmd"`
+	Post     string              `yaml:"post"`
+	Stat     string              `yaml:"stat"`
+}
+
+func (u Unless) HasPostProc() bool {
+	return u.Post == "" || u.Cmd == ""
 }
 
 func (u Unless) String() string {
@@ -36,9 +40,9 @@ func (u Unless) String() string {
 }
 
 type Config struct {
-	Settings       Settings  `yaml:"settings"`
 	Archives       []Archive `yaml:"archives"`
 	PreflightTasks []Task    `yaml:"preflight"`
+	Settings       Settings  `yaml:"settings"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {

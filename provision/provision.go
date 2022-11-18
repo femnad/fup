@@ -70,6 +70,7 @@ func extractArchive(archive base.Archive, settings base.Settings) {
 
 func (p Provisioner) extractArchives() {
 	internal.Log.Notice("Extracting archives")
+
 	for _, archive := range p.Config.Archives {
 		extractArchive(archive, p.Config.Settings)
 	}
@@ -91,6 +92,8 @@ func (p Provisioner) runPreflightTask(task base.Task) {
 }
 
 func (p Provisioner) runPreflightTasks() {
+	internal.Log.Notice("Running preflight tasks")
+
 	for _, task := range p.Config.PreflightTasks {
 		p.runPreflightTask(task)
 	}

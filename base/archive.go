@@ -52,10 +52,14 @@ func (a Archive) ExpandStat(settings Settings) string {
 	})
 }
 
-func (a Archive) RunUnless() Unless {
+func (a Archive) GetUnless() Unless {
 	return a.Unless
 }
 
 func (a Archive) GetVersion() string {
 	return a.Version
+}
+
+func (a Archive) HasPostProc() bool {
+	return a.Unless.HasPostProc()
 }

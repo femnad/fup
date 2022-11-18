@@ -113,10 +113,14 @@ func (t Task) Run() {
 	}
 }
 
-func (t Task) RunUnless() Unless {
+func (t Task) GetUnless() Unless {
 	return t.Unless
 }
 
 func (t Task) GetVersion() string {
 	return ""
+}
+
+func (t Task) HasPostProc() bool {
+	return t.Unless.HasPostProc()
 }
