@@ -13,7 +13,7 @@ var Log = logging.MustGetLogger("fup")
 
 const (
 	stderrLogLevel = logging.INFO
-	fileFormat     = `%{color}%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message} %{color:reset}`
+	fileFormat     = `%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message}`
 	stderrFormat   = `%{color}%{message}%{color:reset}`
 )
 
@@ -27,7 +27,7 @@ func initBackend(format string, writer io.Writer, level logging.Level) logging.L
 	return leveledBackend
 }
 
-func InitLogging(logFile string, level int) {
+func getFileBackend(level int, logFile string) logging.LeveledBackend {
 	dirName, _ := path.Split(logFile)
 
 	_, err := os.Stat(dirName)
@@ -45,8 +45,17 @@ func InitLogging(logFile string, level int) {
 		log.Fatalf("error opening log file: %v", err)
 	}
 
-	fileBackend := initBackend(fileFormat, f, logging.Level(level))
-	stderrBackend := initBackend(stderrFormat, os.Stderr, stderrLogLevel)
+	return initBackend(fileFormat, f, logging.Level(level))
+}
 
-	logging.SetBackend(fileBackend, stderrBackend)
+func InitLogging(level int, logFile string) {
+	stderrBackend := initBackend(stderrFormat, os.Stderr, stderrLogLevel)
+	backends := []logging.Backend{stderrBackend}
+
+	if logFile != "" {
+		fileBackend := getFileBackend(level, logFile)
+		backends = append(backends, fileBackend)
+	}
+
+	logging.SetBackend(backends...)
 }

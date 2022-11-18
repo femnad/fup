@@ -11,9 +11,10 @@ import (
 )
 
 type args struct {
-	File     string `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
-	LogFile  string `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
-	LogLevel int    `arg:"-l,--loglevel" default:"4"`
+	File      string `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
+	LogFile   string `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
+	LogLevel  int    `arg:"-l,--loglevel" default:"4"`
+	WriteLogs bool   `arg:"-w,--writelogs" default:"false"`
 }
 
 func (args) Version() string {
@@ -25,7 +26,10 @@ func main() {
 	arg.MustParse(&args)
 
 	logFile := internal.ExpandUser(args.LogFile)
-	internal.InitLogging(logFile, args.LogLevel)
+	if !args.WriteLogs {
+		logFile = ""
+	}
+	internal.InitLogging(args.LogLevel, logFile)
 
 	config, err := base.ReadConfig(args.File)
 	if err != nil {

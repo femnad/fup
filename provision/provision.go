@@ -35,6 +35,13 @@ func createSymlink(symlink, extractDir string) {
 		return
 	}
 
+	symlinkDir, _ := path.Split(symlinkName)
+	err = mkdirAll(symlinkDir, dirMode)
+	if err != nil {
+		internal.Log.Errorf("Error creating symlink dir %s: %v", symlinkDir, err)
+		return
+	}
+
 	internal.Log.Debugf("Creating symlink target=%s, name=%s", symlinkTarget, symlinkName)
 	err = os.Symlink(symlinkTarget, symlinkName)
 	if err != nil {
