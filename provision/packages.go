@@ -12,7 +12,7 @@ import (
 	precheck "github.com/femnad/fup/unless"
 )
 
-func getMatchingPackages(osId, pattern string, packages []string) []string {
+func matchingPackages(osId, pattern string, packages []string) []string {
 	match, err := regexp.MatchString(pattern, osId)
 	if err != nil {
 		internal.Log.Errorf("Error matching pattern %s: %v", pattern, err)
@@ -26,15 +26,19 @@ func getMatchingPackages(osId, pattern string, packages []string) []string {
 	return packages
 }
 
-func getInstaller(osId string) (packages.Os, error) {
+func getInstaller(osId string) (packages.Installer, error) {
+	installer := packages.Installer{}
+
 	switch osId {
-	case "fedora":
-		return packages.Dnf{}, nil
 	case "debian", "ubuntu":
-		return packages.Apt{}, nil
+		installer.Pkg = packages.Apt{}
+	case "fedora":
+		installer.Pkg = packages.Dnf{}
 	default:
-		return nil, fmt.Errorf("no installer for OS ID %s", osId)
+		return installer, fmt.Errorf("no installer for OS ID %s", osId)
 	}
+
+	return installer, nil
 }
 
 func installPackages(spec base.PackageSpec) error {
@@ -48,13 +52,13 @@ func installPackages(spec base.PackageSpec) error {
 		return fmt.Errorf("cannot determine installer: %v", err)
 	}
 
-	packagesToInstall := mapset.NewSet[string]()
-	for pattern, desiredPackages := range spec {
-		matches := getMatchingPackages(osId, pattern, desiredPackages)
+	pkgToInstall := mapset.NewSet[string]()
+	for pattern, pkgs := range spec {
+		matches := matchingPackages(osId, pattern, pkgs)
 		for _, match := range matches {
-			packagesToInstall.Add(match)
+			pkgToInstall.Add(match)
 		}
 	}
 
-	return installer.Install(packagesToInstall)
+	return installer.Install(pkgToInstall)
 }

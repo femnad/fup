@@ -19,9 +19,9 @@ const (
 	rootUid            = 0
 )
 
-type Os interface {
-	Install(mapset.Set[string]) error
-	InstalledPackages() (mapset.Set[string], error)
+type PkgManager interface {
+	PkgExec() string
+	PkgNameSeparator() string
 }
 
 func maybeRunWithSudo(cmds ...string) error {
@@ -45,10 +45,16 @@ func maybeRunWithSudo(cmds ...string) error {
 	return cmd.Run()
 }
 
-type installer struct {
+type Installer struct {
+	Pkg PkgManager
 }
 
-func (i installer) Install(pkg string, available, desired mapset.Set[string]) error {
+func (i Installer) Install(desired mapset.Set[string]) error {
+	available, err := i.installedPackages()
+	if err != nil {
+		return err
+	}
+
 	missing := desired.Difference(available)
 	var missingList []string
 	missing.Each(func(p string) bool {
@@ -63,13 +69,14 @@ func (i installer) Install(pkg string, available, desired mapset.Set[string]) er
 	sort.Strings(missingList)
 	internal.Log.Noticef("Packages to install: %s", strings.Join(missingList, " "))
 
-	installCmd := []string{pkg, "install", "-y"}
+	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
 	installCmd = append(installCmd, missingList...)
 	return maybeRunWithSudo(installCmd...)
 }
 
-func (i installer) InstalledPackages(pkg, versionSeparator string) (mapset.Set[string], error) {
-	output, err := common.RunCmd(fmt.Sprintf("%s list --installed", pkg))
+func (i Installer) installedPackages() (mapset.Set[string], error) {
+	listCmd := fmt.Sprintf("%s list --installed", i.Pkg.PkgExec())
+	output, err := common.RunCmd(listCmd)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +92,7 @@ func (i installer) InstalledPackages(pkg, versionSeparator string) (mapset.Set[s
 			return nil, fmt.Errorf("unexpected package list line: %s", line)
 		}
 		packageAndVersion := fields[0]
-		packageFields := strings.Split(packageAndVersion, versionSeparator)
+		packageFields := strings.Split(packageAndVersion, i.Pkg.PkgNameSeparator())
 		if len(packageFields) == 0 {
 			return nil, fmt.Errorf("unexpected package field: %s", packageFields)
 		}
