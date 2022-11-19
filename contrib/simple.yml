@@ -103,3 +103,11 @@ archives:
       post: 'head 0 | split 1 | cut 1'
     version: 1.3.3
     binary: terraform
+
+packages:
+  '.*':
+    - acpi
+  debian:
+    - ncal
+  fedora:
+    - neovim

@@ -17,10 +17,12 @@ type Settings struct {
 	HostFacts  map[string]map[string]any `yaml:"host_facts"`
 }
 
+type PackageSpec map[string][]string
+
 type Unless struct {
-	Cmd      string              `yaml:"cmd"`
-	Post     string              `yaml:"post"`
-	Stat     string              `yaml:"stat"`
+	Cmd  string `yaml:"cmd"`
+	Post string `yaml:"post"`
+	Stat string `yaml:"stat"`
 }
 
 func (u Unless) HasPostProc() bool {
@@ -40,9 +42,10 @@ func (u Unless) String() string {
 }
 
 type Config struct {
-	Archives       []Archive `yaml:"archives"`
-	PreflightTasks []Task    `yaml:"preflight"`
-	Settings       Settings  `yaml:"settings"`
+	Archives       []Archive   `yaml:"archives"`
+	Packages       PackageSpec `yaml:"packages"`
+	PreflightTasks []Task      `yaml:"preflight"`
+	Settings       Settings    `yaml:"settings"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {

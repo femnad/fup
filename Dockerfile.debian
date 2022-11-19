@@ -1,0 +1,9 @@
+from debian:bullseye
+run echo 'deb http://deb.debian.org/debian bullseye-backports main' > /etc/apt/sources.list.d/backports.list
+run apt update
+run apt install -t bullseye-backports -y ca-certificates golang-1.19-go
+run mkdir -p /root/fup
+copy . /root/fup/
+workdir /root/fup
+run /usr/lib/go-1.19/bin/go install
+entrypoint ["/root/go/bin/fup"]

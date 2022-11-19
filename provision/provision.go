@@ -19,6 +19,7 @@ type Provisioner struct {
 func (p Provisioner) Apply() {
 	p.runPreflightTasks()
 	p.extractArchives()
+	p.installPackages()
 }
 
 func createSymlink(symlink, extractDir string) {
@@ -96,5 +97,14 @@ func (p Provisioner) runPreflightTasks() {
 
 	for _, task := range p.Config.PreflightTasks {
 		p.runPreflightTask(task)
+	}
+}
+
+func (p Provisioner) installPackages() {
+	internal.Log.Notice("Installing packages")
+
+	err := installPackages(p.Config.Packages)
+	if err != nil {
+		internal.Log.Errorf("error installing packages: %v", err)
 	}
 }

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
@@ -138,10 +138,7 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 }
 
 func runUnlessCmd(unless base.Unless) (string, error) {
-	cmds := strings.Split(unless.Cmd, " ")
-	cmd := exec.Command(cmds[0], cmds[1:]...)
-	output, err := cmd.Output()
-	return string(output), err
+	return common.RunCmd(unless.Cmd)
 }
 
 func shouldSkip(unlessable Unlessable) bool {

@@ -1,48 +1,20 @@
 package precheck
 
 import (
-	"bufio"
 	"fmt"
-	"log"
-	"os"
-	"strings"
-)
-
-const (
-	osReleaseFile = "/etc/os-release"
-	osIdField     = "ID"
 )
 
 func isOs(osId string) (bool, error) {
-	file, err := os.Open(osReleaseFile)
+	foundOsId, err := GetOsId()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("error getting OS ID %v", err)
 	}
 
-	defer func() {
-		err := file.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+	return foundOsId == osId, nil
+}
 
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		fields := strings.Split(line, "=")
-		if len(fields) != 2 {
-			return false, fmt.Errorf("unexpected field count when splitting line: %s", line)
-		}
-		field, value := fields[0], fields[1]
-		if field != osIdField {
-			continue
-		}
-		return value == osId, nil
-	}
-
-	return false, fmt.Errorf("unable to locate OS ID line in %s", osReleaseFile)
+func IsDebian() (bool, error) {
+	return isOs("debian")
 }
 
 func IsFedora() (bool, error) {
@@ -54,6 +26,7 @@ func IsUbuntu() (bool, error) {
 }
 
 var Facts = map[string]func() (bool, error){
+	"is-debian": IsDebian,
 	"is-fedora": IsFedora,
 	"is-ubuntu": IsUbuntu,
 }
