@@ -21,6 +21,7 @@ func (p Provisioner) Apply() {
 	p.extractArchives()
 	p.installPackages()
 	p.removePackages()
+	p.cargoInstall()
 }
 
 func createSymlink(symlink, extractDir string) {
@@ -121,4 +122,10 @@ func (p Provisioner) removePackages() {
 	if err != nil {
 		internal.Log.Errorf("error removing packages: %v", err)
 	}
+}
+
+func (p Provisioner) cargoInstall() {
+	internal.Log.Noticef("Installing cargo packages")
+
+	cargoInstallPkgs(p.Config.Cargo)
 }

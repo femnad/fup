@@ -43,6 +43,7 @@ func (u Unless) String() string {
 
 type Config struct {
 	Archives         []Archive   `yaml:"archives"`
+	Cargo            []CargoPkg  `yaml:"cargo"`
 	Packages         PackageSpec `yaml:"packages"`
 	PreflightTasks   []Task      `yaml:"preflight"`
 	Settings         Settings    `yaml:"settings"`
