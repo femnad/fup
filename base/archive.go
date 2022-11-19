@@ -12,6 +12,7 @@ type Archive struct {
 	Version string   `yaml:"version"`
 	Symlink []string `yaml:"symlink"`
 	Binary  string   `yaml:"binary"`
+	When    string   `yaml:"when"`
 }
 
 func (a Archive) String() string {
@@ -62,4 +63,8 @@ func (a Archive) GetVersion() string {
 
 func (a Archive) HasPostProc() bool {
 	return a.Unless.HasPostProc()
+}
+
+func (a Archive) RunWhen() string {
+	return a.When
 }

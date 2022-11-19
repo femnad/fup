@@ -111,3 +111,7 @@ packages:
     - ncal
   fedora:
     - neovim
+
+unwanted_packages:
+  ubuntu:
+    - snapd

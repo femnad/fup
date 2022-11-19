@@ -20,6 +20,7 @@ func (p Provisioner) Apply() {
 	p.runPreflightTasks()
 	p.extractArchives()
 	p.installPackages()
+	p.removePackages()
 }
 
 func createSymlink(symlink, extractDir string) {
@@ -52,6 +53,10 @@ func createSymlink(symlink, extractDir string) {
 
 func extractArchive(archive base.Archive, settings base.Settings) {
 	archive.Unless.Stat = archive.ExpandStat(settings)
+
+	if !when.ShouldRun(archive) {
+		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", archive.ExpandURL(), archive.When)
+	}
 
 	if precheck.ShouldSkip(archive) {
 		internal.Log.Debugf("Skipping download: %s", archive.ExpandURL())
@@ -88,7 +93,7 @@ func (p Provisioner) runPreflightTask(task base.Task) {
 		return
 	}
 
-	internal.Log.Debugf("Running task %s", task.Name)
+	internal.Log.Infof("Running task: %s", task.Name)
 	task.Run()
 }
 
@@ -106,5 +111,14 @@ func (p Provisioner) installPackages() {
 	err := installPackages(p.Config.Packages)
 	if err != nil {
 		internal.Log.Errorf("error installing packages: %v", err)
+	}
+}
+
+func (p Provisioner) removePackages() {
+	internal.Log.Notice("Removing unwanted packages")
+
+	err := removePackages(p.Config.UnwantedPackages)
+	if err != nil {
+		internal.Log.Errorf("error removing packages: %v", err)
 	}
 }

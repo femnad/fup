@@ -3,10 +3,14 @@ package packages
 type Apt struct {
 }
 
-func (a Apt) PkgExec() string {
+func (Apt) PkgExec() string {
 	return "apt"
 }
 
-func (a Apt) PkgNameSeparator() string {
+func (Apt) PkgNameSeparator() string {
 	return "/"
+}
+
+func (Apt) RemoveCmd() string {
+	return "purge"
 }

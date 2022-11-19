@@ -42,10 +42,11 @@ func (u Unless) String() string {
 }
 
 type Config struct {
-	Archives       []Archive   `yaml:"archives"`
-	Packages       PackageSpec `yaml:"packages"`
-	PreflightTasks []Task      `yaml:"preflight"`
-	Settings       Settings    `yaml:"settings"`
+	Archives         []Archive   `yaml:"archives"`
+	Packages         PackageSpec `yaml:"packages"`
+	PreflightTasks   []Task      `yaml:"preflight"`
+	Settings         Settings    `yaml:"settings"`
+	UnwantedPackages PackageSpec `yaml:"unwanted_packages"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {

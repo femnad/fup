@@ -3,10 +3,14 @@ package packages
 type Dnf struct {
 }
 
-func (f Dnf) PkgExec() string {
+func (Dnf) PkgExec() string {
 	return "dnf"
 }
 
-func (f Dnf) PkgNameSeparator() string {
+func (Dnf) PkgNameSeparator() string {
 	return "."
+}
+
+func (Dnf) RemoveCmd() string {
+	return "remove"
 }

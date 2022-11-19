@@ -41,24 +41,68 @@ func getInstaller(osId string) (packages.Installer, error) {
 	return installer, nil
 }
 
-func installPackages(spec base.PackageSpec) error {
+type determiner struct {
+	osId string
+}
+
+func newDeterminer() (determiner, error) {
+	var d determiner
 	osId, err := precheck.GetOsId()
 	if err != nil {
-		return fmt.Errorf("error determining OS: %v", err)
+		return d, fmt.Errorf("error determining OS: %v", err)
 	}
 
-	installer, err := getInstaller(osId)
+	d.osId = osId
+	return d, nil
+}
+
+func (d determiner) installer() (packages.Installer, error) {
+	installer, err := getInstaller(d.osId)
 	if err != nil {
-		return fmt.Errorf("cannot determine installer: %v", err)
+		return installer, fmt.Errorf("cannot determine installer: %v", err)
 	}
 
+	return installer, nil
+}
+
+func (d determiner) matchingPkgs(spec base.PackageSpec) mapset.Set[string] {
 	pkgToInstall := mapset.NewSet[string]()
 	for pattern, pkgs := range spec {
-		matches := matchingPackages(osId, pattern, pkgs)
+		matches := matchingPackages(d.osId, pattern, pkgs)
 		for _, match := range matches {
 			pkgToInstall.Add(match)
 		}
 	}
 
-	return installer.Install(pkgToInstall)
+	return pkgToInstall
+}
+
+func installPackages(spec base.PackageSpec) error {
+	d, err := newDeterminer()
+	if err != nil {
+		return err
+	}
+
+	i, err := d.installer()
+	if err != nil {
+		return err
+	}
+
+	pkgToInstall := d.matchingPkgs(spec)
+	return i.Install(pkgToInstall)
+}
+
+func removePackages(spec base.PackageSpec) error {
+	d, err := newDeterminer()
+	if err != nil {
+		return err
+	}
+
+	i, err := d.installer()
+	if err != nil {
+		return err
+	}
+
+	pkgToInstall := d.matchingPkgs(spec)
+	return i.Remove(pkgToInstall)
 }

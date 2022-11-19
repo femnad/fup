@@ -22,6 +22,7 @@ const (
 type PkgManager interface {
 	PkgExec() string
 	PkgNameSeparator() string
+	RemoveCmd() string
 }
 
 func maybeRunWithSudo(cmds ...string) error {
@@ -49,6 +50,16 @@ type Installer struct {
 	Pkg PkgManager
 }
 
+func setToSlice[T comparable](set mapset.Set[T]) []T {
+	var items []T
+	set.Each(func(t T) bool {
+		items = append(items, t)
+		return false
+	})
+
+	return items
+}
+
 func (i Installer) Install(desired mapset.Set[string]) error {
 	available, err := i.installedPackages()
 	if err != nil {
@@ -56,21 +67,17 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 	}
 
 	missing := desired.Difference(available)
-	var missingList []string
-	missing.Each(func(p string) bool {
-		missingList = append(missingList, p)
-		return false
-	})
+	missingPkgs := setToSlice(missing)
 
-	if len(missingList) == 0 {
+	if len(missingPkgs) == 0 {
 		return nil
 	}
 
-	sort.Strings(missingList)
-	internal.Log.Noticef("Packages to install: %s", strings.Join(missingList, " "))
+	sort.Strings(missingPkgs)
+	internal.Log.Infof("Packages to install: %s", strings.Join(missingPkgs, " "))
 
 	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
-	installCmd = append(installCmd, missingList...)
+	installCmd = append(installCmd, missingPkgs...)
 	return maybeRunWithSudo(installCmd...)
 }
 
@@ -101,4 +108,26 @@ func (i Installer) installedPackages() (mapset.Set[string], error) {
 	}
 
 	return installedPackages, nil
+}
+
+func (i Installer) Remove(undesired mapset.Set[string]) error {
+	available, err := i.installedPackages()
+	if err != nil {
+		return err
+	}
+
+	toRemove := available.Intersect(undesired)
+	pkgToRemove := setToSlice(toRemove)
+
+	if len(pkgToRemove) == 0 {
+		return nil
+	}
+
+	sort.Strings(pkgToRemove)
+	internal.Log.Infof("Packages to remove: %s", strings.Join(pkgToRemove, " "))
+
+	removeCmd := []string{i.Pkg.PkgExec(), i.Pkg.RemoveCmd(), "-y"}
+	removeCmd = append(removeCmd, pkgToRemove...)
+
+	return maybeRunWithSudo(removeCmd...)
 }
