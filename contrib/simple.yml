@@ -60,7 +60,7 @@ archives:
     unless:
       cmd: gcloud --version
       post: 'head 0 | split 3'
-    version: 409.0.0
+    version: 410.0.0
     symlink:
       - google-cloud-sdk/bin/gcloud
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
@@ -279,7 +279,7 @@ cargo:
     bins: true
   - name: https://github.com/femnad/leth
     unless:
-      ls: ~/.cargo/bin/leth
+      cmd: leth -V
   - name: https://github.com/ogham/dog.git
     unless:
       cmd: dog -v
