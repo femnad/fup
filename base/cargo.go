@@ -4,7 +4,7 @@ type CargoPkg struct {
 	Name     string `yaml:"name"`
 	Unless   Unless `yaml:"unless"`
 	Bins     bool   `yaml:"bins"`
-	MultiBin bool   `yaml:"multi_bin"`
+	MultiBin bool   `yaml:"multibin"`
 }
 
 func (c CargoPkg) GetUnless() Unless {

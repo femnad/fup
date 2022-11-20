@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	listPackagesHeader = "Installed Packages"
-	rootUid            = 0
+	rootUid = 0
 )
 
 type PkgManager interface {
+	ListPkgsHeader() string
 	PkgExec() string
 	PkgNameSeparator() string
 	RemoveCmd() string
@@ -91,19 +91,21 @@ func (i Installer) installedPackages() (mapset.Set[string], error) {
 	installedPackages := mapset.NewSet[string]()
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
-		if line == listPackagesHeader {
+		if line == i.Pkg.ListPkgsHeader() {
 			continue
 		}
 		fields := strings.Split(line, " ")
 		if len(fields) == 0 {
 			return nil, fmt.Errorf("unexpected package list line: %s", line)
 		}
-		packageAndVersion := fields[0]
-		packageFields := strings.Split(packageAndVersion, i.Pkg.PkgNameSeparator())
-		if len(packageFields) == 0 {
-			return nil, fmt.Errorf("unexpected package field: %s", packageFields)
+
+		pkgAndVers := fields[0]
+		pkgFields := common.RightSplit(pkgAndVers, i.Pkg.PkgNameSeparator())
+		if len(pkgFields) == 0 {
+			return nil, fmt.Errorf("unexpected package field: %s", pkgFields)
 		}
-		packageName := packageFields[0]
+
+		packageName := pkgFields[0]
 		installedPackages.Add(packageName)
 	}
 

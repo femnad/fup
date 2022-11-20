@@ -3,6 +3,10 @@ package packages
 type Apt struct {
 }
 
+func (a Apt) ListPkgsHeader() string {
+	return "Listing..."
+}
+
 func (Apt) PkgExec() string {
 	return "apt"
 }

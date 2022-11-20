@@ -3,6 +3,10 @@ package packages
 type Dnf struct {
 }
 
+func (d Dnf) ListPkgsHeader() string {
+	return "Installed Packages"
+}
+
 func (Dnf) PkgExec() string {
 	return "dnf"
 }

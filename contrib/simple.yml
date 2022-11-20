@@ -6,14 +6,24 @@ settings:
       natrium: 3600
 
 preflight:
-  - task: Enable RPM Fusion on Fedora
+  - task: Enable RPM Fusion
     when: is-fedora
     steps:
       - name: shell
         cmd: dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
         sudo: true
     unless:
-      cmd: dnf list installed rpmfusion-free-release
+      cmd: dnf list --installed rpmfusion-free-release
+  - task: Enable Docker repo
+    when: is-fedora
+    steps:
+      - name: shell
+        cmd: |
+          sudo dnf -y install dnf-plugins-core
+          sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+        sudo: true
+    unless:
+      cmd: dnf list --installed docker-ce
   - task: Add Spotify repo
     when: is-ubuntu
     unless:
@@ -105,13 +115,172 @@ archives:
     binary: terraform
 
 packages:
-  '.*':
+  .*:
     - acpi
-  debian:
+    - ansible
+    - at
+    - autoconf
+    - bpftrace
+    - cargo
+    - cmake
+    - colordiff
+    - curl
+    - dmenu
+    - dunst
+    - emacs
+    - fish
+    - gcc
+    - gimp
+    - git
+    - git-crypt
+    - golang
+    - gnupg2
+    - highlight
+    - htop
+    - i3lock
+    - jq
+    - maim
+    - make
+    - most
+    - mpv
+    - mutt
+    - npm
+    - openssh-server
+    - pass
+    - playerctl
+    - podman
+    - pwgen
+    - qutebrowser
+    - ranger
+    - ripgrep
+    - rlwrap
+    - rustfmt
+    - rust-src
+    - rofi
+    - sbcl
+    - strace
+    - surfraw
+    - sxiv
+    - texinfo
+    - thunderbird
+    - tig
+    - tmux
+    - unzip
+    - urlview
+    - w3m
+    - wget
+    - whois
+    - wireguard-tools
+    - wireshark
+    - xdotool
+    - xsel
+    - zathura
+    - zathura-pdf-poppler
+    - zeal
+  ubuntu:
+    - apt-listchanges
+    - avr-libc
+    - avrdude
+    - bpfcc-tools
+    - binutils-arm-none-eabi
+    - binutils-avr
+    - clang
+    - dconf-cli
+    - dfu-programmer
+    - dfu-util
+    - dnsutils
+    - docker.io
+    - gcc-arm-none-eabi
+    - gcc-avr
+    - gettext
+    - imagemagick
+    - ipython3
+    - libclang-dev
+    - libevent-dev
+    - libfontconfig1-dev
+    - libmnl-dev
+    - libnewlib-arm-none-eabi
+    - libnotify-bin
+    - libnotify-dev
+    - libpython3-dev
+    - libssl-dev
+    - libtool
+    - libtool-bin
+    - libx11-dev
+    - libxcb-render0-dev
+    - libxcb-screensaver0-dev
+    - libxcb-shape0-dev
+    - libxcb-xfixes0-dev
+    - libxext-dev
+    - libxfixes-dev
     - ncal
+    - network-manager
+    - pavucontrol
+    - python3-dev
+    - spotify-client
+    - sqlite3
+    - suckless-tools
+    - teensy-loader-cli
+    - unattended-upgrades
+    - x11-utils
+    - x11proto-dev
+    - xfonts-terminus
   fedora:
+    - ImageMagick
+    - NetworkManager-tui
+    - arm-none-eabi-binutils-cs
+    - arm-none-eabi-gcc-cs
+    - arm-none-eabi-newlib
+    - automake
+    - avr-binutils
+    - avr-gcc
+    - avr-libc
+    - containerd.io
+    - docker-ce
+    - docker-ce-cli
+    - docker-compose-plugin
     - neovim
+    - openssl-devel
+    - pinentry-gtk
+    - pipewire-pulseaudio
+    - pipewire-utils
+    - podman
+    - pulseaudio-utils
+    - python3-devel
+    - python3-ipython
+    - python3-virtualenv
+    - sqlite
+    - terminus-fonts
+    - terminus-fonts-legacy-x11
+    - upower
+    - wmname
+    - xdpyinfo
+    - xev
+    - xmodmap
+    - xorg-x11-proto-devel
+    - xprop
+    - xrandr
+    - xsetroot
 
 unwanted_packages:
   ubuntu:
     - snapd
+
+cargo:
+  - name: alacritty
+    unless:
+      cmd: alacritty --version
+  - name: fd-find
+    unless:
+      cmd: fd -V
+  - name: xidlehook
+    unless:
+      cmd: xidlehook -V
+    bins: true
+  - name: https://github.com/femnad/leth
+    unless:
+      ls: ~/.cargo/bin/leth
+  - name: https://github.com/ogham/dog.git
+    unless:
+      cmd: dog -v
+    multibin: true
