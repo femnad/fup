@@ -84,8 +84,8 @@ func getPostProcFn(op string) (func(string, int) (string, error), error) {
 		return Head, nil
 	case "split":
 		return Split, nil
-    case "split-":
-        return SplitByDash, nil
+	case "split-":
+		return SplitByDash, nil
 	default:
 		return nil, fmt.Errorf("error locating post processing function for %s", op)
 	}
@@ -143,14 +143,12 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 	return doPostProcOutput(unless, postProc)
 }
 
-func runUnlessCmd(unless base.Unless) (string, error) {
-	return common.RunCmd(unless.Cmd)
-}
-
 func shouldSkip(unlessable Unlessable) bool {
 	unless := unlessable.GetUnless()
-	output, err := runUnlessCmd(unless)
+	cmd := unless.Cmd
+	output, err := common.RunCmdGetStderr(cmd)
 	if err != nil {
+		internal.Log.Debugf("Command %s returned error: %v, output: %s", unless.Cmd, err, output)
 		// Command wasn't successfully run, should not skip.
 		return false
 	}

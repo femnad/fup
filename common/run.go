@@ -18,6 +18,7 @@ func RunCmdGetStderr(command string) (string, error) {
 	cmds := strings.Split(command, " ")
 
 	cmd := exec.Command(cmds[0], cmds[1:]...)
+	cmd.Stdout = &b
 	cmd.Stderr = &b
 	err := cmd.Run()
 
