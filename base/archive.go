@@ -7,11 +7,11 @@ import (
 )
 
 type Archive struct {
-	Url     string   `yaml:"url"`
-	Unless  Unless   `yaml:"unless"`
-	Version string   `yaml:"version"`
 	Symlink []string `yaml:"symlink"`
-	Binary  string   `yaml:"binary"`
+	Target  string   `yaml:"target"`
+	Unless  Unless   `yaml:"unless"`
+	Url     string   `yaml:"url"`
+	Version string   `yaml:"version"`
 	When    string   `yaml:"when"`
 }
 

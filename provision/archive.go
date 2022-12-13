@@ -51,8 +51,8 @@ func processDownload(archive base.Archive, archiveDir string) error {
 		return err
 	}
 
-	if archive.Binary != "" {
-		dirName = filepath.Join(dirName, archive.Binary)
+	if archive.Target != "" {
+		dirName = filepath.Join(dirName, archive.Target)
 	}
 
 	return extractFn(response, dirName)

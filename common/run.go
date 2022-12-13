@@ -21,5 +21,5 @@ func RunCmdGetStderr(command string) (string, error) {
 	cmd.Stderr = &b
 	err := cmd.Run()
 
-	return string(b.Bytes()), err
+	return b.String(), err
 }

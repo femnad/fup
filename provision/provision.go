@@ -25,7 +25,7 @@ func (p Provisioner) Apply() {
 }
 
 func shouldUpdateSymlink(name, target string) (bool, bool) {
-	_, err := os.Stat(name)
+	_, err := os.Lstat(name)
 	if err != nil {
 		return false, true
 	}

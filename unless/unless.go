@@ -72,6 +72,10 @@ func Split(s string, i int) (string, error) {
 	return delimitAndReturn("Split", " ", s, i)
 }
 
+func SplitByDash(s string, i int) (string, error) {
+	return delimitAndReturn("SplitByDash", "-", s, i)
+}
+
 func getPostProcFn(op string) (func(string, int) (string, error), error) {
 	switch op {
 	case "cut":
@@ -80,6 +84,8 @@ func getPostProcFn(op string) (func(string, int) (string, error), error) {
 		return Head, nil
 	case "split":
 		return Split, nil
+    case "split-":
+        return SplitByDash, nil
 	default:
 		return nil, fmt.Errorf("error locating post processing function for %s", op)
 	}
