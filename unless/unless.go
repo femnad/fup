@@ -16,6 +16,7 @@ type Unlessable interface {
 	GetUnless() base.Unless
 	GetVersion() string
 	HasPostProc() bool
+	Name() string
 }
 
 func processString(fnName, separator, s string, i int, procFn func([]string, int) string) (string, error) {
@@ -143,7 +144,21 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 	return doPostProcOutput(unless, postProc)
 }
 
-func shouldSkip(unlessable Unlessable) bool {
+func getVersion(u Unlessable, s base.Settings) string {
+	version := u.GetVersion()
+	if version != "" {
+		return version
+	}
+
+	name := u.Name()
+	if name == "" {
+		return version
+	}
+
+	return s.Versions[name]
+}
+
+func shouldSkip(unlessable Unlessable, settings base.Settings) bool {
 	unless := unlessable.GetUnless()
 	cmd := unless.Cmd
 	output, err := common.RunCmdGetStderr(cmd)
@@ -153,7 +168,7 @@ func shouldSkip(unlessable Unlessable) bool {
 		return false
 	}
 
-	version := unlessable.GetVersion()
+	version := getVersion(unlessable, settings)
 	if version == "" || unlessable.HasPostProc() {
 		// No version specification or no post proc, but command has succeeded so should skip the operation.
 		return true
@@ -169,7 +184,7 @@ func shouldSkip(unlessable Unlessable) bool {
 	return postProc == unlessable.GetVersion()
 }
 
-func ShouldSkip(unlessable Unlessable) bool {
+func ShouldSkip(unlessable Unlessable, settings base.Settings) bool {
 	unless := unlessable.GetUnless()
 	stat := unless.Stat
 
@@ -185,5 +200,5 @@ func ShouldSkip(unlessable Unlessable) bool {
 		return false
 	}
 
-	return shouldSkip(unlessable)
+	return shouldSkip(unlessable, settings)
 }

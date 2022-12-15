@@ -93,7 +93,7 @@ func (s Step) Run() error {
 }
 
 type Task struct {
-	Name   string `yaml:"task"`
+	Desc   string `yaml:"task"`
 	Steps  []Step `yaml:"steps"`
 	When   string `yaml:"when"`
 	Unless Unless `yaml:"unless"`
@@ -123,4 +123,8 @@ func (t Task) GetVersion() string {
 
 func (t Task) HasPostProc() bool {
 	return t.Unless.HasPostProc()
+}
+
+func (t Task) Name() string {
+    return ""
 }

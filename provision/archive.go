@@ -28,8 +28,8 @@ const (
 	tarFileRegex = `\.tar(\.(gz|bz2|xz))$`
 )
 
-func processDownload(archive base.Archive, archiveDir string) error {
-	url := archive.ExpandURL()
+func processDownload(archive base.Archive, s base.Settings) error {
+	url := archive.ExpandURL(s)
 	if url == "" {
 		return fmt.Errorf("no URL given for archive %v", archive)
 	}
@@ -40,12 +40,12 @@ func processDownload(archive base.Archive, archiveDir string) error {
 		return err
 	}
 
-	extractFn, err := getExtractionFn(archive, response.ContentDisposition)
+	extractFn, err := getExtractionFn(archive, s, response.ContentDisposition)
 	if err != nil {
 		return err
 	}
 
-	dirName := internal.ExpandUser(archiveDir)
+	dirName := internal.ExpandUser(s.ExtractDir)
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
 		return err
@@ -244,8 +244,8 @@ func unzip(response remote.Response, target string) error {
 	return nil
 }
 
-func getExtractionFn(archive base.Archive, contentDisposition string) (func(remote.Response, string) error, error) {
-	fileName := archive.ExpandURL()
+func getExtractionFn(archive base.Archive, s base.Settings, contentDisposition string) (func(remote.Response, string) error, error) {
+	fileName := archive.ExpandURL(s)
 	if contentDisposition != "" {
 		fileName = contentDisposition
 	}
@@ -262,8 +262,8 @@ func getExtractionFn(archive base.Archive, contentDisposition string) (func(remo
 	return nil, fmt.Errorf("unable to find extraction method for URL %s", fileName)
 }
 
-func Extract(archive base.Archive, archiveDir string) error {
-	return processDownload(archive, archiveDir)
+func Extract(archive base.Archive, s base.Settings) error {
+	return processDownload(archive, s)
 }
 
 func download(closer io.ReadCloser, target string) error {

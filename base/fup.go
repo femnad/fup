@@ -15,6 +15,7 @@ import (
 type Settings struct {
 	ExtractDir string                    `yaml:"extract_dir"`
 	HostFacts  map[string]map[string]any `yaml:"host_facts"`
+	Versions   map[string]string         `yaml:"version_store"`
 }
 
 type PackageSpec map[string][]string

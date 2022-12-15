@@ -75,23 +75,24 @@ func createSymlink(symlink, extractDir string) {
 
 func extractArchive(archive base.Archive, settings base.Settings) {
 	archive.Unless.Stat = archive.ExpandStat(settings)
+    url := archive.ExpandURL(settings)
 
 	if !when.ShouldRun(archive) {
-		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", archive.ExpandURL(), archive.When)
+		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
 	}
 
-	if precheck.ShouldSkip(archive) {
-		internal.Log.Debugf("Skipping download: %s", archive.ExpandURL())
+	if precheck.ShouldSkip(archive, settings) {
+		internal.Log.Debugf("Skipping download: %s", url)
 		return
 	}
 
-	err := Extract(archive, settings.ExtractDir)
+	err := Extract(archive, settings)
 	if err != nil {
-		internal.Log.Errorf("Error downloading archive %s: %v", archive.ExpandURL(), err)
+		internal.Log.Errorf("Error downloading archive %s: %v", url, err)
 		return
 	}
 
-	for _, symlink := range archive.ExpandSymlinks() {
+	for _, symlink := range archive.ExpandSymlinks(settings) {
 		createSymlink(symlink, settings.ExtractDir)
 	}
 }
@@ -106,12 +107,12 @@ func (p Provisioner) extractArchives() {
 
 func (p Provisioner) runPreflightTask(task base.Task) {
 	if !when.ShouldRun(task) {
-		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", task.Name, task.When)
+		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", task.Desc, task.When)
 		return
 	}
 
-	if precheck.ShouldSkip(task) {
-		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", task.Name, task.Unless)
+	if precheck.ShouldSkip(task, p.Config.Settings) {
+		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", task.Desc, task.Unless)
 		return
 	}
 
@@ -148,5 +149,5 @@ func (p Provisioner) removePackages() {
 func (p Provisioner) cargoInstall() {
 	internal.Log.Noticef("Installing cargo packages")
 
-	cargoInstallPkgs(p.Config.Cargo)
+	cargoInstallPkgs(p.Config)
 }

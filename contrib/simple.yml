@@ -1,9 +1,11 @@
 settings:
-  extract_dir: ~/fup
+  extract_dir: ~/z/dy
   host_facts:
     lock_period:
       '*': 600
       natrium: 3600
+  versions:
+    vscode: 1.74.1
 
 preflight:
   - task: Enable RPM Fusion
@@ -44,35 +46,35 @@ archives:
       post: 'split 2 | cut 1 | cut -1'
     target: chezmoi
   - url: https://update.code.visualstudio.com/${version}/linux-x64/stable
-    version: 1.74.0
+    name: vscode
     unless:
       cmd: code --version
       post: head 0
-    symlink:
+    link:
       - VSCode-linux-x64/bin/code
   - url: https://download-installer.cdn.mozilla.net/pub/firefox/releases/${version}/linux-x86_64/en-US/firefox-${version}.tar.bz2
     version: 106.0.4
     unless:
       cmd: firefox --version
-    symlink:
+    link:
       - firefox/firefox
   - url: https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
     unless:
       cmd: gcloud --version
       post: 'head 0 | split 3'
     version: 411.0.0
-    symlink:
+    link:
       - google-cloud-sdk/bin/gcloud
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
     version: 2.20.2
     unless:
       cmd: gh version
       post: 'head 0 | split 2'
-    symlink:
+    link:
       - gh_${version}_linux_amd64/bin/gh
   - url: https://download.jetbrains.com/go/goland-${version}.tar.gz
     version: 2022.2.2
-    symlink:
+    link:
       - GoLand-${version}/bin/goland.sh
     unless:
       stat: ${extract_dir}/GoLand-${version}/bin/goland.sh
@@ -82,10 +84,10 @@ archives:
     unless:
       cmd: just -V
       post: split 1
-    symlink:
+    link:
       - just/just
   - url: https://github.com/neovim/neovim/releases/download/${version}/nvim-linux64.tar.gz
-    symlink:
+    link:
       - nvim-linux64/bin/nvim
     unless:
       cmd: nvim --version
@@ -94,15 +96,15 @@ archives:
     when: is-ubuntu
   - url: https://github.com/jeffvli/sonixd/releases/download/v${version}/Sonixd-${version}-linux-x64.tar.xz
     version: 0.15.3
-    symlink:
+    link:
       - Sonixd-${version}-linux-x64/sonixd
     unless:
       stat: ${extract_dir}/Sonixd-${version}-linux-x64/sonixd
     set_permissions: true
     execute_after: |
       find ${archive_dir}/Sonixd-${version}-linux-x64/ -name sonixd -exec chmod 755 '{}' \;
-  - url: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${version}/tectonic-${version}-x86_64-unknown-linux-gnu.tar.gz
-    version: 0.11.0
+  - url: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${version}/tectonic-${version}-x86_64-unknown-linux-musl.tar.gz
+    version: 0.12.0
     unless:
       cmd: tectonic --version
       post: split 1
@@ -284,3 +286,6 @@ cargo:
     unless:
       cmd: dog -v
     multibin: true
+  - name: bottom
+    unless:
+      cmd: btm -V

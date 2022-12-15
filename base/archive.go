@@ -7,7 +7,8 @@ import (
 )
 
 type Archive struct {
-	Symlink []string `yaml:"symlink"`
+	Ref     string   `yaml:"name"`
+	Symlink []string `yaml:"link"`
 	Target  string   `yaml:"target"`
 	Unless  Unless   `yaml:"unless"`
 	Url     string   `yaml:"url"`
@@ -27,13 +28,23 @@ func (a Archive) expand(property string) string {
 	return ""
 }
 
-func (a Archive) ExpandURL() string {
+func (a Archive) version(s Settings) string {
+	if a.Version != "" {
+		return a.Version
+	}
+
+	return s.Versions[a.Name()]
+}
+
+func (a Archive) ExpandURL(s Settings) string {
+	a.Version = a.version(s)
 	return os.Expand(a.Url, a.expand)
 }
 
-func (a Archive) ExpandSymlinks() []string {
+func (a Archive) ExpandSymlinks(s Settings) []string {
 	var expanded []string
 	for _, symlink := range a.Symlink {
+		a.Version = a.version(s)
 		expanded = append(expanded, os.Expand(symlink, a.expand))
 	}
 
@@ -63,6 +74,10 @@ func (a Archive) GetVersion() string {
 
 func (a Archive) HasPostProc() bool {
 	return a.Unless.HasPostProc()
+}
+
+func (a Archive) Name() string {
+	return a.Ref
 }
 
 func (a Archive) RunWhen() string {

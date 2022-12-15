@@ -30,13 +30,13 @@ func crateArgs(name string, multiBin bool) ([]string, error) {
 	return args, nil
 }
 
-func cargoInstall(pkg base.CargoPkg) {
-	if precheck.ShouldSkip(pkg) {
-		internal.Log.Debugf("skipping cargo install for %s", pkg.Name)
+func cargoInstall(pkg base.CargoPkg, s base.Settings) {
+	if precheck.ShouldSkip(pkg, s) {
+		internal.Log.Debugf("skipping cargo install for %s", pkg.Crate)
 		return
 	}
 
-	name := pkg.Name
+	name := pkg.Crate
 	internal.Log.Infof("Installing cargo package: %s", name)
 
 	installCmd := []string{"cargo", "install"}
@@ -59,8 +59,8 @@ func cargoInstall(pkg base.CargoPkg) {
 	}
 }
 
-func cargoInstallPkgs(pkgs []base.CargoPkg) {
-	for _, pkg := range pkgs {
-		cargoInstall(pkg)
+func cargoInstallPkgs(cfg base.Config) {
+	for _, pkg := range cfg.Cargo {
+		cargoInstall(pkg, cfg.Settings)
 	}
 }
