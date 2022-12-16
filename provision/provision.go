@@ -157,6 +157,6 @@ func (p Provisioner) initServices() {
 	internal.Log.Noticef("Initializing services")
 
 	for _, s := range p.Config.Services {
-		initService(s)
+		initService(s, p.Config)
 	}
 }
