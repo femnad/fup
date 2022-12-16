@@ -22,6 +22,7 @@ func (p Provisioner) Apply() {
 	p.installPackages()
 	p.removePackages()
 	p.cargoInstall()
+	p.initServices()
 }
 
 func shouldUpdateSymlink(name, target string) (bool, bool) {
@@ -75,7 +76,7 @@ func createSymlink(symlink, extractDir string) {
 
 func extractArchive(archive base.Archive, settings base.Settings) {
 	archive.Unless.Stat = archive.ExpandStat(settings)
-    url := archive.ExpandURL(settings)
+	url := archive.ExpandURL(settings)
 
 	if !when.ShouldRun(archive) {
 		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
@@ -150,4 +151,12 @@ func (p Provisioner) cargoInstall() {
 	internal.Log.Noticef("Installing cargo packages")
 
 	cargoInstallPkgs(p.Config)
+}
+
+func (p Provisioner) initServices() {
+	internal.Log.Noticef("Initializing services")
+
+	for _, s := range p.Config.Services {
+		initService(s)
+	}
 }

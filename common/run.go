@@ -24,3 +24,10 @@ func RunCmdGetStderr(command string) (string, error) {
 
 	return b.String(), err
 }
+
+func RunCmdExitCode(c string) int {
+	cmds := strings.Split(c, " ")
+	cmd := exec.Command(cmds[0], cmds[1:]...)
+	cmd.Run()
+	return cmd.ProcessState.ExitCode()
+}

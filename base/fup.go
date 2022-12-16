@@ -15,7 +15,7 @@ import (
 type Settings struct {
 	ExtractDir string                    `yaml:"extract_dir"`
 	HostFacts  map[string]map[string]any `yaml:"host_facts"`
-	Versions   map[string]string         `yaml:"version_store"`
+	Versions   map[string]string         `yaml:"versions"`
 }
 
 type PackageSpec map[string][]string
@@ -47,6 +47,7 @@ type Config struct {
 	Cargo            []CargoPkg  `yaml:"cargo"`
 	Packages         PackageSpec `yaml:"packages"`
 	PreflightTasks   []Task      `yaml:"preflight"`
+	Services         []Service
 	Settings         Settings    `yaml:"settings"`
 	UnwantedPackages PackageSpec `yaml:"unwanted_packages"`
 }
