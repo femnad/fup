@@ -52,6 +52,10 @@ func cargoInstall(pkg base.CargoPkg, s base.Settings) {
 		installCmd = append(installCmd, "--bins")
 	}
 
+	if pkg.Version != "" {
+		installCmd = append(installCmd, []string{"--version", pkg.Version}...)
+	}
+
 	cmd := strings.Join(installCmd, " ")
 	output, err := common.RunCmdGetStderr(cmd)
 	if err != nil {

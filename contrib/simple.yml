@@ -296,3 +296,7 @@ cargo:
   - name: bottom
     unless:
       cmd: btm -V
+  - name: git-delta
+    unless:
+      cmd: delta -V
+    version: 0.14.0

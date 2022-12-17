@@ -1,10 +1,11 @@
 package base
 
 type CargoPkg struct {
-	Crate     string `yaml:"name"`
+	Crate    string `yaml:"name"`
 	Unless   Unless `yaml:"unless"`
 	Bins     bool   `yaml:"bins"`
 	MultiBin bool   `yaml:"multibin"`
+	Version  string `yaml:"version"`
 }
 
 func (c CargoPkg) GetUnless() Unless {
@@ -20,5 +21,5 @@ func (c CargoPkg) HasPostProc() bool {
 }
 
 func (c CargoPkg) Name() string {
-    return ""
+	return ""
 }

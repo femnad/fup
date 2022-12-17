@@ -170,27 +170,27 @@ func start(s base.Service) error {
 }
 
 func expandExec(s base.Service, cfg base.Config) base.Service {
-    exec := s.Unit.Exec
+	exec := s.Unit.Exec
 
-    exec = os.Expand(exec, func(prop string) string {
-        val := os.Getenv(prop)
-        if val != "" {
-            return val
-        }
+	exec = os.Expand(exec, func(prop string) string {
+		val := os.Getenv(prop)
+		if val != "" {
+			return val
+		}
 
-        if prop == "version" {
-            return cfg.Settings.Versions[s.Name]
-        }
+		if prop == "version" {
+			return cfg.Settings.Versions[s.Name]
+		}
 
-        return ""
-    })
+		return ""
+	})
 
-    s.Unit.Exec = exec
-    return s
+	s.Unit.Exec = exec
+	return s
 }
 
 func initService(s base.Service, cfg base.Config) {
-    s = expandExec(s, cfg)
+	s = expandExec(s, cfg)
 
 	err := persist(s)
 	if err != nil {

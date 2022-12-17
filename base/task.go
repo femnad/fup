@@ -126,5 +126,5 @@ func (t Task) HasPostProc() bool {
 }
 
 func (t Task) Name() string {
-    return ""
+	return ""
 }
