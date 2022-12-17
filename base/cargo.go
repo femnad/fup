@@ -13,7 +13,7 @@ func (c CargoPkg) GetUnless() Unless {
 }
 
 func (c CargoPkg) GetVersion() string {
-	return ""
+	return Version
 }
 
 func (c CargoPkg) HasPostProc() bool {
@@ -21,5 +21,5 @@ func (c CargoPkg) HasPostProc() bool {
 }
 
 func (c CargoPkg) Name() string {
-	return ""
+	return Crate
 }
