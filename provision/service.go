@@ -182,6 +182,7 @@ func expandExec(s base.Service, cfg base.Config) base.Service {
 			return cfg.Settings.Versions[s.Name]
 		}
 
+		internal.Log.Warningf("Unable resolve property %s for service %s", prop, s.Name)
 		return ""
 	})
 
