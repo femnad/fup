@@ -299,4 +299,6 @@ cargo:
   - name: git-delta
     unless:
       cmd: delta -V
+      # Escape characters in -V output for 0.14.0
+      post: head 0 | split 1
     version: 0.14.0

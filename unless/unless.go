@@ -181,7 +181,13 @@ func shouldSkip(unlessable Unlessable, settings base.Settings) bool {
 		return false
 	}
 
-	return postProc == unlessable.GetVersion()
+	vers := getVersion(unlessable, settings)
+	if postProc != vers {
+		internal.Log.Debugf("Existing version `%s`, required version `%s`", postProc, vers)
+		return false
+	}
+
+	return true
 }
 
 func ShouldSkip(unlessable Unlessable, settings base.Settings) bool {
