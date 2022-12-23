@@ -22,6 +22,7 @@ func (p Provisioner) Apply() {
 	p.installPackages()
 	p.removePackages()
 	p.cargoInstall()
+	p.goInstall()
 	p.initServices()
 	p.runRecipes()
 }
@@ -96,9 +97,15 @@ func (p Provisioner) removePackages() {
 }
 
 func (p Provisioner) cargoInstall() {
-	internal.Log.Noticef("Installing cargo packages")
+	internal.Log.Noticef("Installing Cargo packages")
 
 	cargoInstallPkgs(p.Config)
+}
+
+func (p Provisioner) goInstall() {
+	internal.Log.Noticef("Installing Go packages")
+
+	goInstallPkgs(p.Config)
 }
 
 func (p Provisioner) initServices() {

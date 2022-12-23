@@ -50,3 +50,8 @@ recipes:
     unless:
       stat: ~/.tmux/plugins/tmux-yank
     when: in-tmux
+
+go:
+  - name: aykamko/tag/...
+    unless:
+      cmd: tag -V
