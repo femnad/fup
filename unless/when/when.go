@@ -1,6 +1,8 @@
 package when
 
 import (
+	"strings"
+
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/unless"
 )
@@ -10,10 +12,17 @@ type Whenable interface {
 }
 
 func ShouldRun(whenable Whenable) bool {
+	negate := false
 	fact := whenable.RunWhen()
 	if fact == "" {
 		// No fact defined, always should run.
 		return true
+	}
+
+	tokens := strings.Split(fact, " ")
+	if len(tokens) == 2 && tokens[0] == "not" {
+		negate = true
+		fact = tokens[1]
 	}
 
 	factFn, ok := precheck.Facts[fact]
@@ -30,5 +39,8 @@ func ShouldRun(whenable Whenable) bool {
 		return false
 	}
 
+	if negate {
+		return !factResult
+	}
 	return factResult
 }
