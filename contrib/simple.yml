@@ -1,4 +1,5 @@
 settings:
+  clone_dir: ~/z/gl
   extract_dir: ~/z/dy
   host_facts:
     lock_period:
@@ -105,7 +106,7 @@ archives:
       stat: ${extract_dir}/Sonixd-${version}-linux-x64/sonixd
     set_permissions: true
     execute_after: |
-      find ${archive_dir}/Sonixd-${version}-linux-x64/ -name sonixd -exec chmod 755 '{}' \;
+      find ${extract_dir}/Sonixd-${version}-linux-x64/ -name sonixd -exec chmod 755 '{}' \;
   - url: https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${version}/tectonic-${version}-x86_64-unknown-linux-musl.tar.gz
     version: 0.12.0
     unless:
@@ -143,6 +144,7 @@ packages:
     - git-crypt
     - golang
     - gnupg2
+    - groff
     - highlight
     - htop
     - i3lock
@@ -302,3 +304,189 @@ cargo:
       # Escape characters in -V output for 0.14.0
       post: head 0 | split 1
     version: 0.14.0
+
+tasks:
+  - task: Stumpwm
+    unless:
+      cmd: stumpwm --version
+    steps:
+    - name: download
+      url: https://beta.quicklisp.org/quicklisp.lisp
+      dir: ${extract_dir}/quicklisp/quicklisp.lisp
+      unless:
+        stat: ${extract_dir}/quicklisp/quicklisp.lisp
+    - name: cmd
+      cmd: sbcl --load ${extract_dir}/quicklisp/quicklisp.lisp --eval '(quicklisp-quickstart:install)' --non-interactive
+    - name: rename
+      src: ~/quicklisp
+      dst: ~/.cache/quicklisp
+    - name: quicklisp
+      pkg:
+        - alexandria
+        - clx
+        - cl-ppcre
+    - name: git
+      repo: https://github.com/stumpwm/stumpwm.git
+      dir: ${clone_dir}/stumpwm
+    - name: cmd
+      cmd: |
+        ./autogen.sh
+        ./configure
+        make
+      pwd: ${clone_dir}/stumpwm
+    - name: cmd
+      cmd: make install
+      pwd: ${clone_dir}/stumpwm
+      sudo: true
+  - task: Neovim packages
+    when: not neovim-ready
+    steps:
+      - name: cmd
+        cmd: nvim +PlugInstall +qa
+  - task: Apply common chezmoi
+    when: ssh-ready
+    unless:
+      stat: ~/.gitconfig.user
+    steps:
+      - name: git
+        repo: git@gitlab.com:femnad/chezmoi-common.git
+        dir: ~/.local/share/chezmoi-common
+      - name: cmd
+        cmd: chezmoi apply -S ~/.local/share/chezmoi-common
+  - task: Change https auth to git auth
+    when: ssh-ready
+    steps:
+      - name: cmd
+        cmd: ~/bin/https-to-git.sh
+        pwd: ~/.local/share/chezmoi
+      - name: cmd
+        cmd: ~/bin/https-to-git.sh
+        pwd: ~/z/fm/fup
+  - task: Pull SSH key
+    when: ssh-pull-ready
+    unless:
+      stat: ~/.config/gcloud/application_default_credentials.json
+    steps:
+      - name: cmd
+        cmd: pup
+  - task: Install pyright
+    unless:
+      cmd: pyright --version
+    steps:
+      - name: cmd
+        cmd: npm install -g pyright
+        sudo: true
+  - task: Clone tmux plugin manager
+    steps:
+      - name: git
+        repo: https://github.com/tmux-plugins/tpm
+        dir: ~/.config/tmux/plugins/tpm
+    unless:
+      stat: ~/.config/tmux/plugins/tpm
+  - task: Init tmux plugins
+    steps:
+      - name: cmd
+        cmd: tmux run-shell ~/.config/tmux/plugins/tpm/bin/install_plugins
+    unless:
+      stat: ~/.config/tmux/plugins/tmux-yank
+    when: in-tmux
+  - task: Clone and symlink stumpish
+    steps:
+      - name: git
+        repo: https://github.com/stumpwm/stumpwm-contrib.git
+        dir: ${clone_dir}/stumpwm-contrib
+      - name: symlink
+        link_src: ~/bin/stumpish
+        link_target: ${clone_dir}/stumpwm-contrib/util/stumpish/stumpish
+    unless:
+      cmd: stumpish --help
+  - task: Clone and link clipnotify
+    unless:
+      cmd: which clipnotify
+    steps:
+      - name: git
+        repo: https://github.com/cdown/clipnotify.git
+        dir: ${clone_dir}/clipnotify
+      - name: cmd
+        cmd: make install
+        pwd: ${clone_dir}/clipnotify
+        sudo: true
+        unless:
+          cmd: which clipnotify
+  - task: Clone and link clipmenu
+    unless:
+      cmd: which clipmenud
+    steps:
+      - name: git
+        repo: https://github.com/cdown/clipmenu
+        dir: ${clone_dir}/clipmenu
+      - name: cmd
+        cmd: make install
+        pwd: ${clone_dir}/clipmenu
+        sudo: true
+        unless:
+          cmd: which clipmenud
+  - task: Install Spotify on fedora
+    when: is-fedora
+    steps:
+      - name: cmd
+        cmd: flatpak remote-add flathub https://flathub.org/repo/flathub.flatpakrepo
+        sudo: true
+        unless:
+          cmd: flatpak remotes
+          post: contains flathub
+      - name: cmd
+        cmd: flatpak install -y flathub com.spotify.Client
+        unless:
+          cmd: flatpak list
+          post: contains
+      - name: template
+        target: ${HOME}/bin/spotify
+        mode: '0755'
+        content: |
+          #!/usr/bin/env bash
+          flatpak run com.spotify.Client
+  - task: Install Mullvad app
+    when: is-ubuntu
+    unless:
+      cmd: dpkg-query --list mullvad-vpn
+    steps:
+      - name: cmd
+        cmd: |
+          wget -q https://mullvad.net/media/app/MullvadVPN-2022.4_amd64.deb -O /tmp/MullvadVPN-2022.4_amd64.deb
+          apt install -y /tmp/MullvadVPN-2022.4_amd64.deb
+          rm /tmp/MullvadVPN-2022.4_amd64.deb
+        sudo: true
+  - task: Install Mullvad app
+    when: is-fedora
+    steps:
+      - name: cmd
+        cmd: dnf install -y https://mullvad.net/media/app/MullvadVPN-2022.5_x86_64.rpm
+        sudo: true
+    unless:
+      cmd: rpm -q mullvad-vpn
+  - task: Set lockscreen
+    steps:
+      - name: cmd
+        cmd: ~/bin/locko
+    unless:
+      stat: ~/y/i3locko/locko.png
+  - task: Enable gsutil
+    unless:
+      cmd: gsutil version
+    steps:
+      - name: shell
+        cmd: echo '' | ~/bin/gcloud components install gsutil
+      - name: symlink
+        link_src: ~/bin/gsutil
+        link_target: ${extract_dir}/google-cloud-sdk/bin/gsutil
+  - task: Clone and symlink vimv
+    steps:
+      - name: git
+        repo: https://github.com/thameera/vimv.git
+        dir: ${clone_dir}/vimv
+      - name: symlink
+        link_src: ~/bin/vimv
+        link_target: ${clone_dir}/vimv/vimv
+    unless:
+      stat: ${clone_dir}/vimv/vimv

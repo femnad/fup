@@ -195,7 +195,7 @@ func ShouldSkip(unlessable Unlessable, settings base.Settings) bool {
 	stat := unless.Stat
 
 	if stat != "" {
-		stat = internal.ExpandUser(stat)
+		stat = base.ExpandSettings(settings, stat)
 		internal.Log.Debugf("Checking existence of %s", stat)
 		_, err := os.Stat(stat)
 		return err == nil

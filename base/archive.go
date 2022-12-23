@@ -2,8 +2,6 @@ package base
 
 import (
 	"os"
-
-	"github.com/femnad/fup/internal"
 )
 
 type Archive struct {
@@ -53,9 +51,8 @@ func (a Archive) ExpandSymlinks(s Settings) []string {
 
 func (a Archive) ExpandStat(settings Settings) string {
 	return os.Expand(a.Unless.Stat, func(s string) string {
-		if s == "extract_dir" {
-			extractDir := settings.ExtractDir
-			return internal.ExpandUser(extractDir)
+		if IsExpandable(s) {
+			return ExpandSettings(settings, s)
 		}
 		if s == "version" {
 			return a.Version

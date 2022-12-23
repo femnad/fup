@@ -1,0 +1,52 @@
+settings:
+  extract_dir: ~/z/dy
+  clone_dir: ~/z/gl
+  self_clone_dir: ~/z/fm
+  virtualenv_dir: ~/.local/share/venv
+  versions:
+    chezmoi: 2.28.0
+
+packages:
+  .*:
+    - curl
+    - fish
+    - fzf
+    - git
+    - htop
+    - neovim
+    - ranger
+    - tmux
+
+archives:
+  - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
+    name: chezmoi
+    target: chezmoi
+    symlink:
+      - chezmoi/chezmoi
+    unless:
+      cmd: chezmoi --version
+
+accept_host_keys:
+  - github.com
+  - gitlab.com
+
+recipes:
+  - task: Neovim packages
+    when: not neovim-ready
+    steps:
+      - name: cmd
+        cmd: nvim +PlugInstall +qa
+  - task: Clone tmux plugin manager
+    steps:
+      - name: git
+        repo: https://github.com/tmux-plugins/tpm
+        dir: ~/.tmux/plugins/tpm
+    unless:
+      stat: ~/.tmux/plugins/tpm
+  - task: Init tmux plugins
+    steps:
+      - name: cmd
+        cmd: tmux run-shell ~/.tmux/plugins/tpm/bin/install_plugins
+    unless:
+      stat: ~/.tmux/plugins/tmux-yank
+    when: in-tmux

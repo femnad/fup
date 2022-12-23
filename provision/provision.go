@@ -1,10 +1,10 @@
 package provision
 
 import (
-	"os"
 	"path"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/unless"
 	"github.com/femnad/fup/unless/when"
@@ -23,20 +23,7 @@ func (p Provisioner) Apply() {
 	p.removePackages()
 	p.cargoInstall()
 	p.initServices()
-}
-
-func shouldUpdateSymlink(name, target string) (bool, bool) {
-	_, err := os.Lstat(name)
-	if err != nil {
-		return false, true
-	}
-
-	currLink, err := os.Readlink(name)
-	if err != nil {
-		return true, true
-	}
-
-	return true, currLink != target
+	p.runRecipes()
 }
 
 func createSymlink(symlink, extractDir string) {
@@ -47,31 +34,7 @@ func createSymlink(symlink, extractDir string) {
 	symlinkName := path.Join(binPath, symlinkBasename)
 	symlinkName = internal.ExpandUser(symlinkName)
 
-	exists, update := shouldUpdateSymlink(symlinkName, symlinkTarget)
-	if !update {
-		internal.Log.Debugf("Symlink %s already exists", symlinkName)
-		return
-	}
-
-	symlinkDir, _ := path.Split(symlinkName)
-	err := mkdirAll(symlinkDir, dirMode)
-	if err != nil {
-		internal.Log.Errorf("Error creating symlink dir %s: %v", symlinkDir, err)
-		return
-	}
-
-	internal.Log.Debugf("Creating symlink target=%s, name=%s", symlinkTarget, symlinkName)
-	if exists {
-		if err = os.Remove(symlinkName); err != nil {
-			internal.Log.Errorf("Error removing existing symlink %s: %v", symlinkName, err)
-			return
-		}
-	}
-
-	err = os.Symlink(symlinkTarget, symlinkName)
-	if err != nil {
-		internal.Log.Errorf("Error creating symlink target=%s, name=%s: %v", symlinkTarget, symlinkName, err)
-	}
+	common.Symlink(symlinkName, symlinkTarget)
 }
 
 func extractArchive(archive base.Archive, settings base.Settings) {
@@ -106,26 +69,11 @@ func (p Provisioner) extractArchives() {
 	}
 }
 
-func (p Provisioner) runPreflightTask(task base.Task) {
-	if !when.ShouldRun(task) {
-		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", task.Desc, task.When)
-		return
-	}
-
-	if precheck.ShouldSkip(task, p.Config.Settings) {
-		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", task.Desc, task.Unless)
-		return
-	}
-
-	internal.Log.Infof("Running task: %s", task.Name)
-	task.Run()
-}
-
 func (p Provisioner) runPreflightTasks() {
 	internal.Log.Notice("Running preflight tasks")
 
 	for _, task := range p.Config.PreflightTasks {
-		p.runPreflightTask(task)
+		runTask(task, p.Config)
 	}
 }
 
@@ -159,4 +107,10 @@ func (p Provisioner) initServices() {
 	for _, s := range p.Config.Services {
 		initService(s, p.Config)
 	}
+}
+
+func (p Provisioner) runRecipes() {
+	internal.Log.Noticef("Running tasks")
+
+	runTasks(p.Config)
 }

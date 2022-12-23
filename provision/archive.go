@@ -58,15 +58,6 @@ func processDownload(archive base.Archive, s base.Settings) error {
 	return extractFn(response, dirName)
 }
 
-func mkdirAll(dir string, mode os.FileMode) error {
-	err := os.MkdirAll(dir, mode)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func getReader(response remote.Response) (io.Reader, error) {
 	filename := response.URL
 	if response.ContentDisposition != "" {
@@ -102,7 +93,7 @@ func getReader(response remote.Response) (io.Reader, error) {
 
 func extractCompressedFile(info os.FileInfo, outputPath string, reader io.Reader) error {
 	if info.IsDir() {
-		if err := mkdirAll(outputPath, info.Mode()); err != nil {
+		if err := os.MkdirAll(outputPath, info.Mode()); err != nil {
 			return err
 		}
 		return nil
@@ -133,7 +124,7 @@ func extractCompressedFile(info os.FileInfo, outputPath string, reader io.Reader
 
 func unzipFile(info os.FileInfo, outputPath string, f *zip.File) error {
 	if info.IsDir() {
-		if err := mkdirAll(outputPath, info.Mode()); err != nil {
+		if err := os.MkdirAll(outputPath, info.Mode()); err != nil {
 			return err
 		}
 		return nil

@@ -12,7 +12,7 @@ import (
 const (
 	neovimPluginsDir = "~/.config/nvim/plugged"
 	passwordStoreDir = "~/.password-store"
-	tmuxEnvKey = "TMUX"
+	tmuxEnvKey       = "TMUX"
 )
 
 func InTmux() (bool, error) {
@@ -44,7 +44,7 @@ func IsUbuntu() (bool, error) {
 func NeovimReady() (bool, error) {
 	d := internal.ExpandUser(neovimPluginsDir)
 	_, err := os.Stat(d)
-	return err != nil, nil
+	return err == nil, nil
 }
 
 func SshReady() (bool, error) {
@@ -76,15 +76,15 @@ func SshReady() (bool, error) {
 func SshPullReady() (bool, error) {
 	d := internal.ExpandUser(passwordStoreDir)
 	_, err := os.Stat(d)
-	return err != nil, nil
+	return err == nil, nil
 }
 
 var Facts = map[string]func() (bool, error){
-	"in-tmux": InTmux,
-	"is-debian": IsDebian,
-	"is-fedora": IsFedora,
-	"is-ubuntu": IsUbuntu,
-	"neovim-ready": NeovimReady,
+	"in-tmux":        InTmux,
+	"is-debian":      IsDebian,
+	"is-fedora":      IsFedora,
+	"is-ubuntu":      IsUbuntu,
+	"neovim-ready":   NeovimReady,
 	"ssh-pull-ready": SshPullReady,
-	"ssh-ready": SshReady,
+	"ssh-ready":      SshReady,
 }

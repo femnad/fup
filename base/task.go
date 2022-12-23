@@ -3,9 +3,13 @@ package base
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
+
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
@@ -36,8 +40,16 @@ func runCommand(cmd exec.Cmd) error {
 	return fmt.Errorf("error running command %s: %v => %s", cmd.String(), err, output)
 }
 
-func runCmd(step Step) error {
-	cmds := strings.Split(step.Cmd, " ")
+func createSymlink(step Step, cfg Config) error {
+	name := internal.ExpandUser(step.LinkSrc)
+	target := ExpandSettings(cfg.Settings, step.LinkTarget)
+	common.Symlink(name, target)
+	return nil
+}
+
+func runCmd(step Step, cfg Config) error {
+	c := internal.ExpandUser(step.Cmd)
+	cmds := strings.Split(c, " ")
 	var cmd *exec.Cmd
 	if step.Sudo {
 		cmd = exec.Command("sudo", cmds...)
@@ -47,7 +59,7 @@ func runCmd(step Step) error {
 	return runCommand(*cmd)
 }
 
-func runShellCmd(step Step) error {
+func runShellCmd(step Step, cfg Config) error {
 	var cmd *exec.Cmd
 	if step.Sudo {
 		cmd = exec.Command("sudo", []string{shell, "-c", step.Cmd}...)
@@ -57,12 +69,30 @@ func runShellCmd(step Step) error {
 	return runCommand(*cmd)
 }
 
-func getStepFunction(step Step) (func(Step) error, error) {
+func runGitClone(step Step, cfg Config) error {
+	path := ExpandSettings(cfg.Settings, step.Dir)
+	_, err := os.Stat(path)
+	if err == nil {
+		return nil
+	}
+
+	opt := git.CloneOptions{
+		URL: step.Repo,
+	}
+	_, err = git.PlainClone(path, false, &opt)
+	return err
+}
+
+func getStepFunction(step Step) (func(Step, Config) error, error) {
 	switch step.Name {
 	case "cmd":
 		return runCmd, nil
+	case "git":
+		return runGitClone, nil
 	case "shell":
 		return runShellCmd, nil
+	case "symlink":
+		return createSymlink, nil
 	case "":
 		return nil, fmt.Errorf("no operation defined for step: %s", step)
 	default:
@@ -71,21 +101,25 @@ func getStepFunction(step Step) (func(Step) error, error) {
 }
 
 type Step struct {
-	Name string `yaml:"name"`
-	Cmd  string `yaml:"cmd"`
-	Sudo bool   `yaml:"sudo"`
+	Cmd        string `yaml:"cmd"`
+	Dir        string `yaml:"dir"`
+	LinkSrc    string `yaml:"link_src"`
+	LinkTarget string `yaml:"link_target"`
+	Name       string `yaml:"name"`
+	Repo       string `yaml:"repo"`
+	Sudo       bool   `yaml:"sudo"`
 }
 
 func (s Step) String() string {
 	return fmt.Sprintf("operation=%s, cmd=%s, sudo=%t", s.Name, s.Cmd, s.Sudo)
 }
 
-func (s Step) Run() error {
+func (s Step) Run(cfg Config) error {
 	fn, err := getStepFunction(s)
 	if err != nil {
 		return fmt.Errorf("error getting function for step: %v", err)
 	}
-	err = fn(s)
+	err = fn(s, cfg)
 	if err != nil {
 		return fmt.Errorf("error running function for step: %v", err)
 	}
@@ -103,11 +137,11 @@ func (t Task) RunWhen() string {
 	return t.When
 }
 
-func (t Task) Run() {
+func (t Task) Run(cfg Config) {
 	for _, step := range t.Steps {
-		err := step.Run()
+		err := step.Run(cfg)
 		if err != nil {
-			internal.Log.Errorf("error running task %s: %v", t.Name, err)
+			internal.Log.Errorf("error running task %s: %v", t.Name(), err)
 			return
 		}
 	}
@@ -126,5 +160,5 @@ func (t Task) HasPostProc() bool {
 }
 
 func (t Task) Name() string {
-	return ""
+	return t.Desc
 }
