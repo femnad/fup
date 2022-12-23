@@ -15,13 +15,14 @@ packages:
     - htop
     - neovim
     - ranger
+    - ripgrep
     - tmux
 
 archives:
   - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
     name: chezmoi
     target: chezmoi
-    symlink:
+    link:
       - chezmoi/chezmoi
     unless:
       cmd: chezmoi --version

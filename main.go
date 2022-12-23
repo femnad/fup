@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alexflint/go-arg"
@@ -8,6 +9,10 @@ import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/provision"
+)
+
+const (
+	version = "0.2.1"
 )
 
 type args struct {
@@ -18,7 +23,7 @@ type args struct {
 }
 
 func (args) Version() string {
-	return "fup 0.2.0"
+	return fmt.Sprintf("fup %s", version)
 }
 
 func main() {
