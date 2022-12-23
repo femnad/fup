@@ -18,7 +18,7 @@ type args struct {
 }
 
 func (args) Version() string {
-	return "fup 0.1.0"
+	return "fup 0.2.0"
 }
 
 func main() {
