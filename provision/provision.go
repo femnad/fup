@@ -35,7 +35,10 @@ func createSymlink(symlink, extractDir string) {
 	symlinkName := path.Join(binPath, symlinkBasename)
 	symlinkName = internal.ExpandUser(symlinkName)
 
-	common.Symlink(symlinkName, symlinkTarget)
+	err := common.Symlink(symlinkName, symlinkTarget)
+	if err != nil {
+		internal.Log.Errorf("error creating symlink: %v", err)
+	}
 }
 
 func extractArchive(archive base.Archive, settings base.Settings) {
