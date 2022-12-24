@@ -27,7 +27,6 @@ func shouldUpdateSymlink(name, target string) (bool, bool) {
 }
 
 func Symlink(symlinkName, symlinkTarget string) error {
-	fmt.Println("hi")
 	exists, update := shouldUpdateSymlink(symlinkName, symlinkTarget)
 	if !update {
 		internal.Log.Debugf("Symlink %s already exists", symlinkName)
