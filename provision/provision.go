@@ -119,6 +119,12 @@ func (p Provisioner) initServices() {
 	}
 }
 
+func (p Provisioner) pythonInstall() {
+	internal.Log.Notice("Installing Python packages")
+
+	pythonInstallPkgs(p.Config)
+}
+
 func (p Provisioner) runRecipes() {
 	internal.Log.Noticef("Running tasks")
 

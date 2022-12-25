@@ -13,10 +13,11 @@ import (
 )
 
 type Settings struct {
-	CloneDir   string                    `yaml:"clone_dir"`
-	ExtractDir string                    `yaml:"extract_dir"`
-	HostFacts  map[string]map[string]any `yaml:"host_facts"`
-	Versions   map[string]string         `yaml:"versions"`
+	CloneDir      string                    `yaml:"clone_dir"`
+	ExtractDir    string                    `yaml:"extract_dir"`
+	HostFacts     map[string]map[string]any `yaml:"host_facts"`
+	Versions      map[string]string         `yaml:"versions"`
+	VirtualEnvDir string                    `yaml:"venv_dir"`
 }
 
 type PackageSpec map[string][]string
@@ -49,6 +50,7 @@ type Config struct {
 	Go               []GoPkg     `yaml:"go"`
 	Packages         PackageSpec `yaml:"packages"`
 	PreflightTasks   []Task      `yaml:"preflight"`
+	Python           []PythonPkg `yaml:"python"`
 	Services         []Service   `yaml:"services"`
 	Settings         Settings    `yaml:"settings"`
 	Tasks            []Task      `yaml:"tasks"`
