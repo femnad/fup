@@ -490,3 +490,14 @@ tasks:
         link_target: ${clone_dir}/vimv/vimv
     unless:
       stat: ${clone_dir}/vimv/vimv
+
+go:
+  - name: femnad/rabn/cmd/rabn
+    unless:
+      cmd: rabn --version
+  - name: femnad/stuff/cmd/fred
+    unless:
+      cmd: fred --version
+  - name: aykamko/tag
+    unless:
+      cmd: tag -V
