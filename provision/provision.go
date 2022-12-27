@@ -20,6 +20,7 @@ var (
 		"remove-packages",
 		"cargo",
 		"go",
+		"python",
 		"services",
 		"tasks",
 	}
@@ -39,6 +40,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		"remove-packages": p.removePackages,
 		"cargo":           p.cargoInstall,
 		"go":              p.goInstall,
+		"python":          p.pythonInstall,
 		"services":        p.initServices,
 		"tasks":           p.runTasks,
 	}
