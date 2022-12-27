@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	neovimPluginsDir = "~/.config/nvim/plugged"
+	neovimPluginsDir = "~/.local/share/plugged"
 	passwordStoreDir = "~/.password-store"
 	tmuxEnvKey       = "TMUX"
 )
