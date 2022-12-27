@@ -190,17 +190,27 @@ func shouldSkip(unlessable Unlessable, settings base.Settings) bool {
 	return true
 }
 
+func resolveStat(stat string, unlessable Unlessable, settings base.Settings) string {
+	lookup := map[string]string{}
+	version := unlessable.GetVersion()
+
+	if version == "" {
+		version = settings.Versions[unlessable.Name()]
+	}
+
+	if version != "" {
+		lookup["version"] = version
+	}
+
+	return base.ExpandSettingsWithLookup(settings, stat, lookup)
+}
+
 func ShouldSkip(unlessable Unlessable, settings base.Settings) bool {
 	unless := unlessable.GetUnless()
 	stat := unless.Stat
 
 	if stat != "" {
-		lookup := map[string]string{}
-		version := unlessable.GetVersion()
-		if version != "" {
-			lookup["version"] = version
-		}
-		stat = base.ExpandSettingsWithLookup(settings, stat, lookup)
+		stat = resolveStat(stat, unlessable, settings)
 
 		internal.Log.Debugf("Checking existence of %s", stat)
 		_, err := os.Stat(stat)
