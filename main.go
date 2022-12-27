@@ -16,10 +16,11 @@ const (
 )
 
 type args struct {
-	File      string `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
-	LogFile   string `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
-	LogLevel  int    `arg:"-l,--loglevel" default:"5"`
-	WriteLogs bool   `arg:"-w,--writelogs" default:"false"`
+	File         string   `arg:"-f,--file" default:"~/.config/fup/fup.yml"`
+	LogFile      string   `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
+	LogLevel     int      `arg:"-l,--loglevel" default:"5"`
+	Provisioners []string `arg:"-p,--provisioners"`
+	WriteLogs    bool     `arg:"-w,--writelogs" default:"false"`
 }
 
 func (args) Version() string {
@@ -41,6 +42,6 @@ func main() {
 		log.Fatalf("%v\n", err)
 	}
 
-	p := provision.Provisioner{Config: config}
+	p := provision.NewProvisioner(config, args.Provisioners)
 	p.Apply()
 }

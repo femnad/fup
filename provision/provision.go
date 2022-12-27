@@ -12,19 +12,69 @@ import (
 
 const binPath = "~/bin"
 
+var (
+	provisionOrder = []string{
+		"preflight",
+		"archive",
+		"packages",
+		"remove-packages",
+		"cargo",
+		"go",
+		"services",
+		"tasks",
+	}
+)
+
 type Provisioner struct {
-	Config base.Config
+	Config       base.Config
+	Provisioners map[string]func()
+}
+
+func NewProvisioner(cfg base.Config, provs []string) Provisioner {
+	p := Provisioner{Config: cfg}
+	provisioners := map[string]func(){
+		"preflight":       p.runPreflightTasks,
+		"archive":         p.extractArchives,
+		"packages":        p.installPackages,
+		"remove-packages": p.removePackages,
+		"cargo":           p.cargoInstall,
+		"go":              p.goInstall,
+		"services":        p.initServices,
+		"tasks":           p.runTasks,
+	}
+
+	if len(provs) == 0 {
+		return Provisioner{Config: cfg, Provisioners: provisioners}
+	}
+
+	filtered := map[string]func(){}
+	for _, desired := range provs {
+		prov, ok := provisioners[desired]
+		if !ok {
+			internal.Log.Warningf("Unknown provisioner %s", desired)
+			continue
+		}
+
+		filtered[desired] = prov
+	}
+
+	if len(filtered) == 0 {
+		internal.Log.Warningf("Ignoring provisioner filter which returned no results")
+		return Provisioner{Config: cfg, Provisioners: provisioners}
+	}
+
+	return Provisioner{Config: cfg, Provisioners: filtered}
 }
 
 func (p Provisioner) Apply() {
-	p.runPreflightTasks()
-	p.extractArchives()
-	p.installPackages()
-	p.removePackages()
-	p.cargoInstall()
-	p.goInstall()
-	p.initServices()
-	p.runRecipes()
+	for _, prov := range provisionOrder {
+		fn, ok := p.Provisioners[prov]
+		if !ok {
+			continue
+		}
+
+		fn()
+	}
 }
 
 func createSymlink(symlink, extractDir string) {
@@ -125,7 +175,7 @@ func (p Provisioner) pythonInstall() {
 	pythonInstallPkgs(p.Config)
 }
 
-func (p Provisioner) runRecipes() {
+func (p Provisioner) runTasks() {
 	internal.Log.Noticef("Running tasks")
 
 	runTasks(p.Config)
