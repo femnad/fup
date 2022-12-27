@@ -1,6 +1,7 @@
 package base
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -52,12 +53,12 @@ func (a Archive) ExpandSymlinks(s Settings) []string {
 func (a Archive) ExpandStat(settings Settings) string {
 	return os.Expand(a.Unless.Stat, func(s string) string {
 		if IsExpandable(s) {
-			return ExpandSettings(settings, s)
+			return ExpandSettings(settings, a.Unless.Stat)
 		}
 		if s == "version" {
 			return a.Version
 		}
-		return s
+		return fmt.Sprintf("${%s}", s)
 	})
 }
 

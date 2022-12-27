@@ -92,7 +92,6 @@ func createSymlink(symlink, extractDir string) {
 }
 
 func extractArchive(archive base.Archive, settings base.Settings) {
-	archive.Unless.Stat = archive.ExpandStat(settings)
 	url := archive.ExpandURL(settings)
 
 	if !when.ShouldRun(archive) {
