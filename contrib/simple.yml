@@ -282,6 +282,9 @@ cargo:
   - name: alacritty
     unless:
       cmd: alacritty --version
+  - name: bat
+    unless:
+      cmd: bat -V
   - name: fd-find
     unless:
       cmd: fd -V
@@ -493,10 +496,10 @@ tasks:
       stat: ${clone_dir}/vimv/vimv
 
 go:
-  - name: femnad/rabn/cmd/rabn
+  - name: femnad/rabn
     unless:
       cmd: rabn --version
-  - name: femnad/stuff/cmd/fred
+  - name: femnad/fred
     unless:
       cmd: fred --version
   - name: aykamko/tag
