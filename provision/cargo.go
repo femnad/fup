@@ -10,24 +10,17 @@ import (
 	precheck "github.com/femnad/fup/unless"
 )
 
-func crateArgs(name string, multiBin bool) ([]string, error) {
+func crateArgs(name string) ([]string, error) {
 	if !strings.HasPrefix(name, "https://") {
 		return []string{name}, nil
 	}
 
-	args := []string{"--git", name}
-
-	if !multiBin {
-		return args, nil
-	}
-
-	repoName, err := common.NameFromRepo(name)
+	crate, err := common.NameFromRepo(name)
 	if err != nil {
 		return nil, fmt.Errorf("error getting repo name for %s: %v", name, err)
 	}
-	args = append(args, repoName)
 
-	return args, nil
+	return []string{"--git", name, crate}, nil
 }
 
 func cargoInstall(pkg base.CargoPkg, s base.Settings) {
@@ -41,7 +34,7 @@ func cargoInstall(pkg base.CargoPkg, s base.Settings) {
 
 	installCmd := []string{"cargo", "install"}
 
-	crate, err := crateArgs(name, pkg.MultiBin)
+	crate, err := crateArgs(name)
 	if err != nil {
 		internal.Log.Errorf("error getting crate name for %s: %v", name, err)
 		return

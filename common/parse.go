@@ -14,6 +14,10 @@ func NameFromRepo(repo string) (string, error) {
 	}
 
 	_, repoName := path.Split(u.Path)
+	if !strings.Contains(repoName, ".") {
+		return repoName, nil
+	}
+
 	split := strings.Split(repoName, ".")
 	if len(split) != 2 {
 		return "", fmt.Errorf("unexpected repo name %s", repoName)
