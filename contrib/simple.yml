@@ -16,7 +16,7 @@ settings:
     sonixd: 0.15.3
     tectonic: 0.12.0
     terraform: 1.3.3
-    vscode: 1.74.1
+    vscode: 1.74.2
 
 preflight:
   - task: Enable RPM Fusion
@@ -293,6 +293,9 @@ cargo:
   - name: bat
     unless:
       cmd: bat -V
+  - name: exa
+    unless:
+      cmd: exa -v
   - name: fd-find
     unless:
       cmd: fd -V
@@ -519,3 +522,9 @@ go:
   - name: gitlab.com/gitlab-org/cli/cmd/glab
     unless:
       cmd: glab version
+  - name: charmbracelet/glow
+    unless:
+      cmd: glow --version
+  - name: gokcehan/lf
+    unless:
+      cmd: lf -version
