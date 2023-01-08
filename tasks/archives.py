@@ -24,11 +24,29 @@ def do_set_permissions(file_iterator):
             f.mode = 0o644
 
 
-def extract_tar(file_name, dest, set_permissions=False):
+def is_within_directory(directory: str, target: str) -> bool:
+    abs_directory = os.path.abspath(directory)
+    abs_target = os.path.abspath(target)
+    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+    return prefix == abs_directory
+
+
+def safe_extract(tar: tarfile.TarFile, path: str):
+    for member in tar.getmembers():
+        member_path = os.path.join(path, member.name)
+        if not is_within_directory(path, member_path):
+            raise Exception('Attempted path traversal in tar file')
+
+    tar.extractall(path)
+
+
+def extract_tar(file_name: str, dest: str, set_permissions=False) -> None:
     with tarfile.open(file_name) as tf:
         if set_permissions:
             do_set_permissions(tf)
-        tf.extractall(dest)
+
+        safe_extract(tf, dest)
 
 
 def extract_zip(f, dest, set_permissions=False):
