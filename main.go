@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"path"
 
 	"github.com/alexflint/go-arg"
 
@@ -28,6 +30,21 @@ func (args) Version() string {
 	return fmt.Sprintf("fup %s", version)
 }
 
+func determineConfigFile(a args) (cfg string) {
+	cfg = a.File
+	_, err := os.Stat("fup.yml")
+	if err == nil {
+		wd, err := os.Getwd()
+		if err != nil {
+			internal.Log.Errorf("error determining current dir: %v", err)
+			return
+		}
+		return path.Join(wd, "fup.yml")
+	}
+
+	return cfg
+}
+
 func main() {
 	var parsed args
 	arg.MustParse(&parsed)
@@ -38,7 +55,10 @@ func main() {
 	}
 	internal.InitLogging(parsed.LogLevel, logFile, parsed.DebugToStderr)
 
-	config, err := base.ReadConfig(parsed.File)
+	cfg := determineConfigFile(parsed)
+
+	internal.Log.Debugf("Reading config file %s", cfg)
+	config, err := base.ReadConfig(cfg)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
