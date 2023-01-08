@@ -1,7 +1,6 @@
 package base
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,38 +12,10 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
-var shell = "sh"
-
-func runCommand(cmd exec.Cmd) error {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err == nil {
-		return nil
-	}
-
-	stdoutStr := stdout.String()
-	var output string
-	if stdoutStr != "" {
-		output += fmt.Sprintf("stdout: %s", stdoutStr)
-	}
-	stderrStr := stderr.String()
-	if stderrStr != "" {
-		if output != "" {
-			output += ", "
-		}
-		output += fmt.Sprintf("stderr: %s", stderrStr)
-	}
-	return fmt.Errorf("error running command %s: %v => %s", cmd.String(), err, output)
-}
-
 func createSymlink(step Step, cfg Config) error {
 	name := internal.ExpandUser(step.LinkSrc)
 	target := ExpandSettings(cfg.Settings, step.LinkTarget)
-	common.Symlink(name, target)
-	return nil
+	return common.Symlink(name, target)
 }
 
 func runCmd(step Step, cfg Config) error {
@@ -56,17 +27,11 @@ func runCmd(step Step, cfg Config) error {
 	} else {
 		cmd = exec.Command(cmds[0], cmds[1:]...)
 	}
-	return runCommand(*cmd)
+	return common.RunCommandWithOutput(*cmd)
 }
 
 func runShellCmd(step Step, cfg Config) error {
-	var cmd *exec.Cmd
-	if step.Sudo {
-		cmd = exec.Command("sudo", []string{shell, "-c", step.Cmd}...)
-	} else {
-		cmd = exec.Command(shell, "-c", step.Cmd)
-	}
-	return runCommand(*cmd)
+	return common.RunShellCmd(step.Cmd, step.Sudo)
 }
 
 func runGitClone(step Step, cfg Config) error {

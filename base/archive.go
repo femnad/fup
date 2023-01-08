@@ -6,13 +6,14 @@ import (
 )
 
 type Archive struct {
-	Ref     string   `yaml:"name"`
-	Symlink []string `yaml:"link"`
-	Target  string   `yaml:"target"`
-	Unless  Unless   `yaml:"unless"`
-	Url     string   `yaml:"url"`
-	Version string   `yaml:"version"`
-	When    string   `yaml:"when"`
+	ExecuteAfter []string `yaml:"execute_after"`
+	Ref          string   `yaml:"name"`
+	Symlink      []string `yaml:"link"`
+	Target       string   `yaml:"target"`
+	Unless       Unless   `yaml:"unless"`
+	Url          string   `yaml:"url"`
+	Version      string   `yaml:"version"`
+	When         string   `yaml:"when"`
 }
 
 func (a Archive) String() string {

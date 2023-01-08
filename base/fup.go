@@ -17,7 +17,7 @@ type Settings struct {
 	ExtractDir    string                    `yaml:"extract_dir"`
 	HostFacts     map[string]map[string]any `yaml:"host_facts"`
 	Versions      map[string]string         `yaml:"versions"`
-	VirtualEnvDir string                    `yaml:"venv_dir"`
+	VirtualEnvDir string                    `yaml:"virtualenv_dir"`
 }
 
 type PackageSpec map[string][]string
@@ -101,7 +101,7 @@ func decodeConfig(filename string) (Config, error) {
 
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		return config, err
+		return config, fmt.Errorf("error deserializing config from %s: %v", filename, err)
 	}
 
 	return config, nil

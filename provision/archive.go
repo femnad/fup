@@ -18,8 +18,11 @@ import (
 	"github.com/xi2/xz"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
+	precheck "github.com/femnad/fup/unless"
+	"github.com/femnad/fup/unless/when"
 )
 
 const (
@@ -292,4 +295,49 @@ func download(closer io.ReadCloser, target string) error {
 
 	return nil
 
+}
+func createSymlink(symlink, extractDir string) {
+	symlinkTarget := path.Join(extractDir, symlink)
+	symlinkTarget = internal.ExpandUser(symlinkTarget)
+
+	_, symlinkBasename := path.Split(symlink)
+	symlinkName := path.Join(binPath, symlinkBasename)
+	symlinkName = internal.ExpandUser(symlinkName)
+
+	err := common.Symlink(symlinkName, symlinkTarget)
+	if err != nil {
+		internal.Log.Errorf("error creating symlink: %v", err)
+	}
+}
+
+func extractArchive(archive base.Archive, settings base.Settings) {
+	url := archive.ExpandURL(settings)
+
+	if !when.ShouldRun(archive) {
+		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
+	}
+
+	if precheck.ShouldSkip(archive, settings) {
+		internal.Log.Debugf("Skipping download: %s", url)
+		return
+	}
+
+	err := Extract(archive, settings)
+	if err != nil {
+		internal.Log.Errorf("Error downloading archive %s: %v", url, err)
+		return
+	}
+
+	for _, symlink := range archive.ExpandSymlinks(settings) {
+		createSymlink(symlink, settings.ExtractDir)
+	}
+
+	for _, cmd := range archive.ExecuteAfter {
+		cmd = base.ExpandSettingsWithLookup(settings, cmd, map[string]string{"version": archive.Version})
+		internal.Log.Debugf("Running command %s", cmd)
+		err = common.RunShellCmd(cmd, false)
+		if err != nil {
+			internal.Log.Errorf("error running shell command %s: %v", cmd, err)
+		}
+	}
 }

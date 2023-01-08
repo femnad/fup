@@ -1,6 +1,7 @@
 settings:
   clone_dir: ~/z/gl
   extract_dir: ~/z/dy
+  virtualenv_dir: ~/.local/share/venv
   versions:
     chezmoi: 2.29.0
 
@@ -115,3 +116,8 @@ go:
   - name: gokcehan/lf
     unless:
       cmd: lf -version
+
+python:
+  - name: tuir
+    link:
+      - tuir
