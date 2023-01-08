@@ -16,11 +16,12 @@ const (
 )
 
 type args struct {
-	File         string   `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml"`
-	LogFile      string   `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
-	LogLevel     int      `arg:"-l,--loglevel" default:"5"`
-	Provisioners []string `arg:"-p,--provisioners"`
-	WriteLogs    bool     `arg:"-w,--writelogs" default:"false"`
+	DebugToStderr bool     `arg:"-b,--debug-to-stderr"`
+	File          string   `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml"`
+	LogFile       string   `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
+	LogLevel      int      `arg:"-l,--loglevel" default:"5"`
+	Provisioners  []string `arg:"-p,--provisioners"`
+	WriteLogs     bool     `arg:"-w,--writelogs"`
 }
 
 func (args) Version() string {
@@ -28,20 +29,20 @@ func (args) Version() string {
 }
 
 func main() {
-	var args args
-	arg.MustParse(&args)
+	var parsed args
+	arg.MustParse(&parsed)
 
-	logFile := internal.ExpandUser(args.LogFile)
-	if !args.WriteLogs {
+	logFile := internal.ExpandUser(parsed.LogFile)
+	if !parsed.WriteLogs {
 		logFile = ""
 	}
-	internal.InitLogging(args.LogLevel, logFile)
+	internal.InitLogging(parsed.LogLevel, logFile, parsed.DebugToStderr)
 
-	config, err := base.ReadConfig(args.File)
+	config, err := base.ReadConfig(parsed.File)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
 
-	p := provision.NewProvisioner(config, args.Provisioners)
+	p := provision.NewProvisioner(config, parsed.Provisioners)
 	p.Apply()
 }

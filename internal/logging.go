@@ -48,13 +48,18 @@ func getFileBackend(level int, logFile string) logging.LeveledBackend {
 	return initBackend(fileFormat, f, logging.Level(level))
 }
 
-func InitLogging(level int, logFile string) {
+func InitLogging(level int, logFile string, debugToStderr bool) {
 	stderrBackend := initBackend(stderrFormat, os.Stderr, stderrLogLevel)
 	backends := []logging.Backend{stderrBackend}
 
 	if logFile != "" {
 		fileBackend := getFileBackend(level, logFile)
 		backends = append(backends, fileBackend)
+	}
+
+	if debugToStderr {
+		stderrDebugBackend := initBackend(fileFormat, os.Stderr, logging.DEBUG)
+		backends = append(backends, stderrDebugBackend)
 	}
 
 	logging.SetBackend(backends...)
