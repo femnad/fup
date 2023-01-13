@@ -1,12 +1,14 @@
 package base
 
 type Unit struct {
-	Exec string `yaml:"exec"`
-	Desc string `yaml:"description"`
+	Desc        string            `yaml:"desc"`
+	Environment map[string]string `yaml:"env"`
+	Exec        string            `yaml:"exec"`
 }
 
 type Service struct {
-	Desc string `yaml:"description"`
-	Name string `yaml:"name"`
-	Unit Unit   `yaml:"unit"`
+	DontEnable bool   `yaml:"dont_enable"`
+	DontStart  bool   `yaml:"dont_start"`
+	Name       string `yaml:"name"`
+	Unit       Unit   `yaml:"unit"`
 }

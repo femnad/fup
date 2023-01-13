@@ -31,6 +31,9 @@ Description={{ .Unit.Desc }}
 
 [Service]
 ExecStart={{ .Unit.Exec }}
+{{- range $key, $value := .Unit.Environment  }}
+Environment={{$key}}={{$value}}
+{{- end }}
 
 [Install]
 WantedBy=default.target
@@ -162,14 +165,22 @@ func ensure(s base.Service, action string) error {
 }
 
 func enable(s base.Service) error {
+	if s.DontEnable {
+		return nil
+	}
+
 	return ensure(s, "enable")
 }
 
 func start(s base.Service) error {
+	if s.DontStart {
+		return nil
+	}
+
 	return ensure(s, "start")
 }
 
-func expandExec(s base.Service, cfg base.Config) base.Service {
+func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 	exec := s.Unit.Exec
 
 	exec = os.Expand(exec, func(prop string) string {
@@ -186,25 +197,49 @@ func expandExec(s base.Service, cfg base.Config) base.Service {
 		return ""
 	})
 
-	s.Unit.Exec = exec
-	return s
+	tokens := strings.Split(exec, " ")
+	if len(tokens) == 0 {
+		return s, fmt.Errorf("unable to tokenize executable for service %s", s.Name)
+	}
+	baseExec, err := common.Which(tokens[0])
+	if err != nil {
+		return s, err
+	}
+
+	tokens = append([]string{baseExec}, tokens[1:len(tokens)-1]...)
+	s.Unit.Exec = strings.Join(tokens, " ")
+
+	env := s.Unit.Environment
+	for k, v := range s.Unit.Environment {
+		env[k] = os.ExpandEnv(v)
+	}
+	s.Unit.Environment = env
+
+	return s, nil
 }
 
 func initService(s base.Service, cfg base.Config) {
-	s = expandExec(s, cfg)
+	s, err := expandService(s, cfg)
+	if err != nil {
+		internal.Log.Errorf("error expanding service %s: %v", s.Name, err)
+		return
+	}
 
-	err := persist(s)
+	err = persist(s)
 	if err != nil {
 		internal.Log.Errorf("error persisting service %s: %v", s.Name, err)
+		return
 	}
 
 	err = enable(s)
 	if err != nil {
 		internal.Log.Errorf("error enabling service %s: %v", s.Name, err)
+		return
 	}
 
 	err = start(s)
 	if err != nil {
 		internal.Log.Errorf("error starting service %s: %v", s.Name, err)
+		return
 	}
 }
