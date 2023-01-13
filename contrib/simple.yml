@@ -128,6 +128,6 @@ services:
       exec: grobi watch
       desc: Automatically configure monitors/outputs for Xorg via RANDR
       env:
-        GROBI_CONFIG: ${HOME}/.config/grobi.conf
+        GROBI_CONFIG: ${HOME}/.config/grobi/grobi.conf
     dont_start: true
     dont_enable: true

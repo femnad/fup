@@ -206,7 +206,7 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 		return s, err
 	}
 
-	tokens = append([]string{baseExec}, tokens[1:len(tokens)-1]...)
+	tokens = append([]string{baseExec}, tokens[1:len(tokens)]...)
 	s.Unit.Exec = strings.Join(tokens, " ")
 
 	env := s.Unit.Environment
