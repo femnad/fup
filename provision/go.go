@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
-	precheck "github.com/femnad/fup/unless"
+	precheck "github.com/femnad/fup/precheck/unless"
 )
 
 const (
@@ -35,7 +36,7 @@ func qualifyPkg(pkg base.GoPkg) (string, error) {
 	return fmt.Sprintf("%s/%s@%s", defaultHost, name, version), nil
 }
 
-func goInstall(pkg base.GoPkg, s base.Settings) {
+func goInstall(pkg base.GoPkg, s settings.Settings) {
 	if precheck.ShouldSkip(pkg, s) {
 		internal.Log.Debugf("Skipping go install for %s", pkg.Name())
 		return

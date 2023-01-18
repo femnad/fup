@@ -18,11 +18,12 @@ import (
 	"github.com/xi2/xz"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/remote"
-	precheck "github.com/femnad/fup/unless"
-	"github.com/femnad/fup/unless/when"
 )
 
 const (
@@ -31,7 +32,7 @@ const (
 	tarFileRegex = `\.tar(\.(gz|bz2|xz))$`
 )
 
-func processDownload(archive base.Archive, s base.Settings) error {
+func processDownload(archive base.Archive, s settings.Settings) error {
 	url := archive.ExpandURL(s)
 	if url == "" {
 		return fmt.Errorf("no URL given for archive %v", archive)
@@ -238,7 +239,7 @@ func unzip(response remote.Response, target string) error {
 	return nil
 }
 
-func getExtractionFn(archive base.Archive, s base.Settings, contentDisposition string) (func(remote.Response, string) error, error) {
+func getExtractionFn(archive base.Archive, s settings.Settings, contentDisposition string) (func(remote.Response, string) error, error) {
 	fileName := archive.ExpandURL(s)
 	if contentDisposition != "" {
 		fileName = contentDisposition
@@ -256,7 +257,7 @@ func getExtractionFn(archive base.Archive, s base.Settings, contentDisposition s
 	return nil, fmt.Errorf("unable to find extraction method for URL %s", fileName)
 }
 
-func Extract(archive base.Archive, s base.Settings) error {
+func Extract(archive base.Archive, s settings.Settings) error {
 	return processDownload(archive, s)
 }
 
@@ -310,30 +311,30 @@ func createSymlink(symlink, extractDir string) {
 	}
 }
 
-func extractArchive(archive base.Archive, settings base.Settings) {
-	url := archive.ExpandURL(settings)
+func extractArchive(archive base.Archive, s settings.Settings) {
+	url := archive.ExpandURL(s)
 
 	if !when.ShouldRun(archive) {
 		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
 	}
 
-	if precheck.ShouldSkip(archive, settings) {
+	if unless.ShouldSkip(archive, s) {
 		internal.Log.Debugf("Skipping download: %s", url)
 		return
 	}
 
-	err := Extract(archive, settings)
+	err := Extract(archive, s)
 	if err != nil {
 		internal.Log.Errorf("Error downloading archive %s: %v", url, err)
 		return
 	}
 
-	for _, symlink := range archive.ExpandSymlinks(settings) {
-		createSymlink(symlink, settings.ExtractDir)
+	for _, symlink := range archive.ExpandSymlinks(s) {
+		createSymlink(symlink, s.ExtractDir)
 	}
 
 	for _, cmd := range archive.ExecuteAfter {
-		cmd = base.ExpandSettingsWithLookup(settings, cmd, map[string]string{"version": archive.Version})
+		cmd = settings.ExpandSettingsWithLookup(s, cmd, map[string]string{"version": archive.Version})
 		internal.Log.Debugf("Running command %s", cmd)
 		err = common.RunShellCmd(cmd, false)
 		if err != nil {

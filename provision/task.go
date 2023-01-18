@@ -3,8 +3,8 @@ package provision
 import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
-	"github.com/femnad/fup/unless"
-	"github.com/femnad/fup/unless/when"
+	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/precheck/when"
 )
 
 func runTask(task base.Task, cfg base.Config) {
@@ -13,7 +13,7 @@ func runTask(task base.Task, cfg base.Config) {
 		return
 	}
 
-	if precheck.ShouldSkip(task, cfg.Settings) {
+	if unless.ShouldSkip(task, cfg.Settings) {
 		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", task.Desc, task.Unless)
 		return
 	}

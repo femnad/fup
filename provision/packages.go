@@ -9,7 +9,7 @@ import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/packages"
-	precheck "github.com/femnad/fup/unless"
+	"github.com/femnad/fup/precheck"
 )
 
 func matchingPackages(osId, pattern string, packages []string) []string {

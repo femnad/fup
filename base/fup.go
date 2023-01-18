@@ -8,53 +8,24 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
 )
 
-type Settings struct {
-	CloneDir      string                    `yaml:"clone_dir"`
-	ExtractDir    string                    `yaml:"extract_dir"`
-	HostFacts     map[string]map[string]any `yaml:"host_facts"`
-	Versions      map[string]string         `yaml:"versions"`
-	VirtualEnvDir string                    `yaml:"virtualenv_dir"`
-}
-
 type PackageSpec map[string][]string
 
-type Unless struct {
-	Cmd  string `yaml:"cmd"`
-	Post string `yaml:"post"`
-	Stat string `yaml:"stat"`
-}
-
-func (u Unless) HasPostProc() bool {
-	return u.Post == "" || u.Cmd == ""
-}
-
-func (u Unless) String() string {
-	if u.Stat != "" {
-		return fmt.Sprintf("ls %s", u.Stat)
-	}
-
-	s := u.Cmd
-	if u.Post != "" {
-		s += " | " + u.Post
-	}
-	return s
-}
-
 type Config struct {
-	Archives         []Archive   `yaml:"archives"`
-	Cargo            []CargoPkg  `yaml:"cargo"`
-	Go               []GoPkg     `yaml:"go"`
-	Packages         PackageSpec `yaml:"packages"`
-	PreflightTasks   []Task      `yaml:"preflight"`
-	Python           []PythonPkg `yaml:"python"`
-	Services         []Service   `yaml:"services"`
-	Settings         Settings    `yaml:"settings"`
-	Tasks            []Task      `yaml:"tasks"`
-	UnwantedPackages PackageSpec `yaml:"unwanted_packages"`
+	Archives         []Archive         `yaml:"archives"`
+	Cargo            []CargoPkg        `yaml:"cargo"`
+	Go               []GoPkg           `yaml:"go"`
+	Packages         PackageSpec       `yaml:"packages"`
+	PreflightTasks   []Task            `yaml:"preflight"`
+	Python           []PythonPkg       `yaml:"python"`
+	Services         []Service         `yaml:"services"`
+	Settings         settings.Settings `yaml:"settings"`
+	Tasks            []Task            `yaml:"tasks"`
+	UnwantedPackages PackageSpec       `yaml:"unwanted_packages"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {

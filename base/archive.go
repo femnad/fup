@@ -3,17 +3,20 @@ package base
 import (
 	"fmt"
 	"os"
+
+	"github.com/femnad/fup/base/settings"
+	"github.com/femnad/fup/precheck/unless"
 )
 
 type Archive struct {
-	ExecuteAfter []string `yaml:"execute_after"`
-	Ref          string   `yaml:"name"`
-	Symlink      []string `yaml:"link"`
-	Target       string   `yaml:"target"`
-	Unless       Unless   `yaml:"unless"`
-	Url          string   `yaml:"url"`
-	Version      string   `yaml:"version"`
-	When         string   `yaml:"when"`
+	ExecuteAfter []string      `yaml:"execute_after"`
+	Ref          string        `yaml:"name"`
+	Symlink      []string      `yaml:"link"`
+	Target       string        `yaml:"target"`
+	Unless       unless.Unless `yaml:"unless"`
+	Url          string        `yaml:"url"`
+	Version      string        `yaml:"version"`
+	When         string        `yaml:"when"`
 }
 
 func (a Archive) String() string {
@@ -28,7 +31,7 @@ func (a Archive) expand(property string) string {
 	return ""
 }
 
-func (a Archive) version(s Settings) string {
+func (a Archive) version(s settings.Settings) string {
 	if a.Version != "" {
 		return a.Version
 	}
@@ -36,12 +39,12 @@ func (a Archive) version(s Settings) string {
 	return s.Versions[a.Name()]
 }
 
-func (a Archive) ExpandURL(s Settings) string {
+func (a Archive) ExpandURL(s settings.Settings) string {
 	a.Version = a.version(s)
 	return os.Expand(a.Url, a.expand)
 }
 
-func (a Archive) ExpandSymlinks(s Settings) []string {
+func (a Archive) ExpandSymlinks(s settings.Settings) []string {
 	var expanded []string
 	for _, symlink := range a.Symlink {
 		a.Version = a.version(s)
@@ -51,7 +54,7 @@ func (a Archive) ExpandSymlinks(s Settings) []string {
 	return expanded
 }
 
-func (a Archive) ExpandStat(settings Settings) string {
+func (a Archive) ExpandStat(settings settings.Settings) string {
 	return os.Expand(a.Unless.Stat, func(s string) string {
 		if IsExpandable(s) {
 			return ExpandSettings(settings, a.Unless.Stat)
@@ -63,7 +66,7 @@ func (a Archive) ExpandStat(settings Settings) string {
 	})
 }
 
-func (a Archive) GetUnless() Unless {
+func (a Archive) GetUnless() unless.Unless {
 	return a.Unless
 }
 

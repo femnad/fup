@@ -10,6 +10,11 @@ import (
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/precheck/unless"
+)
+
+const (
+	defaultFileMode = 0644
 )
 
 func createSymlink(step Step, cfg Config) error {
@@ -18,7 +23,7 @@ func createSymlink(step Step, cfg Config) error {
 	return common.Symlink(name, target)
 }
 
-func runCmd(step Step, cfg Config) error {
+func runCmd(step Step, _ Config) error {
 	c := internal.ExpandUser(step.Cmd)
 	cmds := strings.Split(c, " ")
 	var cmd *exec.Cmd
@@ -30,7 +35,7 @@ func runCmd(step Step, cfg Config) error {
 	return common.RunCommandWithOutput(*cmd)
 }
 
-func runShellCmd(step Step, cfg Config) error {
+func runShellCmd(step Step, _ Config) error {
 	return common.RunShellCmd(step.Cmd, step.Sudo)
 }
 
@@ -48,10 +53,33 @@ func runGitClone(step Step, cfg Config) error {
 	return err
 }
 
+func fileCmd(step Step, _ Config) error {
+	path := os.ExpandEnv(step.Path)
+	_, err := os.Stat(path)
+	if err == nil {
+		return nil
+	}
+
+	mode := defaultFileMode
+	if step.Mode != 0 {
+		mode = step.Mode
+	}
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, os.FileMode(mode))
+	if err != nil {
+		return err
+	}
+
+	_, err = f.WriteString(step.Content)
+	return err
+}
+
 func getStepFunction(step Step) (func(Step, Config) error, error) {
-	switch step.Name {
+	switch step.StepName {
 	case "cmd":
 		return runCmd, nil
+	case "file":
+		return fileCmd, nil
 	case "git":
 		return runGitClone, nil
 	case "shell":
@@ -66,13 +94,17 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 }
 
 type Step struct {
-	Cmd        string `yaml:"cmd"`
-	Dir        string `yaml:"dir"`
-	LinkSrc    string `yaml:"link_src"`
-	LinkTarget string `yaml:"link_target"`
-	Name       string `yaml:"name"`
-	Repo       string `yaml:"repo"`
-	Sudo       bool   `yaml:"sudo"`
+	Cmd        string        `yaml:"cmd"`
+	Content    string        `yaml:"content"`
+	Dir        string        `yaml:"dir"`
+	LinkSrc    string        `yaml:"link_src"`
+	LinkTarget string        `yaml:"link_target"`
+	Mode       int           `yaml:"mode"`
+	Path       string        `yaml:"path"`
+	Repo       string        `yaml:"repo"`
+	StepName   string        `yaml:"name"`
+	Sudo       bool          `yaml:"sudo"`
+	Unless     unless.Unless `yaml:"unless"`
 }
 
 func (s Step) String() string {
@@ -91,20 +123,50 @@ func (s Step) Run(cfg Config) error {
 	return nil
 }
 
+func (s Step) GetUnless() unless.Unless {
+	return s.Unless
+}
+
+func (Step) GetVersion() string {
+	return ""
+}
+
+func (Step) HasPostProc() bool {
+	return false
+}
+
+func (Step) Name() string {
+	return ""
+}
+
 type Task struct {
-	Desc   string `yaml:"task"`
-	Steps  []Step `yaml:"steps"`
-	When   string `yaml:"when"`
-	Unless Unless `yaml:"unless"`
+	Desc   string        `yaml:"task"`
+	Steps  []Step        `yaml:"steps"`
+	When   string        `yaml:"when"`
+	Unless unless.Unless `yaml:"unless"`
 }
 
 func (t Task) RunWhen() string {
 	return t.When
 }
 
+func runStep(step Step, cfg Config) error {
+	if unless.ShouldSkip(step, cfg.Settings) {
+		internal.Log.Debugf("skipping step %s due to precheck", step.StepName)
+		return nil
+	}
+
+	err := step.Run(cfg)
+	if err != nil {
+		return fmt.Errorf("error running step %s: %v", step.StepName, err)
+	}
+
+	return nil
+}
+
 func (t Task) Run(cfg Config) {
 	for _, step := range t.Steps {
-		err := step.Run(cfg)
+		err := runStep(step, cfg)
 		if err != nil {
 			internal.Log.Errorf("error running task %s: %v", t.Name(), err)
 			return
@@ -112,7 +174,7 @@ func (t Task) Run(cfg Config) {
 	}
 }
 
-func (t Task) GetUnless() Unless {
+func (t Task) GetUnless() unless.Unless {
 	return t.Unless
 }
 

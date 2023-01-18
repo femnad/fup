@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/femnad/fup/internal"
-	precheck "github.com/femnad/fup/unless"
+	"github.com/femnad/fup/precheck"
 )
 
 type Whenable interface {

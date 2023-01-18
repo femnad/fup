@@ -1,13 +1,15 @@
 package base
 
+import "github.com/femnad/fup/precheck/unless"
+
 type CargoPkg struct {
-	Bins    bool   `yaml:"bins"`
-	Crate   string `yaml:"name"`
-	Unless  Unless `yaml:"unless"`
-	Version string `yaml:"version"`
+	Bins    bool          `yaml:"bins"`
+	Crate   string        `yaml:"name"`
+	Unless  unless.Unless `yaml:"unless"`
+	Version string        `yaml:"version"`
 }
 
-func (c CargoPkg) GetUnless() Unless {
+func (c CargoPkg) GetUnless() unless.Unless {
 	return c.Unless
 }
 

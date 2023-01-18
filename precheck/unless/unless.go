@@ -1,4 +1,4 @@
-package precheck
+package unless
 
 import (
 	"fmt"
@@ -7,13 +7,35 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
+type Unless struct {
+	Cmd  string `yaml:"cmd"`
+	Post string `yaml:"post"`
+	Stat string `yaml:"stat"`
+}
+
+func (u Unless) HasPostProc() bool {
+	return u.Post == "" || u.Cmd == ""
+}
+
+func (u Unless) String() string {
+	if u.Stat != "" {
+		return fmt.Sprintf("ls %s", u.Stat)
+	}
+
+	s := u.Cmd
+	if u.Post != "" {
+		s += " | " + u.Post
+	}
+	return s
+}
+
 type Unlessable interface {
-	GetUnless() base.Unless
+	GetUnless() Unless
 	GetVersion() string
 	HasPostProc() bool
 	Name() string
@@ -119,7 +141,7 @@ func applyProc(proc, output string) (string, error) {
 	return postOutput, nil
 }
 
-func doPostProcOutput(unless base.Unless, output string) (string, error) {
+func doPostProcOutput(unless Unless, output string) (string, error) {
 	procs := strings.Split(unless.Post, "|")
 	postOutput := output
 	var err error
@@ -135,7 +157,7 @@ func doPostProcOutput(unless base.Unless, output string) (string, error) {
 	return postOutput, nil
 }
 
-func postProcOutput(unless base.Unless, output string) (string, error) {
+func postProcOutput(unless Unless, output string) (string, error) {
 	postProc := strings.TrimSpace(output)
 	if unless.Post == "" {
 		return postProc, nil
@@ -144,7 +166,7 @@ func postProcOutput(unless base.Unless, output string) (string, error) {
 	return doPostProcOutput(unless, postProc)
 }
 
-func getVersion(u Unlessable, s base.Settings) string {
+func getVersion(u Unlessable, s settings.Settings) string {
 	version := u.GetVersion()
 	if version != "" {
 		return version
@@ -158,7 +180,7 @@ func getVersion(u Unlessable, s base.Settings) string {
 	return s.Versions[name]
 }
 
-func shouldSkip(unlessable Unlessable, settings base.Settings) bool {
+func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 	unless := unlessable.GetUnless()
 	cmd := unless.Cmd
 	output, err := common.RunCmdGetStderr(cmd)
@@ -190,22 +212,22 @@ func shouldSkip(unlessable Unlessable, settings base.Settings) bool {
 	return true
 }
 
-func resolveStat(stat string, unlessable Unlessable, settings base.Settings) string {
+func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string {
 	lookup := map[string]string{}
 	version := unlessable.GetVersion()
 
 	if version == "" {
-		version = settings.Versions[unlessable.Name()]
+		version = s.Versions[unlessable.Name()]
 	}
 
 	if version != "" {
 		lookup["version"] = version
 	}
 
-	return base.ExpandSettingsWithLookup(settings, stat, lookup)
+	return settings.ExpandSettingsWithLookup(s, stat, lookup)
 }
 
-func ShouldSkip(unlessable Unlessable, settings base.Settings) bool {
+func ShouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 	unless := unlessable.GetUnless()
 	stat := unless.Stat
 

@@ -1,9 +1,9 @@
-package precheck_test
+package unless_test
 
 import (
 	"testing"
 
-	precheck "github.com/femnad/fup/unless"
+	precheck "github.com/femnad/fup/precheck/unless"
 )
 
 func TestCut(t *testing.T) {
