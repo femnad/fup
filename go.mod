@@ -8,6 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.5.1
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
+	golang.org/x/text v0.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

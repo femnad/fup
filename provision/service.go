@@ -9,6 +9,9 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
@@ -144,7 +147,7 @@ func ensure(s base.Service, action string) error {
 		return err
 	}
 
-	r := common.RunCmdExitCode(checkCmd)
+	_, _, r := common.RunCmdExitCode(checkCmd)
 	if r == 0 {
 		return nil
 	}
@@ -154,7 +157,8 @@ func ensure(s base.Service, action string) error {
 		return err
 	}
 
-	verb := strings.Title(gerunds[action])
+	caser := cases.Title(language.Und)
+	verb := caser.String(gerunds[action])
 	internal.Log.Infof("%s service %s", verb, s.Name)
 	_, err = common.RunCmd(actuateCmd)
 	if err != nil {

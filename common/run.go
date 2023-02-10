@@ -53,11 +53,11 @@ func RunCmdGetStderr(command string) (string, error) {
 	return b.String(), err
 }
 
-func RunCmdExitCode(c string) int {
+func RunCmdExitCode(c string) (string, error, int) {
 	cmds := strings.Split(c, " ")
 	cmd := exec.Command(cmds[0], cmds[1:]...)
-	cmd.Run()
-	return cmd.ProcessState.ExitCode()
+	output, err := cmd.Output()
+	return string(output), err, cmd.ProcessState.ExitCode()
 }
 
 func RunShellCmd(cmdstr string, sudo bool) error {

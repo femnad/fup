@@ -48,9 +48,9 @@ func NeovimReady() (bool, error) {
 }
 
 func SshReady() (bool, error) {
-	output, err := common.RunCmd("ssh-add -l")
-	if err != nil {
-		return false, err
+	output, _, code := common.RunCmdExitCode("ssh-add -l")
+	if code == 1 {
+		return false, nil
 	}
 
 	output = strings.TrimSpace(output)
