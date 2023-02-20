@@ -29,7 +29,7 @@ var (
 	}
 )
 
-const tmpl = `[Unit]
+const svcTmpl = `[Unit]
 Description={{ .Unit.Desc }}
 
 [Service]
@@ -71,7 +71,7 @@ func write(s base.Service, f string) error {
 	}
 	defer fd.Close()
 
-	st, err := template.New("service").Parse(tmpl)
+	st, err := template.New("service").Parse(svcTmpl)
 	if err != nil {
 		return fmt.Errorf("error creating template: %v", err)
 	}

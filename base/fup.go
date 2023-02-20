@@ -25,6 +25,7 @@ type Config struct {
 	Services         []Service         `yaml:"services"`
 	Settings         settings.Settings `yaml:"settings"`
 	Tasks            []Task            `yaml:"tasks"`
+	Templates        []Template        `yaml:"template"`
 	UnwantedPackages PackageSpec       `yaml:"unwanted_packages"`
 }
 

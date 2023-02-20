@@ -11,11 +11,17 @@ import (
 
 const (
 	neovimPluginsDir = "~/.local/share/plugged"
-	passwordStoreDir = "~/.password-store"
+	passwordStoreDir = "~/.local/share/password-store"
+	sysClassPower    = "/sys/class/power"
 	tmuxEnvKey       = "TMUX"
 )
 
-func InTmux() (bool, error) {
+func isLaptop() (bool, error) {
+	_, err := os.Stat(sysClassPower)
+	return err != nil, nil
+}
+
+func inTmux() (bool, error) {
 	val := os.Getenv(tmuxEnvKey)
 	return val != "", nil
 }
@@ -29,25 +35,25 @@ func isOs(osId string) (bool, error) {
 	return foundOsId == osId, nil
 }
 
-func IsDebian() (bool, error) {
+func isDebian() (bool, error) {
 	return isOs("debian")
 }
 
-func IsFedora() (bool, error) {
+func isFedora() (bool, error) {
 	return isOs("fedora")
 }
 
-func IsUbuntu() (bool, error) {
+func isUbuntu() (bool, error) {
 	return isOs("ubuntu")
 }
 
-func NeovimReady() (bool, error) {
+func neovimReady() (bool, error) {
 	d := internal.ExpandUser(neovimPluginsDir)
 	_, err := os.Stat(d)
 	return err == nil, nil
 }
 
-func SshReady() (bool, error) {
+func sshReady() (bool, error) {
 	output, _, code := common.RunCmdExitCode("ssh-add -l")
 	if code == 1 {
 		return false, nil
@@ -57,7 +63,7 @@ func SshReady() (bool, error) {
 	for _, line := range strings.Split(output, "\n") {
 		fields := strings.Split(line, " ")
 		if len(fields) != 4 {
-			return false, fmt.Errorf("Unexpected SSH agent output: %s", output)
+			return false, fmt.Errorf("unexpected SSH agent output: %s", output)
 		}
 
 		hostname, err := os.Hostname()
@@ -73,18 +79,19 @@ func SshReady() (bool, error) {
 	return false, nil
 }
 
-func SshPullReady() (bool, error) {
+func sshPullReady() (bool, error) {
 	d := internal.ExpandUser(passwordStoreDir)
 	_, err := os.Stat(d)
 	return err == nil, nil
 }
 
 var Facts = map[string]func() (bool, error){
-	"in-tmux":        InTmux,
-	"is-debian":      IsDebian,
-	"is-fedora":      IsFedora,
-	"is-ubuntu":      IsUbuntu,
-	"neovim-ready":   NeovimReady,
-	"ssh-pull-ready": SshPullReady,
-	"ssh-ready":      SshReady,
+	"is-laptop":      isLaptop,
+	"in-tmux":        inTmux,
+	"is-debian":      isDebian,
+	"is-fedora":      isFedora,
+	"is-ubuntu":      isUbuntu,
+	"neovim-ready":   neovimReady,
+	"ssh-pull-ready": sshPullReady,
+	"ssh-ready":      sshReady,
 }
