@@ -32,7 +32,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	provisioners := map[string]func(){
 		"preflight": p.runPreflightTasks,
 		"archive":   p.extractArchives,
-		"pkg":       p.installPackages,
+		"packages":  p.installPackages,
 		"removepkg": p.removePackages,
 		"cargo":     p.cargoInstall,
 		"go":        p.goInstall,
