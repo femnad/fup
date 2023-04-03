@@ -38,7 +38,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		"go":              p.goInstall,
 		"python":          p.pythonInstall,
 		"services":        p.initServices,
-		"task":            p.runTasks,
+		"tasks":           p.runTasks,
 		"template":        p.applyTemplates,
 	}
 
