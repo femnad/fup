@@ -30,16 +30,16 @@ type Provisioner struct {
 func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	p := Provisioner{Config: cfg}
 	provisioners := map[string]func(){
-		"preflight": p.runPreflightTasks,
-		"archive":   p.extractArchives,
-		"packages":  p.installPackages,
-		"removepkg": p.removePackages,
-		"cargo":     p.cargoInstall,
-		"go":        p.goInstall,
-		"python":    p.pythonInstall,
-		"service":   p.initServices,
-		"task":      p.runTasks,
-		"template":  p.applyTemplates,
+		"preflight":       p.runPreflightTasks,
+		"archive":         p.extractArchives,
+		"packages":        p.installPackages,
+		"remove-packages": p.removePackages,
+		"cargo":           p.cargoInstall,
+		"go":              p.goInstall,
+		"python":          p.pythonInstall,
+		"services":        p.initServices,
+		"task":            p.runTasks,
+		"template":        p.applyTemplates,
 	}
 
 	if len(provs) == 0 {
