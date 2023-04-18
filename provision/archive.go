@@ -29,6 +29,7 @@ import (
 const (
 	bufferSize   = 8192
 	dirMode      = 0755
+	xzDictMax    = 1 << 27
 	tarFileRegex = `\.tar(\.(gz|bz2|xz))$`
 )
 
@@ -85,7 +86,7 @@ func getReader(response remote.Response) (io.Reader, error) {
 	}
 
 	if strings.HasSuffix(filename, ".tar.xz") {
-		xzReader, err := xz.NewReader(response.Body, 0)
+		xzReader, err := xz.NewReader(response.Body, xzDictMax)
 		if err != nil {
 			return nil, err
 		}
