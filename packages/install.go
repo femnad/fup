@@ -43,7 +43,7 @@ func maybeRunWithSudo(cmds ...string) error {
 		cmd = exec.Command("sudo", cmds...)
 	}
 
-	return cmd.Run()
+	return common.RunCommandWithOutput(*cmd)
 }
 
 type Installer struct {
