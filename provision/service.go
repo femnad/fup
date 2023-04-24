@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -42,6 +43,17 @@ Environment={{$key}}={{$value}}
 WantedBy=default.target
 `
 
+func checksumBytes(b bytes.Buffer) (string, error) {
+	h := sha256.New()
+	_, err := io.Copy(h, &b)
+	if err != nil {
+		return "", err
+	}
+
+	sum := h.Sum(nil)
+	return hex.EncodeToString(sum), nil
+}
+
 func checksum(f string) (string, error) {
 	_, err := os.Stat(f)
 	if err != nil {
@@ -64,26 +76,21 @@ func checksum(f string) (string, error) {
 	return hex.EncodeToString(sum), nil
 }
 
-func write(s base.Service, f string) error {
-	fd, err := os.OpenFile(f, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
-	if err != nil {
-		return fmt.Errorf("error opening service file %s, %v", f, err)
-	}
-	defer fd.Close()
-
+func writeTmpl(s base.Service) (bytes.Buffer, error) {
+	b := bytes.Buffer{}
 	st, err := template.New("service").Parse(svcTmpl)
 	if err != nil {
-		return fmt.Errorf("error creating template: %v", err)
+		return b, fmt.Errorf("error creating template: %v", err)
 	}
 
 	s.Unit.Exec = os.ExpandEnv(s.Unit.Exec)
 
-	err = st.Execute(fd, s)
+	err = st.Execute(&b, s)
 	if err != nil {
-		return fmt.Errorf("error applying service template: %v", err)
+		return b, fmt.Errorf("error applying service template: %v", err)
 	}
 
-	return nil
+	return b, nil
 }
 
 func persist(s base.Service) error {
@@ -100,36 +107,47 @@ func persist(s base.Service) error {
 		}
 	}
 
-	err = write(s, f)
+	b, err := writeTmpl(s)
 	if err != nil {
 		return err
 	}
 
-	if !prevFile {
-		return nil
-	}
-
-	sum, err := checksum(f)
+	sum, err := checksumBytes(b)
 	if err != nil {
-		return fmt.Errorf("error checksumming new file %s: %v", f, err)
+		return fmt.Errorf("error checksumming new template: %v", err)
 	}
 
-	if prevChecksum == sum {
+	if prevFile && prevChecksum == sum {
 		return nil
+	}
+
+	fd, err := os.OpenFile(f, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+	if err != nil {
+		return fmt.Errorf("error opening service file %s, %v", f, err)
+	}
+	defer fd.Close()
+
+	_, err = io.Copy(fd, &b)
+	if err != nil {
+		return fmt.Errorf("error writing to file %s, %v", f, err)
 	}
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)
-	common.RunCmd("systemctl --user daemon-reload")
+	_, err = common.RunCmd("systemctl --user daemon-reload")
+	if err != nil {
+		return fmt.Errorf("error running systemctl command: %v", err)
+	}
+
 	return nil
 }
 
 func check(s base.Service, action string) (string, error) {
-	check, ok := actions[action]
+	checkVerb, ok := actions[action]
 	if !ok {
 		return "", fmt.Errorf("unknown action: %s", action)
 	}
 
-	return fmt.Sprintf("systemctl --user %s %s", check, s.Name), nil
+	return fmt.Sprintf("systemctl --user %s %s", checkVerb, s.Name), nil
 }
 
 func actuate(s base.Service, action string) (string, error) {

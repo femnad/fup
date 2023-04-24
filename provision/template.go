@@ -26,6 +26,7 @@ func getMvCmd(src, dst string) string {
 
 	return cmd
 }
+
 func applyTemplate(tmpl base.Template, config base.Config) error {
 	dstDir, dstFile := path.Split(internal.ExpandUser(tmpl.Dest))
 	file, err := os.CreateTemp(tmpDir, dstFile)
