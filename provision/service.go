@@ -43,15 +43,9 @@ Environment={{$key}}={{$value}}
 WantedBy=default.target
 `
 
-func checksumBytes(b bytes.Buffer) (string, error) {
-	h := sha256.New()
-	_, err := io.Copy(h, &b)
-	if err != nil {
-		return "", err
-	}
-
-	sum := h.Sum(nil)
-	return hex.EncodeToString(sum), nil
+type tmplOut struct {
+	buf       bytes.Buffer
+	sha256sum string
 }
 
 func checksum(f string) (string, error) {
@@ -76,21 +70,30 @@ func checksum(f string) (string, error) {
 	return hex.EncodeToString(sum), nil
 }
 
-func writeTmpl(s base.Service) (bytes.Buffer, error) {
+func writeTmpl(s base.Service) (tmplOut, error) {
+	var o tmplOut
+
 	b := bytes.Buffer{}
 	st, err := template.New("service").Parse(svcTmpl)
 	if err != nil {
-		return b, fmt.Errorf("error creating template: %v", err)
+		return o, fmt.Errorf("error creating template: %v", err)
 	}
 
 	s.Unit.Exec = os.ExpandEnv(s.Unit.Exec)
 
-	err = st.Execute(&b, s)
+	h := sha256.New()
+	wrtSum := io.MultiWriter(&b, h)
+
+	err = st.Execute(wrtSum, s)
 	if err != nil {
-		return b, fmt.Errorf("error applying service template: %v", err)
+		return o, fmt.Errorf("error applying service template: %v", err)
 	}
 
-	return b, nil
+	o.buf = b
+	sum := h.Sum(nil)
+	o.sha256sum = hex.EncodeToString(sum)
+
+	return o, nil
 }
 
 func persist(s base.Service) error {
@@ -107,17 +110,12 @@ func persist(s base.Service) error {
 		}
 	}
 
-	b, err := writeTmpl(s)
+	o, err := writeTmpl(s)
 	if err != nil {
 		return err
 	}
 
-	sum, err := checksumBytes(b)
-	if err != nil {
-		return fmt.Errorf("error checksumming new template: %v", err)
-	}
-
-	if prevFile && prevChecksum == sum {
+	if prevFile && prevChecksum == o.sha256sum {
 		return nil
 	}
 
@@ -127,7 +125,7 @@ func persist(s base.Service) error {
 	}
 	defer fd.Close()
 
-	_, err = io.Copy(fd, &b)
+	_, err = io.Copy(fd, &o.buf)
 	if err != nil {
 		return fmt.Errorf("error writing to file %s, %v", f, err)
 	}
@@ -228,7 +226,7 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 		return s, err
 	}
 
-	tokens = append([]string{baseExec}, tokens[1:len(tokens)]...)
+	tokens = append([]string{baseExec}, tokens[1:]...)
 	s.Unit.Exec = strings.Join(tokens, " ")
 
 	env := s.Unit.Environment
