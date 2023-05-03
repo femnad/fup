@@ -23,7 +23,7 @@ func createSymlink(step Step, cfg Config) error {
 	return common.Symlink(name, target)
 }
 
-func runCmd(step Step, _ Config) error {
+func runCmd(step Step, cfg Config) error {
 	c := internal.ExpandUser(step.Cmd)
 	cmds := strings.Split(c, " ")
 	var cmd *exec.Cmd
@@ -31,6 +31,9 @@ func runCmd(step Step, _ Config) error {
 		cmd = exec.Command("sudo", cmds...)
 	} else {
 		cmd = exec.Command(cmds[0], cmds[1:]...)
+	}
+	if step.Pwd != "" {
+		cmd.Dir = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 	return common.RunCommandWithOutput(*cmd)
 }
@@ -101,6 +104,7 @@ type Step struct {
 	LinkTarget string        `yaml:"link_target"`
 	Mode       int           `yaml:"mode"`
 	Path       string        `yaml:"path"`
+	Pwd        string        `yaml:"pwd"`
 	Repo       string        `yaml:"repo"`
 	StepName   string        `yaml:"name"`
 	Sudo       bool          `yaml:"sudo"`
@@ -108,7 +112,7 @@ type Step struct {
 }
 
 func (s Step) String() string {
-	return fmt.Sprintf("operation=%s, cmd=%s, sudo=%t", s.Name, s.Cmd, s.Sudo)
+	return fmt.Sprintf("operation=%s, cmd=%s, sudo=%t", s.Name(), s.Cmd, s.Sudo)
 }
 
 func (s Step) Run(cfg Config) error {
