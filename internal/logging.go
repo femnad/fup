@@ -32,7 +32,7 @@ func getFileBackend(level int, logFile string) logging.LeveledBackend {
 
 	_, err := os.Stat(dirName)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(dirName, 0755)
+		err = os.MkdirAll(dirName, 0755)
 		if err != nil {
 			log.Fatalf("error creating directory %s: %v", dirName, err)
 		}

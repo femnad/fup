@@ -75,13 +75,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 		return os.Remove(src)
 	}
 
-	_, err = os.Stat(dstDir)
-	if os.IsNotExist(err) {
-		err = os.MkdirAll(dstDir, 0744)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
+	if err = common.EnsureDir(dstDir); err != nil {
 		return err
 	}
 

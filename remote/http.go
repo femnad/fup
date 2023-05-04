@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path"
 	"regexp"
 
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
@@ -58,4 +61,35 @@ func ReadResponseBody(url string) (Response, error) {
 	response = Response{Body: resp.Body, ContentDisposition: attachmentFilename, URL: url}
 
 	return response, nil
+}
+
+func Download(url, target string) error {
+	if url == "" {
+		return fmt.Errorf("download URL is empty")
+	}
+	if target == "" {
+		return fmt.Errorf("download target is empty")
+	}
+
+	resp, err := ReadResponseBody(url)
+	if err != nil {
+		return err
+	}
+
+	dir, _ := path.Split(target)
+	if err = common.EnsureDir(dir); err != nil {
+		return err
+	}
+
+	out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY, os.FileMode(0o644))
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

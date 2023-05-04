@@ -60,12 +60,15 @@ func RunCmdExitCode(c string) (string, error, int) {
 	return string(output), err, cmd.ProcessState.ExitCode()
 }
 
-func RunShellCmd(cmdstr string, sudo bool) error {
+func RunShellCmd(cmdstr, pwd string, sudo bool) error {
 	var cmd *exec.Cmd
 	if sudo {
 		cmd = exec.Command("sudo", []string{shell, "-c", cmdstr}...)
 	} else {
 		cmd = exec.Command(shell, "-c", cmdstr)
+	}
+	if pwd != "" {
+		cmd.Dir = pwd
 	}
 	return RunCommandWithOutput(*cmd)
 }

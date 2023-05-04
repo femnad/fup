@@ -11,6 +11,7 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/remote"
 )
 
 const (
@@ -18,13 +19,13 @@ const (
 )
 
 func createSymlink(step Step, cfg Config) error {
-	name := internal.ExpandUser(step.LinkSrc)
-	target := ExpandSettings(cfg.Settings, step.LinkTarget)
+	name := internal.ExpandUser(step.Src)
+	target := ExpandSettings(cfg.Settings, step.Target)
 	return common.Symlink(name, target)
 }
 
 func runCmd(step Step, cfg Config) error {
-	c := internal.ExpandUser(step.Cmd)
+	c := ExpandSettings(cfg.Settings, step.Cmd)
 	cmds := strings.Split(c, " ")
 	var cmd *exec.Cmd
 	if step.Sudo {
@@ -38,8 +39,10 @@ func runCmd(step Step, cfg Config) error {
 	return common.RunCommandWithOutput(*cmd)
 }
 
-func runShellCmd(step Step, _ Config) error {
-	return common.RunShellCmd(step.Cmd, step.Sudo)
+func runShellCmd(step Step, cfg Config) error {
+	cmd := ExpandSettings(cfg.Settings, step.Cmd)
+	pwd := ExpandSettings(cfg.Settings, step.Pwd)
+	return common.RunShellCmd(cmd, pwd, step.Sudo)
 }
 
 func runGitClone(step Step, cfg Config) error {
@@ -77,14 +80,30 @@ func fileCmd(step Step, _ Config) error {
 	return err
 }
 
+func download(step Step, cfg Config) error {
+	url, path := step.Url, ExpandSettings(cfg.Settings, step.Path)
+	internal.Log.Debugf("Downloading %s into %s", url, path)
+	return remote.Download(url, path)
+}
+
+func rename(step Step, cfg Config) error {
+	src := ExpandSettings(cfg.Settings, step.Src)
+	target := ExpandSettings(cfg.Settings, step.Target)
+	return os.Rename(src, target)
+}
+
 func getStepFunction(step Step) (func(Step, Config) error, error) {
 	switch step.StepName {
 	case "cmd":
 		return runCmd, nil
+	case "download":
+		return download, nil
 	case "file":
 		return fileCmd, nil
 	case "git":
 		return runGitClone, nil
+	case "rename":
+		return rename, nil
 	case "shell":
 		return runShellCmd, nil
 	case "symlink":
@@ -97,18 +116,21 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 }
 
 type Step struct {
-	Cmd        string        `yaml:"cmd"`
-	Content    string        `yaml:"content"`
-	Dir        string        `yaml:"dir"`
-	LinkSrc    string        `yaml:"link_src"`
-	LinkTarget string        `yaml:"link_target"`
-	Mode       int           `yaml:"mode"`
-	Path       string        `yaml:"path"`
-	Pwd        string        `yaml:"pwd"`
-	Repo       string        `yaml:"repo"`
-	StepName   string        `yaml:"name"`
-	Sudo       bool          `yaml:"sudo"`
-	Unless     unless.Unless `yaml:"unless"`
+	Cmd     string `yaml:"cmd"`
+	Content string `yaml:"content"`
+	Dir     string `yaml:"dir"`
+	Mode    int    `yaml:"mode"`
+	Path    string `yaml:"path"`
+	Pwd     string `yaml:"pwd"`
+	Repo    string `yaml:"repo"`
+	// For link and rename
+	Src      string `yaml:"src"`
+	StepName string `yaml:"name"`
+	Sudo     bool   `yaml:"sudo"`
+	// For link and rename
+	Target string        `yaml:"target"`
+	Unless unless.Unless `yaml:"unless"`
+	Url    string        `yaml:"url"`
 }
 
 func (s Step) String() string {
