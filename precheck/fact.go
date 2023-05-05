@@ -10,11 +10,16 @@ import (
 )
 
 const (
+	gopathEnvKey     = "GOPATH"
 	neovimPluginsDir = "~/.local/share/plugged"
 	passwordStoreDir = "~/.local/share/password-store"
 	sysClassPower    = "/sys/class/power"
 	tmuxEnvKey       = "TMUX"
 )
+
+func goPathSet() (bool, error) {
+	return os.Getenv(gopathEnvKey) != "", nil
+}
 
 func isLaptop() (bool, error) {
 	_, err := os.Stat(sysClassPower)
@@ -86,6 +91,7 @@ func sshPullReady() (bool, error) {
 }
 
 var Facts = map[string]func() (bool, error){
+	"gopath-set":     goPathSet,
 	"is-laptop":      isLaptop,
 	"in-tmux":        inTmux,
 	"is-debian":      isDebian,

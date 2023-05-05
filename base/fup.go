@@ -21,6 +21,7 @@ type Config struct {
 	Go               []GoPkg           `yaml:"go"`
 	Packages         PackageSpec       `yaml:"packages"`
 	PreflightTasks   []Task            `yaml:"preflight"`
+	PostflightTasks  []Task            `yaml:"postflight"`
 	Python           []PythonPkg       `yaml:"python"`
 	Services         []Service         `yaml:"services"`
 	Settings         settings.Settings `yaml:"settings"`

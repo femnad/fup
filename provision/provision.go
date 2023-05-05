@@ -19,6 +19,7 @@ var (
 		"services",
 		"tasks",
 		"template",
+		"postflight",
 	}
 )
 
@@ -30,13 +31,14 @@ type Provisioner struct {
 func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	p := Provisioner{Config: cfg}
 	provisioners := map[string]func(){
-		"preflight":       p.runPreflightTasks,
 		"archive":         p.extractArchives,
-		"packages":        p.installPackages,
-		"remove-packages": p.removePackages,
 		"cargo":           p.cargoInstall,
 		"go":              p.goInstall,
+		"packages":        p.installPackages,
+		"postflight":      p.runPostflightTasks,
+		"preflight":       p.runPreflightTasks,
 		"python":          p.pythonInstall,
+		"remove-packages": p.removePackages,
 		"services":        p.initServices,
 		"tasks":           p.runTasks,
 		"template":        p.applyTemplates,
@@ -88,6 +90,14 @@ func (p Provisioner) runPreflightTasks() {
 	internal.Log.Notice("Running preflight tasks")
 
 	for _, task := range p.Config.PreflightTasks {
+		runTask(task, p.Config)
+	}
+}
+
+func (p Provisioner) runPostflightTasks() {
+	internal.Log.Notice("Running postlight tasks")
+
+	for _, task := range p.Config.PostflightTasks {
 		runTask(task, p.Config)
 	}
 }
