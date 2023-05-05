@@ -11,7 +11,13 @@ import (
 func removeDirs(dirs []string) error {
 	for _, dir := range dirs {
 		dir = internal.ExpandUser(dir)
-		err := os.Remove(dir)
+		_, err := os.Stat(dir)
+		if os.IsNotExist(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+		err = os.Remove(dir)
 		if err != nil {
 			return fmt.Errorf("error removing directory %s: %v", dir, err)
 		}

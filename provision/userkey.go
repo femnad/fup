@@ -15,7 +15,10 @@ import (
 	"github.com/femnad/fup/remote"
 )
 
-const authorizedKeysFile = "~/.ssh/authorized_keys"
+const (
+	authorizedKeysFile     = "~/.ssh/authorized_keys"
+	authorizedKeyfFilePerm = 0o644
+)
 
 type idKeyPair struct {
 	Id  int    `yaml:"id"`
@@ -44,12 +47,12 @@ func ensureUserKeys(user string) error {
 	_, err = os.Stat(keyFile)
 	var fd *os.File
 	if os.IsNotExist(err) {
-		fd, err = os.OpenFile(keyFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+		fd, err = os.OpenFile(keyFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, authorizedKeyfFilePerm)
 		if err != nil {
 			return err
 		}
 	} else if err == nil {
-		fd, err = os.Open(keyFile)
+		fd, err = os.OpenFile(keyFile, os.O_APPEND|os.O_WRONLY, authorizedKeyfFilePerm)
 		if err != nil {
 			return err
 		}
