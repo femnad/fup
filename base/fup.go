@@ -18,6 +18,7 @@ type PackageSpec map[string][]string
 type Config struct {
 	Archives         []Archive         `yaml:"archives"`
 	Cargo            []CargoPkg        `yaml:"cargo"`
+	EnsureDirs       []string          `yaml:"ensure_dirs"`
 	Go               []GoPkg           `yaml:"go"`
 	GithubUserKey    UserKey           `yaml:"github_user_keys"`
 	Packages         PackageSpec       `yaml:"packages"`
