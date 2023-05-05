@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 	"text/template"
 
@@ -117,6 +118,11 @@ func persist(s base.Service) error {
 
 	if prevFile && prevChecksum == o.sha256sum {
 		return nil
+	}
+
+	dir, _ := path.Split(f)
+	if err = common.EnsureDir(dir); err != nil {
+		return err
 	}
 
 	fd, err := os.OpenFile(f, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)

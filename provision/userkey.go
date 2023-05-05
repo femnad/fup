@@ -23,12 +23,17 @@ type idKeyPair struct {
 }
 
 func ensureUserKeys(user string) error {
+	if user == "" {
+		return fmt.Errorf("GitHub username is empty")
+	}
+
 	url := fmt.Sprintf("https://api.github.com/users/%s/keys", user)
 	resp, err := remote.ReadResponseBody(url)
 	if err != nil {
 		internal.Log.Errorf("error reading from url %s: %v", url, err)
 		return err
 	}
+	defer resp.Body.Close()
 
 	keyFile := internal.ExpandUser(authorizedKeysFile)
 	dir, _ := path.Split(keyFile)
