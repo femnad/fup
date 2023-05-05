@@ -13,6 +13,7 @@ var (
 		"archive",
 		"packages",
 		"remove-packages",
+		"github-key",
 		"cargo",
 		"go",
 		"python",
@@ -33,6 +34,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	provisioners := map[string]func(){
 		"archive":         p.extractArchives,
 		"cargo":           p.cargoInstall,
+		"github-key":      p.githubUserKey,
 		"go":              p.goInstall,
 		"packages":        p.installPackages,
 		"postflight":      p.runPostflightTasks,
@@ -124,6 +126,12 @@ func (p Provisioner) cargoInstall() {
 	internal.Log.Noticef("Installing Cargo packages")
 
 	cargoInstallPkgs(p.Config)
+}
+
+func (p Provisioner) githubUserKey() {
+	internal.Log.Noticef("Adding GitHub user keys")
+
+	addGithubUserKeys(p.Config)
 }
 
 func (p Provisioner) goInstall() {

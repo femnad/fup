@@ -19,6 +19,7 @@ type Config struct {
 	Archives         []Archive         `yaml:"archives"`
 	Cargo            []CargoPkg        `yaml:"cargo"`
 	Go               []GoPkg           `yaml:"go"`
+	GithubUserKey    UserKey           `yaml:"github_user_keys"`
 	Packages         PackageSpec       `yaml:"packages"`
 	PreflightTasks   []Task            `yaml:"preflight"`
 	PostflightTasks  []Task            `yaml:"postflight"`
