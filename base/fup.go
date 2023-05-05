@@ -28,6 +28,7 @@ type Config struct {
 	Settings         settings.Settings `yaml:"settings"`
 	Tasks            []Task            `yaml:"tasks"`
 	Templates        []Template        `yaml:"template"`
+	UnwantedDirs     []string          `yaml:"unwanted_dirs"`
 	UnwantedPackages PackageSpec       `yaml:"unwanted_packages"`
 }
 

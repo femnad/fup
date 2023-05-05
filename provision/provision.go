@@ -20,6 +20,7 @@ var (
 		"services",
 		"tasks",
 		"template",
+		"unwanted-dirs",
 		"postflight",
 	}
 )
@@ -44,6 +45,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		"services":        p.initServices,
 		"tasks":           p.runTasks,
 		"template":        p.applyTemplates,
+		"unwanted-dirs":   p.unwantedDirs,
 	}
 
 	if len(provs) == 0 {
@@ -164,4 +166,10 @@ func (p Provisioner) applyTemplates() {
 	internal.Log.Noticef("Applying templates")
 
 	applyTemplates(p.Config)
+}
+
+func (p Provisioner) unwantedDirs() {
+	internal.Log.Noticef("Removing unwanted dirs")
+
+	removeUnwantedDirs(p.Config)
 }
