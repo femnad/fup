@@ -16,14 +16,15 @@ import (
 type PackageSpec map[string][]string
 
 type Config struct {
+	AcceptHostKeys   []string          `yaml:"accept_host_keys"`
 	Archives         []Archive         `yaml:"archives"`
 	Cargo            []CargoPkg        `yaml:"cargo"`
 	EnsureDirs       []string          `yaml:"ensure_dirs"`
-	Go               []GoPkg           `yaml:"go"`
 	GithubUserKey    UserKey           `yaml:"github_user_keys"`
+	Go               []GoPkg           `yaml:"go"`
 	Packages         PackageSpec       `yaml:"packages"`
-	PreflightTasks   []Task            `yaml:"preflight"`
 	PostflightTasks  []Task            `yaml:"postflight"`
+	PreflightTasks   []Task            `yaml:"preflight"`
 	Python           []PythonPkg       `yaml:"python"`
 	Services         []Service         `yaml:"services"`
 	Settings         settings.Settings `yaml:"settings"`

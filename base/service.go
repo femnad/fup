@@ -7,8 +7,9 @@ type Unit struct {
 }
 
 type Service struct {
-	DontEnable bool   `yaml:"dont_enable"`
-	DontStart  bool   `yaml:"dont_start"`
-	Name       string `yaml:"name"`
-	Unit       Unit   `yaml:"unit"`
+	DontEnable   bool   `yaml:"dont_enable"`
+	DontStart    bool   `yaml:"dont_start"`
+	DontTemplate bool   `yaml:"dont_template"`
+	Name         string `yaml:"name"`
+	Unit         Unit   `yaml:"unit"`
 }

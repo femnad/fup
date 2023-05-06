@@ -13,6 +13,7 @@ var (
 		"archive",
 		"packages",
 		"remove-packages",
+		"known-hosts",
 		"github-key",
 		"cargo",
 		"go",
@@ -38,6 +39,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		"cargo":           p.cargoInstall,
 		"github-key":      p.githubUserKey,
 		"go":              p.goInstall,
+		"known-hosts":     p.acceptHostKeys,
 		"packages":        p.installPackages,
 		"postflight":      p.runPostflightTasks,
 		"preflight":       p.runPreflightTasks,
@@ -59,7 +61,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		prov, ok := provisioners[desired]
 		if !ok {
 			internal.Log.Warningf("Unknown provisioner %s", desired)
-			continue
+			return p
 		}
 
 		filtered[desired] = prov
@@ -67,7 +69,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 
 	if len(filtered) == 0 {
 		internal.Log.Warningf("Ignoring provisioner filter which returned no results")
-		return Provisioner{Config: cfg, Provisioners: provisioners}
+		return p
 	}
 
 	return Provisioner{Config: cfg, Provisioners: filtered}
@@ -142,6 +144,12 @@ func (p Provisioner) goInstall() {
 	internal.Log.Noticef("Installing Go packages")
 
 	goInstallPkgs(p.Config)
+}
+
+func (p Provisioner) acceptHostKeys() {
+	internal.Log.Noticef("Adding known hosts")
+
+	acceptHostKeys(p.Config)
 }
 
 func (p Provisioner) initServices() {

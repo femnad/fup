@@ -76,7 +76,8 @@ func sshReady() (bool, error) {
 			return false, err
 		}
 
-		if hostname == fields[2] {
+		// Third field could be <user>@<hostname> or <hostname>.
+		if strings.HasSuffix(fields[2], hostname) {
 			return true, nil
 		}
 	}

@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -14,6 +15,55 @@ type Settings struct {
 	TemplateDir   string                    `yaml:"template_dir"`
 	Versions      map[string]string         `yaml:"versions"`
 	VirtualEnvDir string                    `yaml:"virtualenv_dir"`
+}
+
+func expand(s string, lookup map[string]string) (string, error) {
+	var backspace bool
+	var cur bytes.Buffer
+	var out bytes.Buffer
+	consuming := false
+	dollar := false
+
+	for _, c := range s {
+		if c == '$' && !backspace {
+			dollar = true
+			continue
+		}
+		if c == '\\' {
+			backspace = true
+			continue
+		}
+		backspace = c == '\\'
+		if dollar {
+			if c == '{' {
+				dollar = false
+				consuming = true
+				continue
+			} else {
+				out.WriteRune('$')
+			}
+		}
+		if c == '}' && consuming {
+			consuming = false
+			curStr := cur.String()
+			val, ok := lookup[curStr]
+			if ok {
+				out.WriteString(val)
+			} else {
+				orig := fmt.Sprintf("${%s}", curStr)
+				out.WriteString(orig)
+			}
+			cur.Reset()
+			continue
+		}
+		if consuming {
+			cur.WriteRune(c)
+		} else {
+			out.WriteRune(c)
+		}
+	}
+
+	return out.String(), nil
 }
 
 func ExpandSettingsWithLookup(settings Settings, s string, lookup map[string]string) string {

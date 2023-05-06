@@ -98,6 +98,10 @@ func writeTmpl(s base.Service) (tmplOut, error) {
 }
 
 func persist(s base.Service) error {
+	if s.DontTemplate {
+		return nil
+	}
+
 	var prevChecksum string
 
 	f := fmt.Sprintf("%s/%s.service", serviceDir, s.Name)
@@ -207,6 +211,10 @@ func start(s base.Service) error {
 }
 
 func expandService(s base.Service, cfg base.Config) (base.Service, error) {
+	if s.DontTemplate {
+		return s, nil
+	}
+
 	exec := s.Unit.Exec
 
 	exec = os.Expand(exec, func(prop string) string {

@@ -52,7 +52,7 @@ func ensureUserKeys(user string) error {
 			return err
 		}
 	} else if err == nil {
-		fd, err = os.OpenFile(keyFile, os.O_APPEND|os.O_WRONLY, authorizedKeyfFilePerm)
+		fd, err = os.OpenFile(keyFile, os.O_RDWR, authorizedKeyfFilePerm)
 		if err != nil {
 			return err
 		}
