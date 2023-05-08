@@ -15,6 +15,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
@@ -79,8 +80,6 @@ func writeTmpl(s base.Service) (tmplOut, error) {
 	if err != nil {
 		return o, fmt.Errorf("error creating template: %v", err)
 	}
-
-	s.Unit.Exec = os.ExpandEnv(s.Unit.Exec)
 
 	h := sha256.New()
 	wrtSum := io.MultiWriter(&b, h)
@@ -217,19 +216,8 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 
 	exec := s.Unit.Exec
 
-	exec = os.Expand(exec, func(prop string) string {
-		val := os.Getenv(prop)
-		if val != "" {
-			return val
-		}
-
-		if prop == "version" {
-			return cfg.Settings.Versions[s.Name]
-		}
-
-		internal.Log.Warningf("Unable resolve property %s for service %s", prop, s.Name)
-		return ""
-	})
+	lookup := map[string]string{"version": cfg.Settings.Versions[s.Name]}
+	exec = settings.ExpandString(cfg.Settings, exec, lookup)
 
 	tokens := strings.Split(exec, " ")
 	if len(tokens) == 0 {
