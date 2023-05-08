@@ -23,7 +23,7 @@ func goPathSet() (bool, error) {
 
 func isLaptop() (bool, error) {
 	_, err := os.Stat(sysClassPower)
-	return err != nil, nil
+	return err == nil, nil
 }
 
 func inTmux() (bool, error) {
