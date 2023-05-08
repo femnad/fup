@@ -18,12 +18,14 @@ type Settings struct {
 	VirtualEnvDir string                    `yaml:"virtualenv_dir"`
 }
 
-func expand(s string, lookup map[string]string) (string, error) {
+func expand(s string, lookup map[string]string) string {
 	var backspace bool
 	var cur bytes.Buffer
 	var out bytes.Buffer
 	consuming := false
 	dollar := false
+
+	s = internal.ExpandUser(s)
 
 	for _, c := range s {
 		if c == '$' && !backspace {
@@ -48,8 +50,11 @@ func expand(s string, lookup map[string]string) (string, error) {
 			consuming = false
 			curStr := cur.String()
 			val, ok := lookup[curStr]
+			envLookup := os.Getenv(curStr)
 			if ok {
 				out.WriteString(val)
+			} else if envLookup != "" {
+				out.WriteString(envLookup)
 			} else {
 				orig := fmt.Sprintf("${%s}", curStr)
 				out.WriteString(orig)

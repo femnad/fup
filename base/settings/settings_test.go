@@ -1,17 +1,20 @@
 package settings
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func Test_expand(t *testing.T) {
 	type args struct {
 		s      string
 		lookup map[string]string
+		env    map[string]string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
+		name string
+		args args
+		want string
 	}{
 		{
 			name: "Whole string expand",
@@ -61,14 +64,43 @@ func Test_expand(t *testing.T) {
 			},
 			want: "echo ${x}; sleep 1",
 		},
+		{
+			name: "Expand environment vars",
+			args: args{
+				s:      "echo ${baz}",
+				lookup: map[string]string{},
+				env:    map[string]string{"baz": "foo"},
+			},
+			want: "echo foo",
+		},
+		{
+			name: "Custom lookup has precedence over environment variables",
+			args: args{
+				s:      "echo ${baz}",
+				lookup: map[string]string{"baz": "qux"},
+				env:    map[string]string{"baz": "foo"},
+			},
+			want: "echo qux",
+		},
+		{
+			name: "Handle non-existing environment variables",
+			args: args{
+				s:      "echo ${fred}",
+				lookup: map[string]string{},
+				env:    map[string]string{},
+			},
+			want: "echo ${fred}",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := expand(tt.args.s, tt.args.lookup)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("expand() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			for k, v := range tt.args.env {
+				err := os.Setenv(k, v)
+				if err != nil {
+					t.Errorf("error setting env in %s: %v", tt.name, err)
+				}
 			}
+			got := expand(tt.args.s, tt.args.lookup)
 			if got != tt.want {
 				t.Errorf("expand() got = %v, want %v", got, tt.want)
 			}
