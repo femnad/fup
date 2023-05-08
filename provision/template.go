@@ -65,12 +65,26 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 	if err != nil {
 		return fmt.Errorf("error getting checksum of source %s: %v", src, err)
 	}
-	dstSum, err := checksum(dst)
+
+	var dstSum string
+	var dstNotExist bool
+	_, err = os.Stat(dst)
 	if err != nil {
-		return fmt.Errorf("error getting checksum of destination %s: %v", dst, err)
+		if os.IsNotExist(err) {
+			dstNotExist = true
+		} else {
+			return err
+		}
 	}
 
-	if srcSum == dstSum {
+	if !dstNotExist {
+		dstSum, err = checksum(dst)
+		if err != nil {
+			return fmt.Errorf("error getting checksum of destination %s: %v", dst, err)
+		}
+	}
+
+	if !dstNotExist && srcSum == dstSum {
 		internal.Log.Debugf("%s and %s have the same content", tmplPath, dst)
 		return os.Remove(src)
 	}
