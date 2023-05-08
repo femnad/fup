@@ -26,6 +26,7 @@ type Config struct {
 	PostflightTasks  []Task            `yaml:"postflight"`
 	PreflightTasks   []Task            `yaml:"preflight"`
 	Python           []PythonPkg       `yaml:"python"`
+	SelfRepos        []string          `yaml:"self_repos"`
 	Services         []Service         `yaml:"services"`
 	Settings         settings.Settings `yaml:"settings"`
 	Tasks            []Task            `yaml:"tasks"`

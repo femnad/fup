@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/go-git/go-git/v5"
-
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
@@ -47,16 +45,7 @@ func runShellCmd(step Step, cfg Config) error {
 
 func runGitClone(step Step, cfg Config) error {
 	path := ExpandSettings(cfg.Settings, step.Dir)
-	_, err := os.Stat(path)
-	if err == nil {
-		return nil
-	}
-
-	opt := git.CloneOptions{
-		URL: step.Repo,
-	}
-	_, err = git.PlainClone(path, false, &opt)
-	return err
+	return common.CloneRepo(step.Repo, path)
 }
 
 func fileCmd(step Step, _ Config) error {

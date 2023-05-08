@@ -22,6 +22,7 @@ var (
 		"tasks",
 		"template",
 		"ensure-dirs",
+		"self-clone",
 		"unwanted-dirs",
 		"postflight",
 	}
@@ -46,6 +47,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		"python":          p.pythonInstall,
 		"remove-packages": p.removePackages,
 		"services":        p.initServices,
+		"self-clone":      p.selfClone,
 		"tasks":           p.runTasks,
 		"template":        p.applyTemplates,
 		"ensure-dirs":     p.ensureDirs,
@@ -182,6 +184,12 @@ func (p Provisioner) ensureDirs() {
 	internal.Log.Noticef("Creating desired dirs")
 
 	ensureDirs(p.Config)
+}
+
+func (p Provisioner) selfClone() {
+	internal.Log.Noticef("Cloning own repos")
+
+	selfClone(p.Config)
 }
 
 func (p Provisioner) unwantedDirs() {

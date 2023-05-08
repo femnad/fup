@@ -12,6 +12,7 @@ type Settings struct {
 	CloneDir      string                    `yaml:"clone_dir"`
 	ExtractDir    string                    `yaml:"extract_dir"`
 	HostFacts     map[string]map[string]any `yaml:"host_facts"`
+	SelfClonePath string                    `yaml:"self_clone_path"`
 	TemplateDir   string                    `yaml:"template_dir"`
 	Versions      map[string]string         `yaml:"versions"`
 	VirtualEnvDir string                    `yaml:"virtualenv_dir"`
