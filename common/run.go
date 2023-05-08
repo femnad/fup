@@ -41,16 +41,29 @@ func RunCmd(command string) (string, error) {
 	return string(output), err
 }
 
-func RunCmdGetStderr(command string) (string, error) {
+func runCmdGetOutput(command string, runInShell bool) (string, error) {
 	var b bytes.Buffer
 	cmds := strings.Split(command, " ")
 
-	cmd := exec.Command(cmds[0], cmds[1:]...)
+	var cmd *exec.Cmd
+	if runInShell {
+		cmd = exec.Command(shell, "-c", command)
+	} else {
+		cmd = exec.Command(cmds[0], cmds[1:]...)
+	}
 	cmd.Stdout = &b
 	cmd.Stderr = &b
 	err := cmd.Run()
 
 	return b.String(), err
+}
+
+func RunShellGetOutput(command string) (string, error) {
+	return runCmdGetOutput(command, true)
+}
+
+func RunCmdGetStderr(command string) (string, error) {
+	return runCmdGetOutput(command, false)
 }
 
 func RunCmdExitCode(c string) (string, error, int) {

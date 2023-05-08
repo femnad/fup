@@ -13,9 +13,10 @@ import (
 )
 
 type Unless struct {
-	Cmd  string `yaml:"cmd"`
-	Post string `yaml:"post"`
-	Stat string `yaml:"stat"`
+	Cmd   string `yaml:"cmd"`
+	Post  string `yaml:"post"`
+	Shell string `yaml:"shell"`
+	Stat  string `yaml:"stat"`
 }
 
 func (u Unless) HasPostProc() bool {
@@ -181,9 +182,15 @@ func getVersion(u Unlessable, s settings.Settings) string {
 }
 
 func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
+	var err error
+	var output string
 	unless := unlessable.GetUnless()
-	cmd := unless.Cmd
-	output, err := common.RunCmdGetStderr(cmd)
+
+	if unless.Shell != "" {
+		output, err = common.RunShellGetOutput(unless.Shell)
+	} else {
+		output, err = common.RunCmdGetStderr(unless.Cmd)
+	}
 	if err != nil {
 		internal.Log.Debugf("Command %s returned error: %v, output: %s", unless.Cmd, err, output)
 		// Command wasn't successfully run, should not skip.
@@ -239,7 +246,7 @@ func ShouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return err == nil
 	}
 
-	if unless.Cmd == "" {
+	if unless.Cmd == "" && unless.Shell == "" {
 		// No stat or command checks, should not skip.
 		return false
 	}
