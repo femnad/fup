@@ -83,5 +83,6 @@ func ExpandSettingsWithLookup(settings Settings, s string, lookup map[string]str
 			return fmt.Sprintf("${%s}", prop)
 		}
 	})
+	expanded = os.ExpandEnv(expanded)
 	return internal.ExpandUser(expanded)
 }

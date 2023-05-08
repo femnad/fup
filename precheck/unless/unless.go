@@ -227,12 +227,12 @@ func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string
 	return settings.ExpandSettingsWithLookup(s, stat, lookup)
 }
 
-func ShouldSkip(unlessable Unlessable, settings settings.Settings) bool {
+func ShouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	unless := unlessable.GetUnless()
 	stat := unless.Stat
 
 	if stat != "" {
-		stat = resolveStat(stat, unlessable, settings)
+		stat = resolveStat(stat, unlessable, s)
 
 		internal.Log.Debugf("Checking existence of %s", stat)
 		_, err := os.Stat(stat)
@@ -244,5 +244,5 @@ func ShouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 		return false
 	}
 
-	return shouldSkip(unlessable, settings)
+	return shouldSkip(unlessable, s)
 }
