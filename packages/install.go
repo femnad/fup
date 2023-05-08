@@ -83,13 +83,13 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 
 func (i Installer) installedPackages() (mapset.Set[string], error) {
 	listCmd := fmt.Sprintf("%s list --installed", i.Pkg.PkgExec())
-	output, err := common.RunCmd(listCmd)
+	resp, err := common.RunCmd(listCmd)
 	if err != nil {
 		return nil, err
 	}
 
 	installedPackages := mapset.NewSet[string]()
-	lines := strings.Split(output, "\n")
+	lines := strings.Split(resp.Stdout, "\n")
 	for _, line := range lines {
 		if line == i.Pkg.ListPkgsHeader() {
 			continue

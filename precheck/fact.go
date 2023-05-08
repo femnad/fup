@@ -59,12 +59,12 @@ func neovimReady() (bool, error) {
 }
 
 func sshReady() (bool, error) {
-	output, _, code := common.RunCmdExitCode("ssh-add -l")
-	if code == 1 {
+	resp, _ := common.RunCmd("ssh-add -l")
+	if resp.Code == 1 {
 		return false, nil
 	}
 
-	output = strings.TrimSpace(output)
+	output := strings.TrimSpace(resp.Stdout)
 	for _, line := range strings.Split(output, "\n") {
 		fields := strings.Split(line, " ")
 		if len(fields) != 4 {

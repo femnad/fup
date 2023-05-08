@@ -9,6 +9,12 @@ import (
 
 var shell = "sh"
 
+type CmdOut struct {
+	Code   int
+	Stdout string
+	Stderr string
+}
+
 func RunCommandWithOutput(cmd exec.Cmd) error {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -34,11 +40,24 @@ func RunCommandWithOutput(cmd exec.Cmd) error {
 	return fmt.Errorf("error running command %s: %v => %s", cmd.String(), err, output)
 }
 
-func RunCmd(command string) (string, error) {
+func RunCmd(command string) (CmdOut, error) {
 	cmds := strings.Split(command, " ")
 	cmd := exec.Command(cmds[0], cmds[1:]...)
-	output, err := cmd.Output()
-	return string(output), err
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	return CmdOut{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
+}
+
+func RunMaybeSudo(c string, sudo bool) (CmdOut, error) {
+	if sudo {
+		c = "sudo " + c
+	}
+	return RunCmd(c)
 }
 
 func runCmdGetOutput(command string, runInShell bool) (string, error) {
@@ -64,13 +83,6 @@ func RunShellGetOutput(command string) (string, error) {
 
 func RunCmdGetStderr(command string) (string, error) {
 	return runCmdGetOutput(command, false)
-}
-
-func RunCmdExitCode(c string) (string, error, int) {
-	cmds := strings.Split(c, " ")
-	cmd := exec.Command(cmds[0], cmds[1:]...)
-	output, err := cmd.Output()
-	return string(output), err, cmd.ProcessState.ExitCode()
 }
 
 func RunShellCmd(cmdstr, pwd string, sudo bool) error {

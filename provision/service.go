@@ -23,16 +23,15 @@ import (
 var (
 	serviceDir = internal.ExpandUser("~/.config/systemd/user")
 	actions    = map[string]string{
-		"enable": "is-enabled",
-		"start":  "is-active",
-	}
-	gerunds = map[string]string{
-		"enable": "enabling",
-		"start":  "starting",
+		"disable": "!is-enabled",
+		"enable":  "is-enabled",
+		"start":   "is-active",
 	}
 )
 
-const svcTmpl = `[Unit]
+const (
+	negationPrefix = "!"
+	svcTmpl        = `[Unit]
 Description={{ .Unit.Desc }}
 
 [Service]
@@ -44,6 +43,7 @@ Environment={{$key}}={{$value}}
 [Install]
 WantedBy=default.target
 `
+)
 
 type tmplOut struct {
 	buf       bytes.Buffer
@@ -140,7 +140,8 @@ func persist(s base.Service) error {
 	}
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)
-	_, err = common.RunCmd("systemctl --user daemon-reload")
+	c := systemctlCmd("daemon-reload", "", !s.System)
+	_, err = common.RunMaybeSudo(c, s.System)
 	if err != nil {
 		return fmt.Errorf("error running systemctl command: %v", err)
 	}
@@ -148,13 +149,34 @@ func persist(s base.Service) error {
 	return nil
 }
 
-func check(s base.Service, action string) (string, error) {
-	checkVerb, ok := actions[action]
-	if !ok {
-		return "", fmt.Errorf("unknown action: %s", action)
+func systemctlCmd(action, target string, user bool) string {
+	var maybeUser string
+	var maybeTarget string
+
+	if user {
+		maybeUser = "--user "
+	}
+	if target != "" {
+		maybeTarget = " " + target
 	}
 
-	return fmt.Sprintf("systemctl --user %s %s", checkVerb, s.Name), nil
+	return fmt.Sprintf("systemctl %s%s%s", maybeUser, action, maybeTarget)
+}
+
+func check(s base.Service, action string) (string, bool, error) {
+	var negated bool
+
+	checkVerb, ok := actions[action]
+	if !ok {
+		return "", negated, fmt.Errorf("unknown action: %s", action)
+	}
+
+	negated = strings.HasPrefix(checkVerb, negationPrefix)
+	if negated {
+		checkVerb = strings.TrimLeft(checkVerb, negationPrefix)
+	}
+
+	return systemctlCmd(checkVerb, s.Name, !s.System), negated, nil
 }
 
 func actuate(s base.Service, action string) (string, error) {
@@ -163,17 +185,19 @@ func actuate(s base.Service, action string) (string, error) {
 		return "", fmt.Errorf("unknown action: %s", action)
 	}
 
-	return fmt.Sprintf("systemctl --user %s %s", action, s.Name), nil
+	return systemctlCmd(action, s.Name, !s.System), nil
 }
 
 func ensure(s base.Service, action string) error {
-	checkCmd, err := check(s, action)
+	checkCmd, negated, err := check(s, action)
 	if err != nil {
 		return err
 	}
 
-	_, _, r := common.RunCmdExitCode(checkCmd)
-	if r == 0 {
+	resp, _ := common.RunMaybeSudo(checkCmd, s.System)
+	if negated && resp.Code != 0 {
+		return nil
+	} else if !negated && resp.Code == 0 {
 		return nil
 	}
 
@@ -183,11 +207,11 @@ func ensure(s base.Service, action string) error {
 	}
 
 	caser := cases.Title(language.Und)
-	verb := caser.String(gerunds[action])
-	internal.Log.Infof("%s service %s", verb, s.Name)
-	_, err = common.RunCmd(actuateCmd)
+	verb := caser.String(action)
+	internal.Log.Infof("%s-ing service %s", verb, s.Name)
+	resp, err = common.RunMaybeSudo(actuateCmd, s.System)
 	if err != nil {
-		return err
+		return fmt.Errorf("error %s-ing service %s: output: %s error: %v", action, s.Name, resp.Stderr, err)
 	}
 
 	return nil
@@ -241,6 +265,14 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 }
 
 func initService(s base.Service, cfg base.Config) {
+	if s.Disable {
+		err := ensure(s, "disable")
+		if err != nil {
+			internal.Log.Errorf("error disabling service %s, %v", s.Name, err)
+		}
+		return
+	}
+
 	s, err := expandService(s, cfg)
 	if err != nil {
 		internal.Log.Errorf("error expanding service %s: %v", s.Name, err)
