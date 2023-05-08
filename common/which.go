@@ -8,7 +8,7 @@ import (
 )
 
 func Which(exec string) (string, error) {
-	if strings.HasPrefix("/", exec) {
+	if strings.HasPrefix(exec, "/") {
 		_, err := os.Stat(exec)
 		if err == nil {
 			return exec, nil
