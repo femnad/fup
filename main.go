@@ -32,13 +32,16 @@ func (args) Version() string {
 
 func determineConfigFile(a args) (cfg string) {
 	cfg = a.File
-	_, err := os.Stat("fup.yml")
+	fi, err := os.Stat("fup.yml")
 	if err == nil {
 		wd, err := os.Getwd()
 		if err != nil {
 			internal.Log.Errorf("error determining current dir: %v", err)
 			return
 		}
+
+		cfgPath := path.Join(wd, fi.Name())
+		internal.Log.Warningf("Using config file under current dir: %s", cfgPath)
 		return path.Join(wd, "fup.yml")
 	}
 
