@@ -2,12 +2,18 @@ package common
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strings"
 )
 
-var shell = "sh"
+var defaultShell = "sh"
+
+type CmdIn struct {
+	Command string
+	Pwd     string
+	Shell   bool
+	Sudo    bool
+}
 
 type CmdOut struct {
 	Code   int
@@ -15,34 +21,21 @@ type CmdOut struct {
 	Stderr string
 }
 
-func RunCommandWithOutput(cmd exec.Cmd) error {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err == nil {
-		return nil
+func RunCmd(in CmdIn) (CmdOut, error) {
+	var cmdSlice []string
+	if in.Shell {
+		cmdSlice = append([]string{defaultShell, "-c"}, in.Command)
+	} else {
+		cmdSlice = strings.Split(in.Command, " ")
+	}
+	if in.Sudo {
+		cmdSlice = append([]string{"sudo"}, cmdSlice...)
 	}
 
-	stdoutStr := stdout.String()
-	var output string
-	if stdoutStr != "" {
-		output += fmt.Sprintf("stdout: %s", stdoutStr)
+	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
+	if in.Pwd != "" {
+		cmd.Dir = in.Pwd
 	}
-	stderrStr := stderr.String()
-	if stderrStr != "" {
-		if output != "" {
-			output += ", "
-		}
-		output += fmt.Sprintf("stderr: %s", stderrStr)
-	}
-	return fmt.Errorf("error running command %s: %v => %s", cmd.String(), err, output)
-}
-
-func RunCmd(command string) (CmdOut, error) {
-	cmds := strings.Split(command, " ")
-	cmd := exec.Command(cmds[0], cmds[1:]...)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -51,49 +44,4 @@ func RunCmd(command string) (CmdOut, error) {
 
 	err := cmd.Run()
 	return CmdOut{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
-}
-
-func RunMaybeSudo(c string, sudo bool) (CmdOut, error) {
-	if sudo {
-		c = "sudo " + c
-	}
-	return RunCmd(c)
-}
-
-func runCmdGetOutput(command string, runInShell bool) (string, error) {
-	var b bytes.Buffer
-	cmds := strings.Split(command, " ")
-
-	var cmd *exec.Cmd
-	if runInShell {
-		cmd = exec.Command(shell, "-c", command)
-	} else {
-		cmd = exec.Command(cmds[0], cmds[1:]...)
-	}
-	cmd.Stdout = &b
-	cmd.Stderr = &b
-	err := cmd.Run()
-
-	return b.String(), err
-}
-
-func RunShellGetOutput(command string) (string, error) {
-	return runCmdGetOutput(command, true)
-}
-
-func RunCmdGetStderr(command string) (string, error) {
-	return runCmdGetOutput(command, false)
-}
-
-func RunShellCmd(cmdstr, pwd string, sudo bool) error {
-	var cmd *exec.Cmd
-	if sudo {
-		cmd = exec.Command("sudo", []string{shell, "-c", cmdstr}...)
-	} else {
-		cmd = exec.Command(shell, "-c", cmdstr)
-	}
-	if pwd != "" {
-		cmd.Dir = pwd
-	}
-	return RunCommandWithOutput(*cmd)
 }

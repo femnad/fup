@@ -183,16 +183,16 @@ func getVersion(u Unlessable, s settings.Settings) string {
 
 func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 	var err error
-	var output string
+	var out common.CmdOut
 	unless := unlessable.GetUnless()
 
 	if unless.Shell != "" {
-		output, err = common.RunShellGetOutput(unless.Shell)
+		out, err = common.RunCmd(common.CmdIn{Command: unless.Shell, Shell: true})
 	} else {
-		output, err = common.RunCmdGetStderr(unless.Cmd)
+		out, err = common.RunCmd(common.CmdIn{Command: unless.Cmd})
 	}
 	if err != nil {
-		internal.Log.Debugf("Command %s returned error: %v, output: %s", unless.Cmd, err, output)
+		internal.Log.Debugf("Command %s returned error: %v, output: %s", unless.Cmd, err, out.Stderr)
 		// Command wasn't successfully run, should not skip.
 		return false
 	}
@@ -203,7 +203,7 @@ func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 		return true
 	}
 
-	postProc, err := postProcOutput(unless, output)
+	postProc, err := postProcOutput(unless, out.Stdout)
 	if err != nil {
 		internal.Log.Errorf("Error running postproc function: %v", err)
 		// Post processor function failed, best not to skip the operation.

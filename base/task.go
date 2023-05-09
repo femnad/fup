@@ -2,14 +2,11 @@ package base
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
+	"os"
 )
 
 const (
@@ -23,24 +20,21 @@ func createSymlink(step Step, cfg Config) error {
 }
 
 func runCmd(step Step, cfg Config) error {
+	var pwd string
 	c := ExpandSettings(cfg.Settings, step.Cmd)
-	cmds := strings.Split(c, " ")
-	var cmd *exec.Cmd
-	if step.Sudo {
-		cmd = exec.Command("sudo", cmds...)
-	} else {
-		cmd = exec.Command(cmds[0], cmds[1:]...)
-	}
 	if step.Pwd != "" {
-		cmd.Dir = ExpandSettings(cfg.Settings, step.Pwd)
+		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
-	return common.RunCommandWithOutput(*cmd)
+
+	_, err := common.RunCmd(common.CmdIn{Command: c, Sudo: step.Sudo, Pwd: pwd})
+	return err
 }
 
 func runShellCmd(step Step, cfg Config) error {
 	cmd := ExpandSettings(cfg.Settings, step.Cmd)
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
-	return common.RunShellCmd(cmd, pwd, step.Sudo)
+	_, err := common.RunCmd(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
+	return err
 }
 
 func runGitClone(step Step, cfg Config) error {

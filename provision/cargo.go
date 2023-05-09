@@ -47,9 +47,9 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	}
 
 	cmd := strings.Join(installCmd, " ")
-	output, err := common.RunCmdGetStderr(cmd)
+	resp, err := common.RunCmd(common.CmdIn{Command: cmd})
 	if err != nil {
-		internal.Log.Errorf("error installing cargo package %s: %v, output: %s", name, err, output)
+		internal.Log.Errorf("error installing cargo package %s: %v, output: %s", name, err, resp.Stderr)
 	}
 }
 

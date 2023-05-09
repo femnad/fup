@@ -2,7 +2,6 @@ package packages
 
 import (
 	"fmt"
-	"os/exec"
 	"os/user"
 	"sort"
 	"strconv"
@@ -36,14 +35,11 @@ func maybeRunWithSudo(cmds ...string) error {
 		return err
 	}
 
-	var cmd *exec.Cmd
-	if userId == rootUid {
-		cmd = exec.Command(cmds[0], cmds[1:]...)
-	} else {
-		cmd = exec.Command("sudo", cmds...)
-	}
+	sudo := userId != rootUid
 
-	return common.RunCommandWithOutput(*cmd)
+	cmd := strings.Join(cmds, " ")
+	_, err = common.RunCmd(common.CmdIn{Command: cmd, Sudo: sudo})
+	return err
 }
 
 type Installer struct {
@@ -83,7 +79,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 
 func (i Installer) installedPackages() (mapset.Set[string], error) {
 	listCmd := fmt.Sprintf("%s list --installed", i.Pkg.PkgExec())
-	resp, err := common.RunCmd(listCmd)
+	resp, err := common.RunCmd(common.CmdIn{Command: listCmd})
 	if err != nil {
 		return nil, err
 	}

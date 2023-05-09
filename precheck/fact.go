@@ -59,7 +59,7 @@ func neovimReady() (bool, error) {
 }
 
 func sshReady() (bool, error) {
-	resp, _ := common.RunCmd("ssh-add -l")
+	resp, _ := common.RunCmd(common.CmdIn{Command: "ssh-add -l"})
 	if resp.Code == 1 {
 		return false, nil
 	}

@@ -96,6 +96,11 @@ func writeTmpl(s base.Service) (tmplOut, error) {
 	return o, nil
 }
 
+func runSystemctlCmd(cmd string, service base.Service) (common.CmdOut, error) {
+	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
+	return common.RunCmd(common.CmdIn{Command: cmd, Sudo: service.System})
+}
+
 func persist(s base.Service) error {
 	if s.DontTemplate {
 		return nil
@@ -141,7 +146,7 @@ func persist(s base.Service) error {
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)
 	c := systemctlCmd("daemon-reload", "", !s.System)
-	_, err = common.RunMaybeSudo(c, s.System)
+	_, err = runSystemctlCmd(c, s)
 	if err != nil {
 		return fmt.Errorf("error running systemctl command: %v", err)
 	}
@@ -194,7 +199,8 @@ func ensure(s base.Service, action string) error {
 		return err
 	}
 
-	resp, _ := common.RunMaybeSudo(checkCmd, s.System)
+	// Don't need sudo for check actions, so don't use runSystemctlCmd
+	resp, _ := common.RunCmd(common.CmdIn{Command: checkCmd})
 	if negated && resp.Code != 0 {
 		return nil
 	} else if !negated && resp.Code == 0 {
@@ -209,7 +215,7 @@ func ensure(s base.Service, action string) error {
 	caser := cases.Title(language.Und)
 	verb := caser.String(action)
 	internal.Log.Infof("%s-ing service %s", verb, s.Name)
-	resp, err = common.RunMaybeSudo(actuateCmd, s.System)
+	resp, err = runSystemctlCmd(actuateCmd, s)
 	if err != nil {
 		return fmt.Errorf("error %s-ing service %s: output: %s error: %v", action, s.Name, resp.Stderr, err)
 	}

@@ -94,7 +94,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 	}
 
 	mvCmd := getMvCmd(src, dst)
-	out, err := common.RunCmdGetStderr(mvCmd)
+	out, err := common.RunCmd(common.CmdIn{Command: mvCmd})
 
 	if err != nil {
 		return fmt.Errorf("error moving file source %s dest %s output %s: %v", src, dst, out, err)

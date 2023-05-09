@@ -50,10 +50,10 @@ func goInstall(pkg base.GoPkg, s settings.Settings) {
 	}
 
 	cmd := fmt.Sprintf("go install %s", name)
-	out, err := common.RunCmdGetStderr(cmd)
+	resp, err := common.RunCmd(common.CmdIn{Command: cmd})
 
 	if err != nil {
-		internal.Log.Errorf("error in installing go package %s: %v, output: %s", name, err, out)
+		internal.Log.Errorf("error in installing go package %s: %v, output: %s", name, err, resp.Stderr)
 	}
 }
 
