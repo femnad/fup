@@ -6,10 +6,16 @@ import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/precheck/when"
 	"os"
 )
 
 func ensureLine(line base.LineInFile) error {
+	if !when.ShouldRun(line) {
+		internal.Log.Debugf("Skipping ensuring %s in %s due to condition %s", line.Replace, line.File, line.When)
+		return nil
+	}
+
 	tmpFile, err := os.CreateTemp(tmpDir, "fup")
 	if err != nil {
 		return err
