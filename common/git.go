@@ -66,7 +66,7 @@ func CloneRepo(repo, dir string) error {
 		return err
 	}
 
-	cloneDir := internal.ExpandUser(path.Join(dir, repoUrl.url))
+	cloneDir := internal.ExpandUser(path.Join(dir, repoUrl.base))
 	_, err = os.Stat(cloneDir)
 	if err == nil {
 		return nil
