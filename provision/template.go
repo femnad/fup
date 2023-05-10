@@ -15,16 +15,12 @@ import (
 
 const tmpDir = "/tmp"
 
-func getMvCmd(src, dst string) string {
-	home := os.Getenv("HOME")
+func getMvCmd(src, dst string) common.CmdIn {
 	cmd := fmt.Sprintf("mv %s %s", src, dst)
-
+	home := os.Getenv("HOME")
 	sudo := !strings.HasPrefix(dst, home)
-	if sudo {
-		return fmt.Sprintf("sudo %s", cmd)
-	}
 
-	return cmd
+	return common.CmdIn{Command: cmd, Sudo: sudo}
 }
 
 func applyTemplate(tmpl base.Template, config base.Config) error {
@@ -94,7 +90,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 	}
 
 	mvCmd := getMvCmd(src, dst)
-	out, err := common.RunCmd(common.CmdIn{Command: mvCmd})
+	out, err := common.RunCmd(mvCmd)
 
 	if err != nil {
 		return fmt.Errorf("error moving file source %s dest %s output %s: %v", src, dst, out, err)

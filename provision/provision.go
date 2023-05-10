@@ -22,6 +22,7 @@ var (
 		"tasks",
 		"template",
 		"ensure-dirs",
+		"ensure-lines",
 		"self-clone",
 		"unwanted-dirs",
 		"postflight",
@@ -38,6 +39,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	provisioners := map[string]func(){
 		"archive":         p.extractArchives,
 		"cargo":           p.cargoInstall,
+		"ensure-lines":    p.ensureLines,
 		"github-key":      p.githubUserKey,
 		"go":              p.goInstall,
 		"known-hosts":     p.acceptHostKeys,
@@ -184,6 +186,12 @@ func (p Provisioner) ensureDirs() {
 	internal.Log.Noticef("Creating desired dirs")
 
 	ensureDirs(p.Config)
+}
+
+func (p Provisioner) ensureLines() {
+	internal.Log.Noticef("Ensuring lines in files")
+
+	ensureLines(p.Config)
 }
 
 func (p Provisioner) selfClone() {

@@ -20,6 +20,7 @@ type Config struct {
 	Archives         []Archive         `yaml:"archives"`
 	Cargo            []CargoPkg        `yaml:"cargo"`
 	EnsureDirs       []string          `yaml:"ensure_dirs"`
+	EnsureLines      []LineInFile      `yaml:"ensure_lines"`
 	GithubUserKey    UserKey           `yaml:"github_user_keys"`
 	Go               []GoPkg           `yaml:"go"`
 	Packages         PackageSpec       `yaml:"packages"`

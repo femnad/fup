@@ -14,4 +14,9 @@ type Service struct {
 	Name         string `yaml:"name"`
 	System       bool   `yaml:"system"`
 	Unit         Unit   `yaml:"unit"`
+	When         string `yaml:"when"`
+}
+
+func (s Service) RunWhen() string {
+	return s.When
 }

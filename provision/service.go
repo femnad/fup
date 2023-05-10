@@ -18,11 +18,13 @@ import (
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/precheck/when"
 )
 
 var (
-	serviceDir = internal.ExpandUser("~/.config/systemd/user")
-	actions    = map[string]string{
+	systemServiceDir = internal.ExpandUser("/usr/lib/systemd/system")
+	userServiceDir   = internal.ExpandUser("~/.config/systemd/user")
+	actions          = map[string]string{
 		"disable": "!is-enabled",
 		"enable":  "is-enabled",
 		"start":   "is-active",
@@ -101,6 +103,14 @@ func runSystemctlCmd(cmd string, service base.Service) (common.CmdOut, error) {
 	return common.RunCmd(common.CmdIn{Command: cmd, Sudo: service.System})
 }
 
+func getServiceFilePath(s base.Service) string {
+	if s.System {
+		return fmt.Sprintf("%s/%s.service", systemServiceDir, s.Name)
+	}
+
+	return fmt.Sprintf("%s/%s.service", userServiceDir, s.Name)
+}
+
 func persist(s base.Service) error {
 	if s.DontTemplate {
 		return nil
@@ -108,14 +118,14 @@ func persist(s base.Service) error {
 
 	var prevChecksum string
 
-	f := fmt.Sprintf("%s/%s.service", serviceDir, s.Name)
-	_, err := os.Stat(f)
+	serviceFilePath := getServiceFilePath(s)
+	_, err := os.Stat(serviceFilePath)
 
 	prevFile := err == nil
 	if prevFile {
-		prevChecksum, err = checksum(f)
+		prevChecksum, err = checksum(serviceFilePath)
 		if err != nil {
-			return fmt.Errorf("error checksumming existing file %s: %v", f, err)
+			return fmt.Errorf("error checksumming existing file %s: %v", serviceFilePath, err)
 		}
 	}
 
@@ -128,20 +138,20 @@ func persist(s base.Service) error {
 		return nil
 	}
 
-	dir, _ := path.Split(f)
+	dir, _ := path.Split(serviceFilePath)
 	if err = common.EnsureDir(dir); err != nil {
 		return err
 	}
 
-	fd, err := os.OpenFile(f, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+	fd, err := os.OpenFile(serviceFilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
-		return fmt.Errorf("error opening service file %s, %v", f, err)
+		return fmt.Errorf("error opening service file %s, %v", serviceFilePath, err)
 	}
 	defer fd.Close()
 
 	_, err = io.Copy(fd, &o.buf)
 	if err != nil {
-		return fmt.Errorf("error writing to file %s, %v", f, err)
+		return fmt.Errorf("error writing to file %s, %v", serviceFilePath, err)
 	}
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)
@@ -271,6 +281,11 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 }
 
 func initService(s base.Service, cfg base.Config) {
+	if !when.ShouldRun(s) {
+		internal.Log.Debugf("Skipping initializing %s as when condition %s evaluated to false", s.Name, s.When)
+		return
+	}
+
 	if s.Disable {
 		err := ensure(s, "disable")
 		if err != nil {
