@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"text/template"
 
 	"github.com/femnad/fup/base"
@@ -14,14 +13,6 @@ import (
 )
 
 const tmpDir = "/tmp"
-
-func getMvCmd(src, dst string) common.CmdIn {
-	cmd := fmt.Sprintf("mv %s %s", src, dst)
-	home := os.Getenv("HOME")
-	sudo := !strings.HasPrefix(dst, home)
-
-	return common.CmdIn{Command: cmd, Sudo: sudo}
-}
 
 func applyTemplate(tmpl base.Template, config base.Config) error {
 	dstDir, dstFile := path.Split(internal.ExpandUser(tmpl.Dest))
@@ -57,7 +48,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 		}
 	}
 
-	srcSum, err := checksum(src)
+	srcSum, err := common.Checksum(src)
 	if err != nil {
 		return fmt.Errorf("error getting checksum of source %s: %v", src, err)
 	}
@@ -74,7 +65,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 	}
 
 	if !dstNotExist {
-		dstSum, err = checksum(dst)
+		dstSum, err = common.Checksum(dst)
 		if err != nil {
 			return fmt.Errorf("error getting checksum of destination %s: %v", dst, err)
 		}
@@ -89,7 +80,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 		return err
 	}
 
-	mvCmd := getMvCmd(src, dst)
+	mvCmd := common.GetMvCmd(src, dst)
 	out, err := common.RunCmd(mvCmd)
 
 	if err != nil {

@@ -63,7 +63,7 @@ func ensureLine(line base.LineInFile) error {
 		return nil
 	}
 
-	mv := getMvCmd(tmpPath, line.File)
+	mv := common.GetMvCmd(tmpPath, line.File)
 	out, err := common.RunCmd(mv)
 	if err != nil {
 		return fmt.Errorf("error renaming %s to %s: %v, output %s", tmpPath, line.File, err, out.Stderr)

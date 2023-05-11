@@ -2,11 +2,13 @@ package base
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
-	"os"
 )
 
 const (
@@ -42,29 +44,15 @@ func runGitClone(step Step, cfg Config) error {
 	return common.CloneRepo(step.Repo, path)
 }
 
-func fileCmd(step Step, _ Config) error {
-	path := os.ExpandEnv(step.Path)
-	_, err := os.Stat(path)
-	if err == nil {
-		return nil
-	}
+func fileCmd(step Step, cfg Config) error {
+	target := settings.ExpandString(cfg.Settings, step.Target)
+	content := settings.ExpandString(cfg.Settings, step.Content)
 
-	mode := defaultFileMode
-	if step.Mode != 0 {
-		mode = step.Mode
-	}
-
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, os.FileMode(mode))
-	if err != nil {
-		return err
-	}
-
-	_, err = f.WriteString(step.Content)
-	return err
+	return common.WriteContent(target, content, step.Validate, os.FileMode(step.Mode))
 }
 
 func download(step Step, cfg Config) error {
-	url, path := step.Url, ExpandSettings(cfg.Settings, step.Path)
+	url, path := step.Url, ExpandSettings(cfg.Settings, step.Target)
 	internal.Log.Debugf("Downloading %s into %s", url, path)
 	return remote.Download(url, path)
 }
@@ -103,17 +91,18 @@ type Step struct {
 	Content string `yaml:"content"`
 	Dir     string `yaml:"dir"`
 	Mode    int    `yaml:"mode"`
-	Path    string `yaml:"path"`
 	Pwd     string `yaml:"pwd"`
 	Repo    string `yaml:"repo"`
 	// For link and rename
 	Src      string `yaml:"src"`
 	StepName string `yaml:"name"`
 	Sudo     bool   `yaml:"sudo"`
-	// For link and rename
+	// For download, file, link and rename
 	Target string        `yaml:"target"`
 	Unless unless.Unless `yaml:"unless"`
-	Url    string        `yaml:"url"`
+	// For file
+	Validate string `yaml:"validate"`
+	Url      string `yaml:"url"`
 }
 
 func (s Step) String() string {

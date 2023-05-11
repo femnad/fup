@@ -52,28 +52,6 @@ type tmplOut struct {
 	sha256sum string
 }
 
-func checksum(f string) (string, error) {
-	_, err := os.Stat(f)
-	if err != nil {
-		return "", err
-	}
-
-	h := sha256.New()
-	fd, err := os.Open(f)
-	if err != nil {
-		return "", err
-	}
-	defer fd.Close()
-
-	_, err = io.Copy(h, fd)
-	if err != nil {
-		return "", err
-	}
-
-	sum := h.Sum(nil)
-	return hex.EncodeToString(sum), nil
-}
-
 func writeTmpl(s base.Service) (tmplOut, error) {
 	var o tmplOut
 
@@ -123,7 +101,7 @@ func persist(s base.Service) error {
 
 	prevFile := err == nil
 	if prevFile {
-		prevChecksum, err = checksum(serviceFilePath)
+		prevChecksum, err = common.Checksum(serviceFilePath)
 		if err != nil {
 			return fmt.Errorf("error checksumming existing file %s: %v", serviceFilePath, err)
 		}
@@ -257,7 +235,7 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 	exec := s.Unit.Exec
 
 	lookup := map[string]string{"version": cfg.Settings.Versions[s.Name]}
-	exec = settings.ExpandString(cfg.Settings, exec, lookup)
+	exec = settings.ExpandStringWithLookup(cfg.Settings, exec, lookup)
 
 	tokens := strings.Split(exec, " ")
 	if len(tokens) == 0 {

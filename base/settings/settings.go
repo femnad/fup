@@ -72,11 +72,15 @@ func expand(s string, lookup map[string]string) string {
 	return out.String()
 }
 
-func ExpandString(settings Settings, s string, lookup map[string]string) string {
+func ExpandStringWithLookup(settings Settings, s string, lookup map[string]string) string {
 	lookup["clone_dir"] = settings.CloneDir
 	lookup["extract_dir"] = settings.ExtractDir
 
 	return expand(s, lookup)
+}
+
+func ExpandString(settings Settings, s string) string {
+	return ExpandStringWithLookup(settings, s, map[string]string{})
 }
 
 func ExpandSettingsWithLookup(settings Settings, s string, lookup map[string]string) string {
