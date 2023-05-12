@@ -4,6 +4,7 @@ type Unit struct {
 	Desc        string            `yaml:"desc"`
 	Environment map[string]string `yaml:"env"`
 	Exec        string            `yaml:"exec"`
+	Options     map[string]string `yaml:"options"`
 }
 
 type Service struct {

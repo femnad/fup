@@ -38,8 +38,11 @@ Description={{ .Unit.Desc }}
 
 [Service]
 ExecStart={{ .Unit.Exec }}
-{{- range $key, $value := .Unit.Environment  }}
+{{- range $key, $value := .Unit.Environment }}
 Environment={{$key}}={{$value}}
+{{- end }}
+{{- range $key, $value := .Unit.Options }}
+{{$key}}={{$value}}
 {{- end }}
 
 [Install]
