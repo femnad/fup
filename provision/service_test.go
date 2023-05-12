@@ -17,7 +17,12 @@ func Test_writeTmpl(t *testing.T) {
 	}{
 		{
 			name: "Basic service",
-			args: args{s: base.Service{Unit: base.Unit{Desc: "Test", Exec: "test"}}},
+			args: args{s: base.Service{
+				Unit: base.Unit{
+					Desc: "Test",
+					Exec: "test"},
+			},
+			},
 			want: `[Unit]
 Description=Test
 
@@ -30,8 +35,16 @@ WantedBy=default.target
 		},
 		{
 			name: "Service with options",
-			args: args{s: base.Service{Unit: base.Unit{Desc: "Test", Exec: "test",
-				Options: map[string]string{"Restart": "always", "RestartSec": "5"}}}},
+			args: args{s: base.Service{
+				Unit: base.Unit{
+					Desc: "Test",
+					Exec: "test",
+					Options: map[string]string{
+						"Restart":    "always",
+						"RestartSec": "5"},
+				},
+			},
+			},
 			want: `[Unit]
 Description=Test
 
@@ -39,6 +52,41 @@ Description=Test
 ExecStart=test
 Restart=always
 RestartSec=5
+
+[Install]
+WantedBy=default.target
+`,
+		},
+		{
+			name: "Service with wanted by",
+			args: args{s: base.Service{Unit: base.Unit{
+				Desc:     "Test",
+				Exec:     "test",
+				WantedBy: "sleep",
+			}}},
+			want: `[Unit]
+Description=Test
+
+[Service]
+ExecStart=test
+
+[Install]
+WantedBy=sleep.target
+`,
+		},
+		{
+			name: "Service with before",
+			args: args{s: base.Service{Unit: base.Unit{
+				Desc:   "Test",
+				Exec:   "test",
+				Before: "sleep",
+			}}},
+			want: `[Unit]
+Description=Test
+Before=sleep.target
+
+[Service]
+ExecStart=test
 
 [Install]
 WantedBy=default.target

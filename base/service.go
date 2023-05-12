@@ -1,10 +1,12 @@
 package base
 
 type Unit struct {
+	Before      string            `yaml:"before"`
 	Desc        string            `yaml:"desc"`
 	Environment map[string]string `yaml:"env"`
 	Exec        string            `yaml:"exec"`
 	Options     map[string]string `yaml:"options"`
+	WantedBy    string            `yaml:"wanted_by"`
 }
 
 type Service struct {

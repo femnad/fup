@@ -35,6 +35,9 @@ const (
 	negationPrefix = "!"
 	svcTmpl        = `[Unit]
 Description={{ .Unit.Desc }}
+{{- if .Unit.Before}}
+Before={{ .Unit.Before }}.target
+{{- end }}
 
 [Service]
 ExecStart={{ .Unit.Exec }}
@@ -42,11 +45,11 @@ ExecStart={{ .Unit.Exec }}
 Environment={{$key}}={{$value}}
 {{- end }}
 {{- range $key, $value := .Unit.Options }}
-{{$key}}={{$value}}
+{{ $key }}={{ $value }}
 {{- end }}
 
 [Install]
-WantedBy=default.target
+WantedBy={{ if .Unit.WantedBy }}{{ .Unit.WantedBy }}{{ else }}{{ "default" }}{{ end }}.target
 `
 )
 
