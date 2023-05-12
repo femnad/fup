@@ -48,7 +48,8 @@ func fileCmd(step Step, cfg Config) error {
 	target := settings.ExpandString(cfg.Settings, step.Target)
 	content := settings.ExpandString(cfg.Settings, step.Content)
 
-	return common.WriteContent(target, content, step.Validate, os.FileMode(step.Mode))
+	_, err := common.WriteContent(target, content, step.Validate, os.FileMode(step.Mode))
+	return err
 }
 
 func download(step Step, cfg Config) error {

@@ -99,9 +99,8 @@ WantedBy=default.target
 				t.Errorf("writeTmpl() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			out := got.buf.String()
-			if out != tt.want {
-				t.Errorf("writeTmpl() got = \n`%s`, want \n`%s`", out, tt.want)
+			if got != tt.want {
+				t.Errorf("writeTmpl() got = \n`%s`, want \n`%s`", got, tt.want)
 			}
 		})
 	}

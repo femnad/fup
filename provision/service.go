@@ -2,10 +2,7 @@ package provision
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"strings"
@@ -53,33 +50,19 @@ WantedBy={{ if .Unit.WantedBy }}{{ .Unit.WantedBy }}{{ else }}{{ "default" }}{{ 
 `
 )
 
-type tmplOut struct {
-	buf       bytes.Buffer
-	sha256sum string
-}
-
-func writeTmpl(s base.Service) (tmplOut, error) {
-	var o tmplOut
-
+func writeTmpl(s base.Service) (string, error) {
 	b := bytes.Buffer{}
 	st, err := template.New("service").Parse(svcTmpl)
 	if err != nil {
-		return o, fmt.Errorf("error creating template: %v", err)
+		return "", fmt.Errorf("error creating template: %v", err)
 	}
 
-	h := sha256.New()
-	wrtSum := io.MultiWriter(&b, h)
-
-	err = st.Execute(wrtSum, s)
+	err = st.Execute(&b, s)
 	if err != nil {
-		return o, fmt.Errorf("error applying service template: %v", err)
+		return "", fmt.Errorf("error applying service template: %v", err)
 	}
 
-	o.buf = b
-	sum := h.Sum(nil)
-	o.sha256sum = hex.EncodeToString(sum)
-
-	return o, nil
+	return b.String(), nil
 }
 
 func runSystemctlCmd(cmd string, service base.Service) (common.CmdOut, error) {
@@ -95,21 +78,20 @@ func getServiceFilePath(s base.Service) string {
 	return fmt.Sprintf("%s/%s.service", userServiceDir, s.Name)
 }
 
+func writeServiceFile(file, content string) (bool, error) {
+	return common.WriteContent(file, content, "", 0o644)
+}
+
 func persist(s base.Service) error {
 	if s.DontTemplate {
 		return nil
 	}
 
-	var prevChecksum string
-
 	serviceFilePath := getServiceFilePath(s)
-	_, err := os.Stat(serviceFilePath)
-
-	prevFile := err == nil
-	if prevFile {
-		prevChecksum, err = common.Checksum(serviceFilePath)
-		if err != nil {
-			return fmt.Errorf("error checksumming existing file %s: %v", serviceFilePath, err)
+	if !s.System {
+		dir, _ := path.Split(serviceFilePath)
+		if err := common.EnsureDir(dir); err != nil {
+			return err
 		}
 	}
 
@@ -118,24 +100,9 @@ func persist(s base.Service) error {
 		return err
 	}
 
-	if prevFile && prevChecksum == o.sha256sum {
+	changed, err := writeServiceFile(serviceFilePath, o)
+	if !changed {
 		return nil
-	}
-
-	dir, _ := path.Split(serviceFilePath)
-	if err = common.EnsureDir(dir); err != nil {
-		return err
-	}
-
-	fd, err := os.OpenFile(serviceFilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
-	if err != nil {
-		return fmt.Errorf("error opening service file %s, %v", serviceFilePath, err)
-	}
-	defer fd.Close()
-
-	_, err = io.Copy(fd, &o.buf)
-	if err != nil {
-		return fmt.Errorf("error writing to file %s, %v", serviceFilePath, err)
 	}
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)

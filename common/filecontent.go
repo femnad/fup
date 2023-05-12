@@ -86,7 +86,8 @@ func getStatSum(f string) (statSum, error) {
 	return statSum{mode: uint32(mode), sha256sum: sum}, nil
 }
 
-func WriteContent(target, content, validate string, mode os.FileMode) error {
+func WriteContent(target, content, validate string, mode os.FileMode) (bool, error) {
+	var changed bool
 	var dstSum string
 	var srcSum string
 	var noPermission bool
@@ -100,28 +101,28 @@ func WriteContent(target, content, validate string, mode os.FileMode) error {
 		if os.IsNotExist(err) {
 			dstExists = false
 		} else if err != nil {
-			return err
+			return changed, err
 		}
 	} else if os.IsNotExist(err) {
 		dstExists = false
 	} else if err != nil {
-		return err
+		return changed, err
 	}
 
 	src, err := os.CreateTemp(tmpDir, "fup")
 	if err != nil {
-		return err
+		return changed, err
 	}
 	defer src.Close()
 	srcPath := src.Name()
 
 	_, err = src.WriteString(content)
 	if err != nil {
-		return err
+		return changed, err
 	}
 	srcSum, err = Checksum(srcPath)
 	if err != nil {
-		return err
+		return changed, err
 	}
 	defer os.Remove(srcSum)
 
@@ -131,37 +132,37 @@ func WriteContent(target, content, validate string, mode os.FileMode) error {
 		} else {
 			dstSum, err = Checksum(target)
 			if err != nil {
-				return err
+				return changed, err
 			}
 		}
 	}
 
 	if dstExists && srcSum == dstSum {
-		return nil
+		return false, nil
 	}
 
 	if validate != "" {
 		validateCmd := fmt.Sprintf("%s %s", validate, srcPath)
 		out, validateErr := RunCmd(CmdIn{Command: validateCmd, Sudo: noPermission})
 		if validateErr != nil {
-			return fmt.Errorf("error running validate command %s, output %s", validateCmd, strings.TrimSpace(out.Stderr))
+			return changed, fmt.Errorf("error running validate command %s, output %s", validateCmd, strings.TrimSpace(out.Stderr))
 		}
 	}
 
 	mv := GetMvCmd(srcPath, target)
 	_, err = RunCmd(mv)
 	if err != nil {
-		return err
+		return changed, err
 	}
 
 	if mode != 0 {
 		mode = defaultFileMode
 	}
 
-	var targetMode os.FileMode
+	targetMode := os.FileMode(defaultFileMode)
 	if noPermission {
 		targetMode = os.FileMode(ss.mode)
-	} else {
+	} else if fi.Mode() != 0 {
 		targetMode = fi.Mode()
 	}
 
@@ -169,16 +170,16 @@ func WriteContent(target, content, validate string, mode os.FileMode) error {
 		chmodCmd := getChmodCmd(target, mode)
 		_, err = RunCmd(chmodCmd)
 		if err != nil {
-			return err
+			return changed, err
 		}
 	}
 
 	if noPermission {
 		_, err = RunCmd(CmdIn{Command: fmt.Sprintf("chown 0:0 %s", target), Sudo: true})
 		if err != nil {
-			return err
+			return changed, err
 		}
 	}
 
-	return err
+	return true, nil
 }
