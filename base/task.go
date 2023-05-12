@@ -11,10 +11,6 @@ import (
 	"github.com/femnad/fup/remote"
 )
 
-const (
-	defaultFileMode = 0644
-)
-
 func createSymlink(step Step, cfg Config) error {
 	name := internal.ExpandUser(step.Src)
 	target := ExpandSettings(cfg.Settings, step.Target)
@@ -48,7 +44,7 @@ func fileCmd(step Step, cfg Config) error {
 	target := settings.ExpandString(cfg.Settings, step.Target)
 	content := settings.ExpandString(cfg.Settings, step.Content)
 
-	_, err := common.WriteContent(target, content, step.Validate, os.FileMode(step.Mode))
+	_, err := common.WriteContent(target, content, step.Validate, step.Mode)
 	return err
 }
 

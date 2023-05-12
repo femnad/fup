@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	defaultFileMode   = 0644
+	defaultFileMode   = 0o644
 	statNoExistsError = "No such file or directory"
 	tmpDir            = "/tmp"
 )
 
 type statSum struct {
-	mode      uint32
+	mode      int
 	sha256sum string
 }
 
@@ -29,7 +29,7 @@ func GetMvCmd(src, dst string) CmdIn {
 	return CmdIn{Command: cmd, Sudo: sudo}
 }
 
-func getChmodCmd(target string, mode os.FileMode) CmdIn {
+func getChmodCmd(target string, mode int) CmdIn {
 	cmd := fmt.Sprintf("chmod %d %s", mode, target)
 	home := os.Getenv("HOME")
 	sudo := !strings.HasPrefix(target, home)
@@ -83,10 +83,10 @@ func getStatSum(f string) (statSum, error) {
 	}
 	sum := sumFields[0]
 
-	return statSum{mode: uint32(mode), sha256sum: sum}, nil
+	return statSum{mode: int(mode), sha256sum: sum}, nil
 }
 
-func WriteContent(target, content, validate string, mode os.FileMode) (bool, error) {
+func WriteContent(target, content, validate string, mode int) (bool, error) {
 	var changed bool
 	var dstSum string
 	var srcSum string
@@ -159,11 +159,11 @@ func WriteContent(target, content, validate string, mode os.FileMode) (bool, err
 		mode = defaultFileMode
 	}
 
-	targetMode := os.FileMode(defaultFileMode)
+	targetMode := defaultFileMode
 	if noPermission {
-		targetMode = os.FileMode(ss.mode)
-	} else if fi.Mode() != 0 {
-		targetMode = fi.Mode()
+		targetMode = ss.mode
+	} else if fi != nil {
+		targetMode = int(fi.Mode())
 	}
 
 	if targetMode != mode {
