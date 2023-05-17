@@ -18,12 +18,12 @@ const (
 )
 
 type args struct {
-	DebugToStderr bool     `arg:"-b,--debug-to-stderr"`
-	File          string   `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml"`
-	LogFile       string   `arg:"--logfile" default:"~/.local/share/fup/fup.log"`
-	LogLevel      int      `arg:"-l,--loglevel" default:"5"`
-	Provisioners  []string `arg:"-p,--provisioners"`
-	WriteLogs     bool     `arg:"-w,--writelogs"`
+	DebugToStderr bool     `arg:"-b,--debug-to-stderr" help:"Write logs to stderr"`
+	File          string   `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml" help:"Config file path"`
+	LogFile       string   `arg:"--logfile" default:"~/.local/share/fup/fup.log" help:"Log file path"`
+	LogLevel      int      `arg:"-l,--loglevel" default:"5" help:"Log level as integer"`
+	Provisioners  []string `arg:"-p,--provisioners" help:"List of provisioners to run"`
+	WriteLogs     bool     `arg:"-w,--writelogs" help:"Write logs to a file"`
 }
 
 func (args) Version() string {
