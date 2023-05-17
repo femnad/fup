@@ -25,6 +25,7 @@ var (
 		"ensure-lines",
 		"self-clone",
 		"unwanted-dirs",
+		"user-in-group",
 		"postflight",
 	}
 )
@@ -39,6 +40,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	provisioners := map[string]func(){
 		"archive":         p.extractArchives,
 		"cargo":           p.cargoInstall,
+		"ensure-dirs":     p.ensureDirs,
 		"ensure-lines":    p.ensureLines,
 		"github-key":      p.githubUserKey,
 		"go":              p.goInstall,
@@ -48,12 +50,12 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 		"preflight":       p.runPreflightTasks,
 		"python":          p.pythonInstall,
 		"remove-packages": p.removePackages,
-		"services":        p.initServices,
 		"self-clone":      p.selfClone,
+		"services":        p.initServices,
 		"tasks":           p.runTasks,
 		"template":        p.applyTemplates,
-		"ensure-dirs":     p.ensureDirs,
 		"unwanted-dirs":   p.unwantedDirs,
+		"user-in-group":   p.userInGroup,
 	}
 
 	if len(provs) == 0 {
@@ -204,4 +206,10 @@ func (p Provisioner) unwantedDirs() {
 	internal.Log.Noticef("Removing unwanted dirs")
 
 	removeUnwantedDirs(p.Config)
+}
+
+func (p Provisioner) userInGroup() {
+	internal.Log.Noticef("Ensuring user is in desired groups")
+
+	userInGroup(p.Config)
 }

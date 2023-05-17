@@ -16,24 +16,25 @@ import (
 type PackageSpec map[string][]string
 
 type Config struct {
-	AcceptHostKeys   []string          `yaml:"accept_host_keys"`
-	Archives         []Archive         `yaml:"archives"`
-	Cargo            []CargoPkg        `yaml:"cargo"`
-	EnsureDirs       []string          `yaml:"ensure_dirs"`
-	EnsureLines      []LineInFile      `yaml:"ensure_lines"`
-	GithubUserKey    UserKey           `yaml:"github_user_keys"`
-	Go               []GoPkg           `yaml:"go"`
-	Packages         PackageSpec       `yaml:"packages"`
-	PostflightTasks  []Task            `yaml:"postflight"`
-	PreflightTasks   []Task            `yaml:"preflight"`
-	Python           []PythonPkg       `yaml:"python"`
-	SelfRepos        []string          `yaml:"self_repos"`
-	Services         []Service         `yaml:"services"`
-	Settings         settings.Settings `yaml:"settings"`
-	Tasks            []Task            `yaml:"tasks"`
-	Templates        []Template        `yaml:"template"`
-	UnwantedDirs     []string          `yaml:"unwanted_dirs"`
-	UnwantedPackages PackageSpec       `yaml:"unwanted_packages"`
+	AcceptHostKeys   []string            `yaml:"accept_host_keys"`
+	Archives         []Archive           `yaml:"archives"`
+	Cargo            []CargoPkg          `yaml:"cargo"`
+	EnsureDirs       []string            `yaml:"ensure_dirs"`
+	EnsureLines      []LineInFile        `yaml:"ensure_lines"`
+	GithubUserKey    UserKey             `yaml:"github_user_keys"`
+	Go               []GoPkg             `yaml:"go"`
+	Packages         PackageSpec         `yaml:"packages"`
+	PostflightTasks  []Task              `yaml:"postflight"`
+	PreflightTasks   []Task              `yaml:"preflight"`
+	Python           []PythonPkg         `yaml:"python"`
+	SelfRepos        []string            `yaml:"self_repos"`
+	Services         []Service           `yaml:"services"`
+	Settings         settings.Settings   `yaml:"settings"`
+	Tasks            []Task              `yaml:"tasks"`
+	Templates        []Template          `yaml:"template"`
+	UserInGroup      map[string][]string `yaml:"user_in_group"`
+	UnwantedDirs     []string            `yaml:"unwanted_dirs"`
+	UnwantedPackages PackageSpec         `yaml:"unwanted_packages"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {

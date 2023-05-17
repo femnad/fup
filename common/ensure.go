@@ -3,7 +3,6 @@ package common
 import (
 	"bufio"
 	"fmt"
-	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/femnad/fup/internal"
 	"os"
 	"path"
@@ -12,10 +11,7 @@ import (
 const permissions = 0o600
 
 func EnsureLinesInFile(file string, lines []string) error {
-	itemSet := mapset.NewSet[string]()
-	for _, line := range lines {
-		itemSet.Add(line)
-	}
+	itemSet := internal.SetFromList[string](lines)
 
 	file = internal.ExpandUser(file)
 	dir, _ := path.Split(file)
