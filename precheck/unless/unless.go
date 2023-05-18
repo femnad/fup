@@ -234,16 +234,41 @@ func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string
 	return settings.ExpandSettingsWithLookup(s, stat, lookup)
 }
 
+func sudoStat(target string) bool {
+	internal.Log.Debugf("Trying to access %s with elevated privileges", target)
+
+	statCmd := fmt.Sprintf("stat %s", target)
+	out, cmdErr := common.RunCmd(common.CmdIn{Command: statCmd, Sudo: true})
+
+	if strings.HasSuffix(strings.TrimSpace(out.Stderr), "No such file or directory") {
+		return false
+	} else if cmdErr == nil {
+		return true
+	}
+
+	return false
+}
+
+func fileExists(target string) bool {
+	internal.Log.Debugf("Checking existence of %s", target)
+
+	_, err := os.Stat(target)
+	if err == nil {
+		return true
+	} else if os.IsPermission(err) {
+		return sudoStat(target)
+	}
+
+	return false
+}
+
 func ShouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	unless := unlessable.GetUnless()
 	stat := unless.Stat
 
 	if stat != "" {
 		stat = resolveStat(stat, unlessable, s)
-
-		internal.Log.Debugf("Checking existence of %s", stat)
-		_, err := os.Stat(stat)
-		return err == nil
+		return fileExists(stat)
 	}
 
 	if unless.Cmd == "" && unless.Shell == "" {
