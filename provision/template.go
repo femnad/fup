@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/femnad/fup/base"
@@ -12,7 +14,81 @@ import (
 	"github.com/femnad/fup/precheck/when"
 )
 
-const tmpDir = "/tmp"
+const (
+	// -1 means don't change user/group with os.Chown.
+	defaultId           = -1
+	getentUserDatabase  = "passwd"
+	getentGroupDatabase = "group"
+	getentSeparator     = ":"
+	rootUser            = "root"
+	tmpDir              = "/tmp"
+)
+
+func getent(key, database string) (int, error) {
+	if key == "" {
+		return defaultId, nil
+	}
+
+	out, err := common.RunCmd(common.CmdIn{Command: fmt.Sprintf("getent %s %s", database, key)})
+	if err != nil {
+		return 0, err
+	}
+
+	getentOutput := out.Stdout
+	getentFields := strings.Split(getentOutput, getentSeparator)
+	if len(getentFields) < 2 {
+		return 0, fmt.Errorf("unexpected getent output: %s", getentOutput)
+	}
+
+	id, err := strconv.ParseInt(getentFields[2], 10, 32)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+func chown(file, user, group string) error {
+	isAbsPath := strings.HasPrefix(file, "/")
+	if user == "" && group == "" {
+		if !isAbsPath {
+			return nil
+		}
+
+		user = rootUser
+		group = rootUser
+	}
+
+	userId, err := getent(user, getentUserDatabase)
+	if err != nil {
+		return err
+	}
+
+	groupId, err := getent(group, getentGroupDatabase)
+	if err != nil {
+		return err
+	}
+
+	if !isAbsPath {
+		return os.Chown(file, userId, groupId)
+	}
+
+	chownCmd := "chown "
+	if user != "" {
+		chownCmd += user
+	}
+	if group != "" {
+		chownCmd += ":" + user
+	}
+	chownCmd += " " + file
+
+	out, err := common.RunCmd(common.CmdIn{Command: chownCmd, Sudo: true})
+	if err != nil {
+		return fmt.Errorf("error changing owner of %s, output %s: %v", file, out.Stderr, err)
+	}
+
+	return nil
+}
 
 func applyTemplate(tmpl base.Template, config base.Config) error {
 	dstDir, dstFile := path.Split(internal.ExpandUser(tmpl.Dest))
@@ -87,7 +163,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 		return fmt.Errorf("error moving file source %s dest %s output %s: %v", src, dst, out.Stderr, err)
 	}
 
-	return nil
+	return chown(dst, tmpl.User, tmpl.Group)
 }
 
 func applyTemplates(config base.Config) {

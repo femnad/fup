@@ -26,10 +26,6 @@ type idKeyPair struct {
 }
 
 func ensureUserKeys(user string) error {
-	if user == "" {
-		return fmt.Errorf("GitHub username is empty")
-	}
-
 	url := fmt.Sprintf("https://api.github.com/users/%s/keys", user)
 	resp, err := remote.ReadResponseBody(url)
 	if err != nil {
@@ -97,6 +93,10 @@ func ensureUserKeys(user string) error {
 
 func addGithubUserKeys(config base.Config) {
 	user := config.GithubUserKey.User
+	if user == "" {
+		return
+	}
+
 	err := ensureUserKeys(user)
 	if err != nil {
 		internal.Log.Errorf("error ensuring GitHub keys for user %s: %v", user, err)
