@@ -2,16 +2,21 @@ package common
 
 import (
 	"fmt"
-	"github.com/femnad/fup/internal"
-	"github.com/go-git/go-git/v5"
 	"net/url"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/go-git/go-git/v5/config"
+
+	"github.com/femnad/fup/entity"
+	"github.com/femnad/fup/internal"
+	"github.com/go-git/go-git/v5"
 )
 
 const (
 	defaultHost   = "github.com"
+	defaultRemote = "origin"
 	gitRepoSuffix = ".git"
 )
 
@@ -60,8 +65,46 @@ func processUrl(repoUrl string) (cloneUrl, error) {
 	return clone, nil
 }
 
-func CloneRepo(repo, dir string) error {
-	repoUrl, err := processUrl(repo)
+func updateSubmodule(r git.Repository) error {
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	submodules, err := w.Submodules()
+	if err != nil {
+		return err
+	}
+
+	for _, submodule := range submodules {
+		sub, subErr := w.Submodule(submodule.Config().Name)
+		if subErr != nil {
+			return subErr
+		}
+
+		sr, subErr := sub.Repository()
+		if subErr != nil {
+			return subErr
+		}
+
+		sw, subErr := sr.Worktree()
+		if subErr != nil {
+			return subErr
+		}
+
+		subErr = sw.Pull(&git.PullOptions{
+			RemoteName: defaultRemote},
+		)
+		if subErr != nil {
+			return subErr
+		}
+	}
+
+	return nil
+}
+
+func CloneRepo(repo entity.Repo, dir string) error {
+	repoUrl, err := processUrl(repo.Name)
 	if err != nil {
 		return err
 	}
@@ -75,9 +118,39 @@ func CloneRepo(repo, dir string) error {
 	opt := git.CloneOptions{
 		URL: repoUrl.url,
 	}
-	_, err = git.PlainClone(cloneDir, false, &opt)
+	if repo.Submodule {
+		opt.RecurseSubmodules = git.DefaultSubmoduleRecursionDepth
+	}
+
+	r, err := git.PlainClone(cloneDir, false, &opt)
 	if err != nil {
-		return fmt.Errorf("error cloning repo %s: %v", repo, err)
+		return fmt.Errorf("error cloning repo %s: %v", repo.Name, err)
+	}
+
+	if repo.Submodule {
+		err = updateSubmodule(*r)
+		if err != nil {
+			return err
+		}
+	}
+
+	for remote, remoteUrl := range repo.Remotes {
+		remoteExpanded, remoteErr := processUrl(remoteUrl)
+		_, remoteErr = r.CreateRemote(&config.RemoteConfig{
+			Name: remote,
+			URLs: []string{remoteExpanded.url},
+		})
+		if remoteErr != nil {
+			return remoteErr
+		}
+
+		internal.Log.Debugf("Fetching remote %s from %s for repo %s", remote, remoteUrl, repo.Name)
+		remoteErr = r.Fetch(&git.FetchOptions{
+			RemoteName: remote,
+		})
+		if remoteErr != nil {
+			return remoteErr
+		}
 	}
 
 	return nil

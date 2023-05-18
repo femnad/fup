@@ -3,10 +3,11 @@ package provision
 import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 )
 
-func cloneRepos(repos []string, clonePath string) error {
+func cloneRepos(repos []entity.Repo, clonePath string) error {
 	for _, repo := range repos {
 		err := common.CloneRepo(repo, clonePath)
 		if err != nil {

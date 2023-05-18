@@ -6,6 +6,7 @@ import (
 
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
@@ -84,12 +85,12 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 }
 
 type Step struct {
-	Cmd     string `yaml:"cmd"`
-	Content string `yaml:"content"`
-	Dir     string `yaml:"dir"`
-	Mode    int    `yaml:"mode"`
-	Pwd     string `yaml:"pwd"`
-	Repo    string `yaml:"repo"`
+	Cmd     string      `yaml:"cmd"`
+	Content string      `yaml:"content"`
+	Dir     string      `yaml:"dir"`
+	Mode    int         `yaml:"mode"`
+	Pwd     string      `yaml:"pwd"`
+	Repo    entity.Repo `yaml:"repo"`
 	// For link and rename
 	Src      string `yaml:"src"`
 	StepName string `yaml:"name"`
