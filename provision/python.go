@@ -8,6 +8,7 @@ import (
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/precheck/unless"
 )
 
 func pipInstall(pipBin, pkg string) error {
@@ -21,6 +22,11 @@ func pipInstall(pipBin, pkg string) error {
 }
 
 func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
+	if unless.ShouldSkip(pkg, cfg.Settings) {
+		internal.Log.Debugf("skipping pip install for %s", pkg.Name())
+		return
+	}
+
 	name := pkg.Name()
 	baseDir := internal.ExpandUser(cfg.Settings.VirtualEnvDir)
 	venvDir := path.Join(baseDir, name)
