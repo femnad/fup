@@ -6,20 +6,37 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strconv"
 	"strings"
+
+	"github.com/femnad/fup/internal"
 )
 
 const (
-	defaultFileMode   = 0o644
-	rootUser          = "root"
-	statNoExistsError = "No such file or directory"
-	tmpDir            = "/tmp"
+	// -1 means don't change user/group with os.Chown.
+	defaultFileMode     = 0o644
+	defaultId           = -1
+	getentGroupDatabase = "group"
+	getentSeparator     = ":"
+	getentUserDatabase  = "passwd"
+	rootUser            = "root"
+	statNoExistsError   = "No such file or directory"
+	tmpDir              = "/tmp"
 )
 
 type statSum struct {
 	mode      int
 	sha256sum string
+}
+
+type ManagedFile struct {
+	Content     string
+	Path        string
+	Mode        int
+	User        string
+	Group       string
+	ValidateCmd string
 }
 
 func GetMvCmd(src, dst string) CmdIn {
@@ -86,13 +103,97 @@ func getStatSum(f string) (statSum, error) {
 	return statSum{mode: int(mode), sha256sum: sum}, nil
 }
 
-func WriteContent(target, content, validate string, mode int) (bool, error) {
+func getent(key, database string) (int, error) {
+	if key == "" {
+		return defaultId, nil
+	}
+
+	out, err := RunCmd(CmdIn{Command: fmt.Sprintf("getent %s %s", database, key)})
+	if err != nil {
+		return 0, err
+	}
+
+	getentOutput := out.Stdout
+	getentFields := strings.Split(getentOutput, getentSeparator)
+	if len(getentFields) < 2 {
+		return 0, fmt.Errorf("unexpected getent output: %s", getentOutput)
+	}
+
+	id, err := strconv.ParseInt(getentFields[2], 10, 32)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+func chown(file, user, group string) error {
+	isHomePath := IsHomePath(file)
+	if user == "" && group == "" {
+		if isHomePath {
+			return nil
+		}
+
+		user = rootUser
+		group = rootUser
+	}
+
+	userId, err := getent(user, getentUserDatabase)
+	if err != nil {
+		return err
+	}
+
+	groupId, err := getent(group, getentGroupDatabase)
+	if err != nil {
+		return err
+	}
+
+	if isHomePath {
+		return os.Chown(file, userId, groupId)
+	}
+
+	chownCmd := "chown "
+	if user != "" {
+		chownCmd += user
+	}
+	if group != "" {
+		chownCmd += ":" + user
+	}
+	chownCmd += " " + file
+
+	out, err := RunCmd(CmdIn{Command: chownCmd, Sudo: true})
+	if err != nil {
+		return fmt.Errorf("error changing owner of %s, output %s: %v", file, out.Stderr, err)
+	}
+
+	return nil
+}
+
+func ensureDir(dir string) error {
+	if HasPerms(dir) {
+		return os.MkdirAll(dir, 0o755)
+	}
+
+	internal.Log.Warningf("escalating privileges to create directory %s", dir)
+	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
+	out, err := RunCmd(CmdIn{Command: mkdirCmd, Sudo: true})
+	if err != nil {
+		return fmt.Errorf("error running command %s, output %s: %v", mkdirCmd, out.Stderr, err)
+	}
+
+	return nil
+}
+
+func WriteContent(file ManagedFile) (bool, error) {
 	var changed bool
 	var dstSum string
 	var srcSum string
 	var noPermission bool
 	var ss statSum
 	dstExists := true
+	target := internal.ExpandUser(file.Path)
+	mode := file.Mode
+	validateCmd := file.ValidateCmd
 
 	_, err := os.Stat(target)
 	if os.IsPermission(err) {
@@ -116,7 +217,7 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 	defer src.Close()
 	srcPath := src.Name()
 
-	_, err = src.WriteString(content)
+	_, err = src.WriteString(file.Content)
 	if err != nil {
 		return changed, err
 	}
@@ -141,12 +242,18 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 		return false, nil
 	}
 
-	if validate != "" {
-		validateCmd := fmt.Sprintf("%s %s", validate, srcPath)
+	if validateCmd != "" {
+		validateCmd = fmt.Sprintf("%s %s", validateCmd, srcPath)
 		out, validateErr := RunCmd(CmdIn{Command: validateCmd, Sudo: noPermission})
 		if validateErr != nil {
 			return changed, fmt.Errorf("error running validate command %s, output %s", validateCmd, strings.TrimSpace(out.Stderr))
 		}
+	}
+
+	dir, _ := path.Split(target)
+	err = ensureDir(dir)
+	if err != nil {
+		return false, err
 	}
 
 	mv := GetMvCmd(srcPath, target)
@@ -155,7 +262,7 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 		return changed, fmt.Errorf("error running mv command: %s, output %s: %v", mv.Command, out.Stderr, err)
 	}
 
-	if mode != 0 {
+	if mode == 0 {
 		mode = defaultFileMode
 	}
 
@@ -183,6 +290,11 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 		if err != nil {
 			return changed, err
 		}
+	}
+
+	err = chown(target, file.User, file.Group)
+	if err != nil {
+		return false, err
 	}
 
 	return true, nil

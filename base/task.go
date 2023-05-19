@@ -45,7 +45,12 @@ func fileCmd(step Step, cfg Config) error {
 	target := settings.ExpandString(cfg.Settings, step.Target)
 	content := settings.ExpandString(cfg.Settings, step.Content)
 
-	_, err := common.WriteContent(target, content, step.Validate, step.Mode)
+	_, err := common.WriteContent(common.ManagedFile{
+		Path:        target,
+		Content:     content,
+		ValidateCmd: step.Validate,
+		Mode:        step.Mode,
+	})
 	return err
 }
 

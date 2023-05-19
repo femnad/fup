@@ -86,7 +86,7 @@ func getServiceFilePath(s base.Service) string {
 }
 
 func writeServiceFile(file, content string) (bool, error) {
-	return common.WriteContent(file, content, "", 0o644)
+	return common.WriteContent(common.ManagedFile{Path: file, Content: content})
 }
 
 func persist(s base.Service) error {

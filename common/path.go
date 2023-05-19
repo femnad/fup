@@ -23,3 +23,20 @@ func IsHomePath(path string) bool {
 	home := os.Getenv("HOME")
 	return strings.HasPrefix(path, home)
 }
+
+func HasPerms(targetPath string) bool {
+	_, err := os.Stat(targetPath)
+	if os.IsNotExist(err) {
+		if strings.HasSuffix(targetPath, "/") {
+			targetPath = targetPath[:len(targetPath)-1]
+		}
+		lastSlash := strings.LastIndex(targetPath, "/")
+		parent := targetPath[:lastSlash]
+		if parent == "" {
+			return false
+		}
+		return HasPerms(parent)
+	}
+
+	return err == nil
+}
