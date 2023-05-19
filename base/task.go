@@ -25,8 +25,12 @@ func runCmd(step Step, cfg Config) error {
 		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 
-	_, err := common.RunCmd(common.CmdIn{Command: c, Sudo: step.Sudo, Pwd: pwd})
-	return err
+	out, err := common.RunCmd(common.CmdIn{Command: c, Sudo: step.Sudo, Pwd: pwd})
+	if err != nil {
+		return fmt.Errorf("error running %s, stdout %s, stderr %s, error %v", c, out.Stdout, out.Stderr, err)
+	}
+
+	return nil
 }
 
 func runShellCmd(step Step, cfg Config) error {
