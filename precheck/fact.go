@@ -3,6 +3,7 @@ package precheck
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/femnad/fup/common"
@@ -10,11 +11,16 @@ import (
 )
 
 const (
-	gopathEnvKey     = "GOPATH"
-	neovimPluginsDir = "~/.local/share/plugged"
-	passwordStoreDir = "~/.local/share/password-store"
-	sysClassPower    = "/sys/class/power_supply"
-	tmuxEnvKey       = "TMUX"
+	batteryDevicePattern = "BAT[0-9]+"
+	gopathEnvKey         = "GOPATH"
+	neovimPluginsDir     = "~/.local/share/plugged"
+	passwordStoreDir     = "~/.local/share/password-store"
+	sysClassPower        = "/sys/class/power_supply"
+	tmuxEnvKey           = "TMUX"
+)
+
+var (
+	batteryDeviceRegex = regexp.MustCompile(batteryDevicePattern)
 )
 
 func goPathSet() (bool, error) {
@@ -23,7 +29,26 @@ func goPathSet() (bool, error) {
 
 func isLaptop() (bool, error) {
 	_, err := os.Stat(sysClassPower)
-	return err == nil, nil
+	if err != nil {
+		return false, err
+	}
+
+	entries, err := os.ReadDir(sysClassPower)
+	if err != nil {
+		return false, err
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		if batteryDeviceRegex.MatchString(entry.Name()) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func inTmux() (bool, error) {
