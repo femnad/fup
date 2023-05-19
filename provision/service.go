@@ -115,7 +115,7 @@ func persist(s base.Service) error {
 		return nil
 	}
 
-	if changed && strings.HasPrefix(serviceFilePath, "/") {
+	if changed && !common.IsHomePath(serviceFilePath) {
 		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
 		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
 		internal.Log.Debugf("running restorecon command %s", restorecon)
