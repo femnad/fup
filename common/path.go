@@ -1,6 +1,9 @@
 package common
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 func EnsureDir(dir string) error {
 	_, err := os.Stat(dir)
@@ -14,4 +17,9 @@ func EnsureDir(dir string) error {
 	}
 
 	return nil
+}
+
+func IsHomePath(path string) bool {
+	home := os.Getenv("HOME")
+	return strings.HasPrefix(path, home)
 }

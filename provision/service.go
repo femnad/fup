@@ -101,8 +101,21 @@ func persist(s base.Service) error {
 	}
 
 	changed, err := writeServiceFile(serviceFilePath, o)
+	if err != nil {
+		return err
+	}
 	if !changed {
 		return nil
+	}
+
+	if changed && strings.HasPrefix(serviceFilePath, "/") {
+		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
+		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
+		internal.Log.Debugf("running restorecon command %s", restorecon)
+		out, cmdErr := common.RunCmd(common.CmdIn{Command: restorecon, Sudo: true})
+		if cmdErr != nil {
+			return fmt.Errorf("error running restorecon %s, output %s: %v", restorecon, out.Stderr, cmdErr)
+		}
 	}
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)

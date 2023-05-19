@@ -49,9 +49,9 @@ func getent(key, database string) (int, error) {
 }
 
 func chown(file, user, group string) error {
-	isAbsPath := strings.HasPrefix(file, "/")
+	isHomePath := common.IsHomePath(file)
 	if user == "" && group == "" {
-		if !isAbsPath {
+		if isHomePath {
 			return nil
 		}
 
@@ -69,7 +69,7 @@ func chown(file, user, group string) error {
 		return err
 	}
 
-	if !isAbsPath {
+	if isHomePath {
 		return os.Chown(file, userId, groupId)
 	}
 

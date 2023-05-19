@@ -13,7 +13,7 @@ const (
 	gopathEnvKey     = "GOPATH"
 	neovimPluginsDir = "~/.local/share/plugged"
 	passwordStoreDir = "~/.local/share/password-store"
-	sysClassPower    = "/sys/class/power"
+	sysClassPower    = "/sys/class/power_supply"
 	tmuxEnvKey       = "TMUX"
 )
 

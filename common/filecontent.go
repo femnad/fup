@@ -12,6 +12,7 @@ import (
 
 const (
 	defaultFileMode   = 0o644
+	rootUser          = "root"
 	statNoExistsError = "No such file or directory"
 	tmpDir            = "/tmp"
 )
@@ -23,16 +24,15 @@ type statSum struct {
 
 func GetMvCmd(src, dst string) CmdIn {
 	cmd := fmt.Sprintf("mv %s %s", src, dst)
-	home := os.Getenv("HOME")
-	sudo := !strings.HasPrefix(dst, home)
+	sudo := !IsHomePath(dst)
 
 	return CmdIn{Command: cmd, Sudo: sudo}
 }
 
 func getChmodCmd(target string, mode int) CmdIn {
-	cmd := fmt.Sprintf("chmod %d %s", mode, target)
-	home := os.Getenv("HOME")
-	sudo := !strings.HasPrefix(target, home)
+	octal := strconv.FormatInt(int64(mode), 8)
+	cmd := fmt.Sprintf("chmod %s %s", octal, target)
+	sudo := !IsHomePath(target)
 
 	return CmdIn{Command: cmd, Sudo: sudo}
 }
@@ -124,7 +124,7 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 	if err != nil {
 		return changed, err
 	}
-	defer os.Remove(srcSum)
+	defer os.Remove(srcPath)
 
 	if dstExists {
 		if noPermission {
@@ -150,9 +150,9 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 	}
 
 	mv := GetMvCmd(srcPath, target)
-	_, err = RunCmd(mv)
+	out, err := RunCmd(mv)
 	if err != nil {
-		return changed, err
+		return changed, fmt.Errorf("error running mv command: %s, output %s: %v", mv.Command, out.Stderr, err)
 	}
 
 	if mode != 0 {
@@ -166,16 +166,16 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 		targetMode = int(fi.Mode())
 	}
 
-	if targetMode != mode {
+	if targetMode != mode || !dstExists {
 		chmodCmd := getChmodCmd(target, mode)
-		_, err = RunCmd(chmodCmd)
-		if err != nil {
-			return changed, err
+		_, chmodErr := RunCmd(chmodCmd)
+		if chmodErr != nil {
+			return changed, chmodErr
 		}
 	}
 
-	if noPermission {
-		_, err = RunCmd(CmdIn{Command: fmt.Sprintf("chown 0:0 %s", target), Sudo: true})
+	if noPermission || !IsHomePath(target) {
+		_, err = RunCmd(CmdIn{Command: fmt.Sprintf("chown %s:%s %s", rootUser, rootUser, target), Sudo: true})
 		if err != nil {
 			return changed, err
 		}
