@@ -94,7 +94,7 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 	var ss statSum
 	dstExists := true
 
-	fi, err := os.Stat(target)
+	_, err := os.Stat(target)
 	if os.IsPermission(err) {
 		noPermission = true
 		ss, err = getStatSum(target)
@@ -159,14 +159,18 @@ func WriteContent(target, content, validate string, mode int) (bool, error) {
 		mode = defaultFileMode
 	}
 
-	targetMode := defaultFileMode
+	currentMode := defaultFileMode
 	if noPermission {
-		targetMode = ss.mode
-	} else if fi != nil {
-		targetMode = int(fi.Mode())
+		currentMode = ss.mode
+	} else {
+		fi, statErr := os.Stat(target)
+		if statErr != nil {
+			return false, fmt.Errorf("unexpected stat error for %s: %v", target, statErr)
+		}
+		currentMode = int(fi.Mode())
 	}
 
-	if targetMode != mode || !dstExists {
+	if currentMode != mode || !dstExists {
 		chmodCmd := getChmodCmd(target, mode)
 		_, chmodErr := RunCmd(chmodCmd)
 		if chmodErr != nil {

@@ -52,6 +52,13 @@ WantedBy={{ if .Unit.WantedBy }}{{ .Unit.WantedBy }}{{ else }}{{ "default" }}{{ 
 
 func writeTmpl(s base.Service) (string, error) {
 	b := bytes.Buffer{}
+
+	options := make(map[string]string)
+	for k, v := range s.Unit.Options {
+		options[k] = os.ExpandEnv(v)
+	}
+	s.Unit.Options = options
+
 	st, err := template.New("service").Parse(svcTmpl)
 	if err != nil {
 		return "", fmt.Errorf("error creating template: %v", err)
