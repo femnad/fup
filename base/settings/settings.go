@@ -30,19 +30,21 @@ func expand(s string, lookup map[string]string) string {
 	var dollar bool
 
 	for _, c := range s {
-		if c == '$' && !backspace {
+		if backspace {
+			if c != '$' {
+				out.WriteRune('\\')
+			}
+		} else if c == '$' {
 			backspace = false
 			dollar = true
 			continue
 		}
-		if backspace && c != '$' {
-			out.WriteRune('\\')
-		}
-		if c == '\\' {
-			backspace = true
+
+		backspace = c == '\\'
+		if backspace {
 			continue
 		}
-		backspace = c == '\\'
+
 		if dollar {
 			if c == '{' {
 				dollar = false
@@ -52,6 +54,7 @@ func expand(s string, lookup map[string]string) string {
 				out.WriteRune('$')
 			}
 		}
+
 		if c == '}' && consuming {
 			consuming = false
 			curStr := cur.String()
@@ -68,6 +71,7 @@ func expand(s string, lookup map[string]string) string {
 			cur.Reset()
 			continue
 		}
+
 		if consuming {
 			cur.WriteRune(c)
 		} else {
