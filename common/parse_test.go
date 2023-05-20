@@ -18,9 +18,10 @@ func TestNameFromRepo(t *testing.T) {
 			want: "bar",
 		},
 		{
-			name:    "Test parsing error",
-			args:    args{repo: "quz/bar/baz"},
-			wantErr: true,
+			name:    "Test parsing short form",
+			args:    args{repo: "qux/baz"},
+			want:    "baz",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {

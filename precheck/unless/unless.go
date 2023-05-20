@@ -231,7 +231,7 @@ func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string
 		lookup["version"] = version
 	}
 
-	return settings.ExpandSettingsWithLookup(s, stat, lookup)
+	return settings.ExpandStringWithLookup(s, stat, lookup)
 }
 
 func sudoStat(target string) bool {

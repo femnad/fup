@@ -335,7 +335,7 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 	}
 
 	for _, cmd := range archive.ExecuteAfter {
-		cmd = settings.ExpandSettingsWithLookup(s, cmd, map[string]string{"version": archive.Version})
+		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": archive.Version})
 		internal.Log.Debugf("Running command %s", cmd)
 		_, err = common.RunCmd(common.CmdIn{Command: cmd, Shell: true})
 		if err != nil {

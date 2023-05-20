@@ -17,5 +17,5 @@ func IsExpandable(prop string) bool {
 }
 
 func ExpandSettings(stg settings.Settings, s string) string {
-	return settings.ExpandSettingsWithLookup(stg, s, map[string]string{})
+	return settings.ExpandStringWithLookup(stg, s, map[string]string{})
 }

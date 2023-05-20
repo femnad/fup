@@ -122,23 +122,3 @@ func ExpandStringWithLookup(settings Settings, s string, lookup map[string]strin
 func ExpandString(settings Settings, s string) string {
 	return ExpandStringWithLookup(settings, s, map[string]string{})
 }
-
-func ExpandSettingsWithLookup(settings Settings, s string, lookup map[string]string) string {
-	expanded := os.Expand(s, func(prop string) string {
-		val, ok := lookup[prop]
-		if ok {
-			return val
-		}
-
-		switch prop {
-		case "clone_dir":
-			return settings.CloneDir
-		case "extract_dir":
-			return settings.ExtractDir
-		default:
-			return fmt.Sprintf("${%s}", prop)
-		}
-	})
-	expanded = os.ExpandEnv(expanded)
-	return internal.ExpandUser(expanded)
-}
