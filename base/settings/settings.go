@@ -23,18 +23,22 @@ type Settings struct {
 }
 
 func expand(s string, lookup map[string]string) string {
-	var backspace bool
 	var cur bytes.Buffer
 	var out bytes.Buffer
-	consuming := false
-	dollar := false
+	var backspace bool
+	var consuming bool
+	var dollar bool
 
 	s = internal.ExpandUser(s)
 
 	for _, c := range s {
 		if c == '$' && !backspace {
+			backspace = false
 			dollar = true
 			continue
+		}
+		if backspace && c != '$' {
+			out.WriteRune('\\')
 		}
 		if c == '\\' {
 			backspace = true

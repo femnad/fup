@@ -91,6 +91,15 @@ func Test_expand(t *testing.T) {
 			},
 			want: "echo ${fred}",
 		},
+		{
+			name: "Keep backslashes intact if they're not preceding dollar signs",
+			args: args{
+				s:      "echo 'foo \\'bar baz\\''",
+				lookup: map[string]string{},
+				env:    map[string]string{},
+			},
+			want: "echo 'foo \\'bar baz\\''",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
