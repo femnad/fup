@@ -29,8 +29,6 @@ func expand(s string, lookup map[string]string) string {
 	var consuming bool
 	var dollar bool
 
-	s = internal.ExpandUser(s)
-
 	for _, c := range s {
 		if c == '$' && !backspace {
 			backspace = false
@@ -120,7 +118,8 @@ func ExpandStringWithLookup(settings Settings, s string, lookup map[string]strin
 	lookup["extract_dir"] = settings.ExtractDir
 	lookup = addHostFacts(lookup, settings.HostFacts)
 
-	return expand(s, lookup)
+	expanded := expand(s, lookup)
+	return internal.ExpandUser(expanded)
 }
 
 func ExpandString(settings Settings, s string) string {
