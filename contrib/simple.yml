@@ -1,9 +1,17 @@
 settings:
-  clone_dir: ~/z/gl
-  extract_dir: ~/z/dy
-  virtualenv_dir: ~/.local/share/venv
+  clone_dir: ~/foo # only referenced in this file
+  extract_dir: ~/bar # only referenced in this file
+  self_clone_path: ~/baz # self-clone provisioner references this
+  template_dir: ~/fup/templates # template provisioner references this
+  virtualenv_dir: ~/venv # python provisioner references this
+  # Lookup based on host name, only references in this file
+  host_facts:
+    lock_period:
+      '.*': 600
+      qux: 1800
+      fred: 3600
   versions:
-    chezmoi: 2.29.0
+    gh: 2.29.0
 
 preflight:
   - task: Enable RPM Fusion
@@ -14,16 +22,6 @@ preflight:
         sudo: true
     unless:
       cmd: dnf list --installed rpmfusion-free-release
-  - task: Enable Docker repo
-    when: is-fedora
-    steps:
-      - name: shell
-        cmd: |
-          sudo dnf -y install dnf-plugins-core
-          sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
-        sudo: true
-    unless:
-      cmd: dnf list --installed docker-ce
   - task: Add Spotify repo
     when: is-ubuntu
     unless:
@@ -37,97 +35,132 @@ preflight:
           apt update
 
 archives:
-  - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
-    name: chezmoi
+  - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
+    name: gh
     unless:
-      cmd: chezmoi --version
-      post: split 2 | cut 1 | cut -1
-    target: chezmoi
+      cmd: gh version
+      post: head 0 | split 2
     link:
-      - chezmoi/chezmoi
+      - gh_${version}_linux_amd64/bin/gh
 
 packages:
   .*:
-    - tmux
+    - pass
   ubuntu:
-    - suckless-tools
+    - apt-listchanges
   fedora:
-    - NetworkManager-tui
+    - dnf-automatic
 
 unwanted_packages:
   ubuntu:
     - snapd
 
 cargo:
-  - name: git-delta
+  - name: alacritty
     unless:
-      cmd: delta -V
-      # Escape characters in -V output for 0.14.0
-      post: head 0 | split 1
-    version: 0.14.0
+      cmd: alacritty --version
 
 tasks:
-  - task: Neovim packages
-    when: not neovim-ready
-    steps:
-      - name: cmd
-        cmd: nvim +PlugInstall +qa
-  - task: Clone and link clipnotify
+  - task: Install Mullvad app
+    when: is-ubuntu
     unless:
-      cmd: which clipnotify
+      cmd: dpkg-query --list mullvad-vpn
     steps:
-      - name: git
-        repo: https://github.com/cdown/clipnotify.git
-        dir: ${clone_dir}/clipnotify
       - name: cmd
-        cmd: make install
-        pwd: ${clone_dir}/clipnotify
+        cmd: |
+          wget -q https://mullvad.net/media/app/MullvadVPN-2023.3_amd64.deb -O /tmp/MullvadVPN-2023.3_amd64.deb
+          apt install -y /tmp/MullvadVPN-2023.3_amd64.deb
+          rm /tmp/MullvadVPN-2023.3_amd64.deb
         sudo: true
-        unless:
-          cmd: which clipnotify
-  - task: Install Spotify on fedora
+  - task: Install Mullvad app
     when: is-fedora
     steps:
       - name: cmd
-        cmd: flatpak remote-add flathub https://flathub.org/repo/flathub.flatpakrepo
+        cmd: dnf install -y https://mullvad.net/media/app/MullvadVPN-2023.3_x86_64.rpm
         sudo: true
-        unless:
-          cmd: flatpak remotes
-          post: contains flathub
-      - name: cmd
-        cmd: flatpak install -y flathub com.spotify.Client
-        unless:
-          cmd: flatpak list
-          post: contains
-      - name: template
-        target: ${HOME}/bin/spotify
-        mode: '0755'
-        content: |
-          #!/usr/bin/env bash
-          flatpak run com.spotify.Client
+    unless:
+      cmd: rpm -q mullvad-vpn
 
 go:
-  - name: gitlab.com/gitlab-org/cli/cmd/glab
-    unless:
-      cmd: glab version
   - name: charmbracelet/glow
     unless:
       cmd: glow --version
-  - name: gokcehan/lf
-    unless:
-      cmd: lf -version
 
 python:
-  - name: tuir
+  - name: qmk
     link:
-      - tuir
+      - qmk
+    unless:
+      cmd: qmk -V
 
 services:
   - name: grobi
     unit:
-      exec: grobi watch
+      exec: grobi watch -v
       desc: Automatically configure monitors/outputs for Xorg via RANDR
       env:
         GROBI_CONFIG: ${HOME}/.config/grobi/grobi.conf
-    dont_start: true
     dont_enable: true
+    dont_start: true
+  - name: dnf-automatic.timer
+    system: true
+    dont_template: true
+    when: is-fedora
+
+template:
+  - src: touchpad.conf
+    dest: /etc/X11/xorg.conf.d/30-touchpad.conf
+    when: is-laptop
+  - src: unattended-upgrades.conf
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    when: is-ubuntu
+
+postflight:
+  # Useful if Go binaries were installed before GOPATH was set
+  - task: Move go dir
+    when: gopath-set
+    unless:
+      stat: ${GOPATH}
+    steps:
+      - name: rename
+        src: ~/go
+        target: ${GOPATH}
+
+github_user_keys:
+  # Not a user
+  user: cli
+
+ensure_dirs:
+  - ~/taxes
+
+accept_host_keys:
+  - github.com
+  - gitlab.com
+
+unwanted_dirs:
+  - ~/snap
+
+self_repos:
+  - name: cli/cli
+  - name: https://gitlab.com/gitlab-org/cli/
+  - name: qmk/qmk_firmware
+    submodule: true
+    remotes:
+      upstream: https://github.com/zsa/qmk_firmware.git
+
+user_in_group:
+  # Made up example
+  root:
+    - video
+
+ensure_lines:
+  - name: replace
+    file: /etc/dnf/automatic.conf
+    text: apply_updates = no
+    replace: apply_updates = yes
+    when: is-fedora
+  - name: replace
+    file: /etc/systemd/logind.conf
+    text: '#HandleLidSwitchDocked=ignore'
+    replace: HandleLidSwitchDocked=suspend
+    when: is-laptop
