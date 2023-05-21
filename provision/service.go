@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"os"
@@ -29,8 +30,9 @@ var (
 )
 
 const (
-	negationPrefix = "!"
-	svcTmpl        = `[Unit]
+	negationPrefix       = "!"
+	serviceExecLineStart = "ExecStart="
+	svcTmpl              = `[Unit]
 Description={{ .Unit.Desc }}
 {{- if .Unit.Before}}
 Before={{ .Unit.Before }}.target
@@ -89,6 +91,52 @@ func writeServiceFile(file, content string) (bool, error) {
 	return common.WriteContent(common.ManagedFile{Path: file, Content: content})
 }
 
+func maybeRestart(s base.Service) error {
+	cmd := systemctlCmd("is-active", s.Name, !s.System)
+	out, err := common.RunCmd(common.CmdIn{Command: cmd})
+	if err != nil {
+		if out.Stdout == "inactive" {
+			return nil
+		}
+		return err
+	}
+
+	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
+
+	cmd = systemctlCmd("restart", s.Name, !s.System)
+	out, err = common.RunCmd(common.CmdIn{Command: cmd, Sudo: s.System})
+	if err != nil {
+		return fmt.Errorf("error restarting service %s, output %s: %v", s.Name, out.Stderr, err)
+	}
+
+	return nil
+}
+
+func getServiceExec(serviceFile string) (string, error) {
+	f, err := os.Open(serviceFile)
+	if os.IsNotExist(err) {
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.HasPrefix(line, serviceExecLineStart) {
+			continue
+		}
+
+		fields := strings.Split(line, "=")
+		return fields[1], nil
+	}
+
+	return "", nil
+}
+
 func persist(s base.Service) error {
 	if s.DontTemplate {
 		return nil
@@ -100,6 +148,11 @@ func persist(s base.Service) error {
 		if err := common.EnsureDir(dir); err != nil {
 			return err
 		}
+	}
+
+	prevExec, err := getServiceExec(serviceFilePath)
+	if err != nil {
+		return err
 	}
 
 	o, err := writeTmpl(s)
@@ -132,7 +185,11 @@ func persist(s base.Service) error {
 		return fmt.Errorf("error running systemctl command: %v", err)
 	}
 
-	return nil
+	if prevExec == "" || prevExec == s.Unit.Exec {
+		return nil
+	}
+
+	return maybeRestart(s)
 }
 
 func systemctlCmd(action, target string, user bool) string {
