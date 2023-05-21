@@ -231,6 +231,16 @@ func actuate(s base.Service, action string) (string, error) {
 	return systemctlCmd(action, s.Name, !s.System), nil
 }
 
+func readableVerb(action string) string {
+	caser := cases.Title(language.Und)
+	verb := caser.String(action)
+	// Only disable and enable would be matching arguments here.
+	if strings.HasSuffix(verb, "e") {
+		verb = verb[:len(verb)-1]
+	}
+	return fmt.Sprintf("%sing", verb)
+}
+
 func ensure(s base.Service, action string) error {
 	checkCmd, negated, err := check(s, action)
 	if err != nil {
@@ -250,12 +260,12 @@ func ensure(s base.Service, action string) error {
 		return err
 	}
 
-	caser := cases.Title(language.Und)
-	verb := caser.String(action)
-	internal.Log.Infof("%s-ing service %s", verb, s.Name)
+	verb := readableVerb(action)
+	internal.Log.Infof("%s service %s", verb, s.Name)
+
 	resp, err = runSystemctlCmd(actuateCmd, s)
 	if err != nil {
-		return fmt.Errorf("error %s-ing service %s: output: %s error: %v", action, s.Name, resp.Stderr, err)
+		return fmt.Errorf("error %s service %s: output: %s error: %v", verb, s.Name, resp.Stderr, err)
 	}
 
 	return nil
