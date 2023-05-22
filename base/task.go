@@ -25,19 +25,13 @@ func runCmd(step Step, cfg Config) error {
 		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 
-	out, err := common.RunCmd(common.CmdIn{Command: c, Sudo: step.Sudo, Pwd: pwd})
-	if err != nil {
-		return fmt.Errorf("error running %s, stdout %s, stderr %s, error %v", c, out.Stdout, out.Stderr, err)
-	}
-
-	return nil
+	return common.RunCmdShowError(common.CmdIn{Command: c, Sudo: step.Sudo, Pwd: pwd})
 }
 
 func runShellCmd(step Step, cfg Config) error {
 	cmd := ExpandSettings(cfg.Settings, step.Cmd)
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
-	_, err := common.RunCmd(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
-	return err
+	return common.RunCmdShowError(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
 }
 
 func runGitClone(step Step, cfg Config) error {

@@ -176,12 +176,7 @@ func ensureDir(dir string) error {
 
 	internal.Log.Warningf("escalating privileges to create directory %s", dir)
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
-	out, err := RunCmd(CmdIn{Command: mkdirCmd, Sudo: true})
-	if err != nil {
-		return fmt.Errorf("error running command %s, output %s: %v", mkdirCmd, out.Stderr, err)
-	}
-
-	return nil
+	return RunCmdShowError(CmdIn{Command: mkdirCmd, Sudo: true})
 }
 
 func WriteContent(file ManagedFile) (bool, error) {
@@ -244,9 +239,9 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if validateCmd != "" {
 		validateCmd = fmt.Sprintf("%s %s", validateCmd, srcPath)
-		out, validateErr := RunCmd(CmdIn{Command: validateCmd, Sudo: noPermission})
+		validateErr := RunCmdShowError(CmdIn{Command: validateCmd, Sudo: noPermission})
 		if validateErr != nil {
-			return changed, fmt.Errorf("error running validate command %s, output %s", validateCmd, strings.TrimSpace(out.Stderr))
+			return false, validateErr
 		}
 	}
 
@@ -257,9 +252,9 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	mv := GetMvCmd(srcPath, target)
-	out, err := RunCmd(mv)
+	err = RunCmdShowError(mv)
 	if err != nil {
-		return changed, fmt.Errorf("error running mv command: %s, output %s: %v", mv.Command, out.Stderr, err)
+		return changed, err
 	}
 
 	if mode == 0 {

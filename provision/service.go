@@ -74,9 +74,9 @@ func writeTmpl(s base.Service) (string, error) {
 	return b.String(), nil
 }
 
-func runSystemctlCmd(cmd string, service base.Service) (common.CmdOut, error) {
+func runSystemctlCmd(cmd string, service base.Service) error {
 	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
-	return common.RunCmd(common.CmdIn{Command: cmd, Sudo: service.System})
+	return common.RunCmdShowError(common.CmdIn{Command: cmd, Sudo: service.System})
 }
 
 func getServiceFilePath(s base.Service) string {
@@ -172,17 +172,17 @@ func persist(s base.Service) error {
 		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
 		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
 		internal.Log.Debugf("running restorecon command %s", restorecon)
-		out, cmdErr := common.RunCmd(common.CmdIn{Command: restorecon, Sudo: true})
+		cmdErr := common.RunCmdShowError(common.CmdIn{Command: restorecon, Sudo: true})
 		if cmdErr != nil {
-			return fmt.Errorf("error running restorecon %s, output %s: %v", restorecon, out.Stderr, cmdErr)
+			return cmdErr
 		}
 	}
 
 	internal.Log.Infof("Reloading unit files for %s", s.Name)
 	c := systemctlCmd("daemon-reload", "", !s.System)
-	_, err = runSystemctlCmd(c, s)
+	err = runSystemctlCmd(c, s)
 	if err != nil {
-		return fmt.Errorf("error running systemctl command: %v", err)
+		return err
 	}
 
 	if prevExec == "" || prevExec == s.Unit.Exec {
@@ -263,12 +263,7 @@ func ensure(s base.Service, action string) error {
 	verb := readableVerb(action)
 	internal.Log.Infof("%s service %s", verb, s.Name)
 
-	resp, err = runSystemctlCmd(actuateCmd, s)
-	if err != nil {
-		return fmt.Errorf("error %s service %s: output: %s error: %v", verb, s.Name, resp.Stderr, err)
-	}
-
-	return nil
+	return runSystemctlCmd(actuateCmd, s)
 }
 
 func enable(s base.Service) error {

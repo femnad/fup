@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -44,4 +45,25 @@ func RunCmd(in CmdIn) (CmdOut, error) {
 
 	err := cmd.Run()
 	return CmdOut{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
+}
+
+func RunCmdShowError(in CmdIn) error {
+	out, err := RunCmd(in)
+	if err == nil {
+		return nil
+	}
+
+	stdout := out.Stdout
+	stderr := out.Stderr
+	outStr := fmt.Sprintf("error running command %s", in.Command)
+
+	if stdout != "" {
+		outStr += fmt.Sprintf(", stdout: %s", stdout)
+	}
+	if stderr != "" {
+		outStr += fmt.Sprintf(", stderr: %s", stderr)
+	}
+	outStr += fmt.Sprintf(", error: %v", err)
+
+	return fmt.Errorf(outStr)
 }
