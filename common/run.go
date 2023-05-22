@@ -47,14 +47,14 @@ func RunCmd(in CmdIn) (CmdOut, error) {
 	return CmdOut{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
 }
 
-func RunCmdShowError(in CmdIn) error {
+func RunCmdGetOutputShowError(in CmdIn) (CmdOut, error) {
 	out, err := RunCmd(in)
 	if err == nil {
-		return nil
+		return out, nil
 	}
 
-	stdout := out.Stdout
-	stderr := out.Stderr
+	stdout := strings.TrimSpace(out.Stdout)
+	stderr := strings.TrimSpace(out.Stderr)
 	outStr := fmt.Sprintf("error running command %s", in.Command)
 
 	if stdout != "" {
@@ -65,5 +65,10 @@ func RunCmdShowError(in CmdIn) error {
 	}
 	outStr += fmt.Sprintf(", error: %v", err)
 
-	return fmt.Errorf(outStr)
+	return out, fmt.Errorf(outStr)
+}
+
+func RunCmdShowError(in CmdIn) error {
+	_, err := RunCmdGetOutputShowError(in)
+	return err
 }

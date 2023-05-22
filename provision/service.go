@@ -93,9 +93,9 @@ func writeServiceFile(file, content string) (bool, error) {
 
 func maybeRestart(s base.Service) error {
 	cmd := systemctlCmd("is-active", s.Name, !s.System)
-	out, err := common.RunCmd(common.CmdIn{Command: cmd})
+	out, err := common.RunCmdGetOutputShowError(common.CmdIn{Command: cmd})
 	if err != nil {
-		if out.Stdout == "inactive" {
+		if strings.TrimSpace(out.Stdout) == "inactive" {
 			return nil
 		}
 		return err
@@ -104,12 +104,7 @@ func maybeRestart(s base.Service) error {
 	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
 
 	cmd = systemctlCmd("restart", s.Name, !s.System)
-	out, err = common.RunCmd(common.CmdIn{Command: cmd, Sudo: s.System})
-	if err != nil {
-		return fmt.Errorf("error restarting service %s, output %s: %v", s.Name, out.Stderr, err)
-	}
-
-	return nil
+	return common.RunCmdShowError(common.CmdIn{Command: cmd, Sudo: s.System})
 }
 
 func getServiceExec(serviceFile string) (string, error) {

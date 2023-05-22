@@ -78,22 +78,24 @@ func Checksum(f string) (string, error) {
 
 func getStatSum(f string) (statSum, error) {
 	cmd := fmt.Sprintf("stat -c %%a %s", f)
-	out, err := RunCmd(CmdIn{Command: cmd, Sudo: true})
+	out, err := RunCmdGetOutputShowError(CmdIn{Command: cmd, Sudo: true})
 	if err != nil {
 		if strings.HasSuffix(strings.TrimSpace(out.Stderr), statNoExistsError) {
 			return statSum{}, os.ErrNotExist
 		}
-		return statSum{}, fmt.Errorf("error running command %s, output %s, error %v", cmd, out.Stderr, err)
+		return statSum{}, err
 	}
+
 	mode, err := strconv.ParseUint(strings.TrimSpace(out.Stdout), 10, 32)
 	if err != nil {
 		return statSum{}, err
 	}
 
-	out, err = RunCmd(CmdIn{Command: fmt.Sprintf("sha256sum %s", f), Sudo: true})
+	out, err = RunCmdGetOutputShowError(CmdIn{Command: fmt.Sprintf("sha256sum %s", f), Sudo: true})
 	if err != nil {
 		return statSum{}, err
 	}
+
 	sumFields := strings.Split(out.Stdout, "  ")
 	if len(sumFields) != 2 {
 		return statSum{}, fmt.Errorf("unexpected sha256sum output: %s", out.Stdout)
@@ -161,12 +163,7 @@ func chown(file, user, group string) error {
 	}
 	chownCmd += " " + file
 
-	out, err := RunCmd(CmdIn{Command: chownCmd, Sudo: true})
-	if err != nil {
-		return fmt.Errorf("error changing owner of %s, output %s: %v", file, out.Stderr, err)
-	}
-
-	return nil
+	return RunCmdShowError(CmdIn{Command: chownCmd, Sudo: true})
 }
 
 func ensureDir(dir string) error {
@@ -274,7 +271,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if currentMode != mode || !dstExists {
 		chmodCmd := getChmodCmd(target, mode)
-		_, chmodErr := RunCmd(chmodCmd)
+		chmodErr := RunCmdShowError(chmodCmd)
 		if chmodErr != nil {
 			return changed, chmodErr
 		}
