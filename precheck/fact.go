@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	batteryDevicePattern = "BAT[0-9]+"
+	batteryDevicePattern = "^BAT[0-9]+$"
 	gopathEnvKey         = "GOPATH"
 	neovimPluginsDir     = "~/.local/share/plugged"
 	passwordStoreDir     = "~/.local/share/password-store"
@@ -39,10 +39,6 @@ func isLaptop() (bool, error) {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-
 		if batteryDeviceRegex.MatchString(entry.Name()) {
 			return true, nil
 		}
