@@ -317,6 +317,7 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 
 	if !when.ShouldRun(archive) {
 		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
+		return
 	}
 
 	if unless.ShouldSkip(archive, s) {
