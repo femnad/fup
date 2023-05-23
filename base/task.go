@@ -3,6 +3,7 @@ package base
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
@@ -29,9 +30,16 @@ func runCmd(step Step, cfg Config) error {
 }
 
 func runShellCmd(step Step, cfg Config) error {
-	cmd := ExpandSettings(cfg.Settings, step.Cmd)
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
-	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
+	for _, cmd := range strings.Split(step.Cmd, "\n") {
+		cmd = ExpandSettings(cfg.Settings, cmd)
+		err := common.RunCmdNoOutput(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func runGitClone(step Step, cfg Config) error {
