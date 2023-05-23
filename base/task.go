@@ -31,7 +31,8 @@ func runCmd(step Step, cfg Config) error {
 
 func runShellCmd(step Step, cfg Config) error {
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
-	for _, cmd := range strings.Split(step.Cmd, "\n") {
+	lines := strings.TrimSpace(step.Cmd)
+	for _, cmd := range strings.Split(lines, "\n") {
 		cmd = ExpandSettings(cfg.Settings, cmd)
 		err := common.RunCmdNoOutput(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
 		if err != nil {
