@@ -335,12 +335,17 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 		createSymlink(symlink, s.ExtractDir)
 	}
 
+	version := archive.Version
+	if version == "" {
+		version = s.Versions[archive.Name()]
+	}
+
 	for _, cmd := range archive.ExecuteAfter {
-		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": archive.Version})
+		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
 		internal.Log.Debugf("Running command %s", cmd)
-		_, err = common.RunCmd(common.CmdIn{Command: cmd, Shell: true})
+		err = common.RunCmdNoOutput(common.CmdIn{Command: cmd, Shell: true})
 		if err != nil {
-			internal.Log.Errorf("error running shell command %s: %v", cmd, err)
+			internal.Log.Errorf("error running post extract command: %v", err)
 		}
 	}
 }

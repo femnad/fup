@@ -76,7 +76,7 @@ func writeTmpl(s base.Service) (string, error) {
 
 func runSystemctlCmd(cmd string, service base.Service) error {
 	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
-	return common.RunCmdShowError(common.CmdIn{Command: cmd, Sudo: service.System})
+	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Sudo: service.System})
 }
 
 func getServiceFilePath(s base.Service) string {
@@ -93,7 +93,7 @@ func writeServiceFile(file, content string) (bool, error) {
 
 func maybeRestart(s base.Service) error {
 	cmd := systemctlCmd("is-active", s.Name, !s.System)
-	out, err := common.RunCmdGetOutputShowError(common.CmdIn{Command: cmd})
+	out, err := common.RunCmdFormatError(common.CmdIn{Command: cmd})
 	if err != nil {
 		if strings.TrimSpace(out.Stdout) == "inactive" {
 			return nil
@@ -104,7 +104,7 @@ func maybeRestart(s base.Service) error {
 	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
 
 	cmd = systemctlCmd("restart", s.Name, !s.System)
-	return common.RunCmdShowError(common.CmdIn{Command: cmd, Sudo: s.System})
+	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Sudo: s.System})
 }
 
 func getServiceExec(serviceFile string) (string, error) {
@@ -167,7 +167,7 @@ func persist(s base.Service) error {
 		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
 		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
 		internal.Log.Debugf("running restorecon command %s", restorecon)
-		cmdErr := common.RunCmdShowError(common.CmdIn{Command: restorecon, Sudo: true})
+		cmdErr := common.RunCmdNoOutput(common.CmdIn{Command: restorecon, Sudo: true})
 		if cmdErr != nil {
 			return cmdErr
 		}

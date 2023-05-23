@@ -47,7 +47,7 @@ func RunCmd(in CmdIn) (CmdOut, error) {
 	return CmdOut{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
 }
 
-func RunCmdGetOutputShowError(in CmdIn) (CmdOut, error) {
+func RunCmdFormatError(in CmdIn) (CmdOut, error) {
 	out, err := RunCmd(in)
 	if err == nil {
 		return out, nil
@@ -68,7 +68,7 @@ func RunCmdGetOutputShowError(in CmdIn) (CmdOut, error) {
 	return out, fmt.Errorf(outStr)
 }
 
-func RunCmdShowError(in CmdIn) error {
-	_, err := RunCmdGetOutputShowError(in)
+func RunCmdNoOutput(in CmdIn) error {
+	_, err := RunCmdFormatError(in)
 	return err
 }

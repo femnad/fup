@@ -10,7 +10,7 @@ import (
 
 func addUserToGroup(user, group string) error {
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
-	return common.RunCmdShowError(common.CmdIn{Command: usermod, Sudo: true})
+	return common.RunCmdNoOutput(common.CmdIn{Command: usermod, Sudo: true})
 }
 
 func doEnsureUserInGroups(user string, groups []string) error {

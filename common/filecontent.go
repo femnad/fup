@@ -78,7 +78,7 @@ func Checksum(f string) (string, error) {
 
 func getStatSum(f string) (statSum, error) {
 	cmd := fmt.Sprintf("stat -c %%a %s", f)
-	out, err := RunCmdGetOutputShowError(CmdIn{Command: cmd, Sudo: true})
+	out, err := RunCmdFormatError(CmdIn{Command: cmd, Sudo: true})
 	if err != nil {
 		if strings.HasSuffix(strings.TrimSpace(out.Stderr), statNoExistsError) {
 			return statSum{}, os.ErrNotExist
@@ -91,7 +91,7 @@ func getStatSum(f string) (statSum, error) {
 		return statSum{}, err
 	}
 
-	out, err = RunCmdGetOutputShowError(CmdIn{Command: fmt.Sprintf("sha256sum %s", f), Sudo: true})
+	out, err = RunCmdFormatError(CmdIn{Command: fmt.Sprintf("sha256sum %s", f), Sudo: true})
 	if err != nil {
 		return statSum{}, err
 	}
@@ -163,7 +163,7 @@ func chown(file, user, group string) error {
 	}
 	chownCmd += " " + file
 
-	return RunCmdShowError(CmdIn{Command: chownCmd, Sudo: true})
+	return RunCmdNoOutput(CmdIn{Command: chownCmd, Sudo: true})
 }
 
 func ensureDir(dir string) error {
@@ -173,7 +173,7 @@ func ensureDir(dir string) error {
 
 	internal.Log.Warningf("escalating privileges to create directory %s", dir)
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
-	return RunCmdShowError(CmdIn{Command: mkdirCmd, Sudo: true})
+	return RunCmdNoOutput(CmdIn{Command: mkdirCmd, Sudo: true})
 }
 
 func WriteContent(file ManagedFile) (bool, error) {
@@ -236,7 +236,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if validateCmd != "" {
 		validateCmd = fmt.Sprintf("%s %s", validateCmd, srcPath)
-		validateErr := RunCmdShowError(CmdIn{Command: validateCmd, Sudo: noPermission})
+		validateErr := RunCmdNoOutput(CmdIn{Command: validateCmd, Sudo: noPermission})
 		if validateErr != nil {
 			return false, validateErr
 		}
@@ -249,7 +249,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	mv := GetMvCmd(srcPath, target)
-	err = RunCmdShowError(mv)
+	err = RunCmdNoOutput(mv)
 	if err != nil {
 		return changed, err
 	}
@@ -271,7 +271,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if currentMode != mode || !dstExists {
 		chmodCmd := getChmodCmd(target, mode)
-		chmodErr := RunCmdShowError(chmodCmd)
+		chmodErr := RunCmdNoOutput(chmodCmd)
 		if chmodErr != nil {
 			return changed, chmodErr
 		}
