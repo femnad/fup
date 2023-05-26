@@ -13,10 +13,11 @@ import (
 )
 
 type Unless struct {
-	Cmd   string `yaml:"cmd"`
-	Post  string `yaml:"post"`
-	Shell string `yaml:"shell"`
-	Stat  string `yaml:"stat"`
+	Cmd      string `yaml:"cmd"`
+	ExitCode int    `yaml:"exit_code"`
+	Post     string `yaml:"post"`
+	Shell    bool   `yaml:"shell"`
+	Stat     string `yaml:"stat"`
 }
 
 func (u Unless) HasPostProc() bool {
@@ -185,14 +186,17 @@ func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 	var err error
 	var out common.CmdOut
 	unless := unlessable.GetUnless()
+	cmd := unless.Cmd
 
-	if unless.Shell != "" {
-		out, err = common.RunCmd(common.CmdIn{Command: unless.Shell, Shell: true})
-	} else {
-		out, err = common.RunCmd(common.CmdIn{Command: unless.Cmd})
+	out, err = common.RunCmd(common.CmdIn{Command: cmd, Shell: unless.Shell})
+
+	if unless.ExitCode != 0 {
+		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", cmd, out.Code, unless.ExitCode)
+		return out.Code == unless.ExitCode
 	}
+
 	if err != nil {
-		internal.Log.Debugf("Command %s returned error: %v, output: %s", unless.Cmd, err, out.Stderr)
+		internal.Log.Debugf("Command %s returned error: %v, output: %s", cmd, err, out.Stderr)
 		// Command wasn't successfully run, should not skip.
 		return false
 	}
@@ -271,7 +275,7 @@ func ShouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return fileExists(stat)
 	}
 
-	if unless.Cmd == "" && unless.Shell == "" {
+	if unless.Cmd == "" {
 		// No stat or command checks, should not skip.
 		return false
 	}
