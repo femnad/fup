@@ -8,9 +8,15 @@ import (
 	"github.com/femnad/fup/precheck/unless"
 )
 
+type NamedLink struct {
+	Name   string `yaml:"name"`
+	Target string `yaml:"target"`
+}
+
 type Archive struct {
 	ExecuteAfter []string      `yaml:"execute_after"`
 	Ref          string        `yaml:"name"`
+	NamedLink    []NamedLink   `yaml:"named_link"`
 	Symlink      []string      `yaml:"link"`
 	Target       string        `yaml:"target"`
 	Unless       unless.Unless `yaml:"unless"`
@@ -44,11 +50,22 @@ func (a Archive) ExpandURL(s settings.Settings) string {
 	return os.Expand(a.Url, a.expand)
 }
 
-func (a Archive) ExpandSymlinks(s settings.Settings) []string {
-	var expanded []string
+func (a Archive) ExpandSymlinks(s settings.Settings) []NamedLink {
+	var links []NamedLink
+	var expanded []NamedLink
+
+	links = append(links, a.NamedLink...)
 	for _, symlink := range a.Symlink {
+		links = append(links, NamedLink{
+			Name:   "",
+			Target: symlink,
+		})
+	}
+
+	for _, symlink := range links {
 		a.Version = a.version(s)
-		expanded = append(expanded, os.Expand(symlink, a.expand))
+		symlink.Target = os.Expand(symlink.Target, a.expand)
+		expanded = append(expanded, symlink)
 	}
 
 	return expanded

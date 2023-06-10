@@ -13,7 +13,7 @@ import (
 
 func pipInstall(pipBin, pkg string) error {
 	cmd := fmt.Sprintf("%s install %s", pipBin, pkg)
-	_, err := common.RunCmd(common.CmdIn{Command: cmd})
+	_, err := common.RunCmdFormatError(common.CmdIn{Command: cmd})
 	if err != nil {
 		return err
 	}
@@ -47,9 +47,9 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 	}
 
 	for _, req := range pkg.Reqs {
-		err := pipInstall(venvPip, req)
+		err = pipInstall(venvPip, req)
 		if err != nil {
-			internal.Log.Errorf("error installing requirement pip package %s: %v", name, err)
+			internal.Log.Errorf("error installing required pip package %s for %s: %v", req, name, err)
 			return
 		}
 	}

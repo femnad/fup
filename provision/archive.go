@@ -298,11 +298,15 @@ func download(closer io.ReadCloser, target string) error {
 	return nil
 
 }
-func createSymlink(symlink, extractDir string) {
-	symlinkTarget := path.Join(extractDir, symlink)
+
+func createSymlink(symlink base.NamedLink, extractDir string) {
+	symlinkTarget := path.Join(extractDir, symlink.Target)
 	symlinkTarget = internal.ExpandUser(symlinkTarget)
 
-	_, symlinkBasename := path.Split(symlink)
+	symlinkBasename := symlink.Name
+	if symlinkBasename == "" {
+		_, symlinkBasename = path.Split(symlink.Name)
+	}
 	symlinkName := path.Join(binPath, symlinkBasename)
 	symlinkName = internal.ExpandUser(symlinkName)
 
