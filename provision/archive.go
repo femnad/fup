@@ -305,7 +305,11 @@ func createSymlink(symlink base.NamedLink, extractDir string) {
 
 	symlinkBasename := symlink.Name
 	if symlinkBasename == "" {
-		_, symlinkBasename = path.Split(symlink.Name)
+		name := symlink.Name
+		if name == "" {
+			name = symlinkTarget
+		}
+		_, symlinkBasename = path.Split(name)
 	}
 	symlinkName := path.Join(binPath, symlinkBasename)
 	symlinkName = internal.ExpandUser(symlinkName)
