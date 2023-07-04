@@ -4,6 +4,7 @@ import "github.com/femnad/fup/precheck/unless"
 
 type Binary struct {
 	BinName string        `yaml:"name"`
+	Dir     string        `yaml:"dir"`
 	Url     string        `yaml:"url"`
 	Unless  unless.Unless `yaml:"unless"`
 	Version string        `yaml:"version"`

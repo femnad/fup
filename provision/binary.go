@@ -35,7 +35,12 @@ func downloadBinary(binary entity.Binary, config base.Config) error {
 		_, name = path.Split(url)
 	}
 
-	binaryDir := fmt.Sprintf("%s/%s", internal.ExpandUser(config.Settings.ExtractDir), name)
+	dir := binary.Dir
+	if dir == "" {
+		dir = name
+	}
+
+	binaryDir := fmt.Sprintf("%s/%s", internal.ExpandUser(config.Settings.ExtractDir), dir)
 	binaryPath := fmt.Sprintf("%s/%s", binaryDir, name)
 	err := remote.Download(url, binaryPath)
 	if err != nil {
