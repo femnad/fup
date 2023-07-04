@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	systemServiceDir = internal.ExpandUser("/usr/lib/systemd/system")
+	systemServiceDir = "/usr/lib/systemd/system"
 	userServiceDir   = internal.ExpandUser("~/.config/systemd/user")
 	actions          = map[string]string{
 		"disable": "!is-enabled",

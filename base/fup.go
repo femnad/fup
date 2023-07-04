@@ -19,6 +19,7 @@ type PackageSpec map[string][]string
 type Config struct {
 	AcceptHostKeys   []string            `yaml:"accept_host_keys"`
 	Archives         []Archive           `yaml:"archives"`
+	Binaries         []entity.Binary     `yaml:"binaries"`
 	Cargo            []CargoPkg          `yaml:"cargo"`
 	EnsureDirs       []string            `yaml:"ensure_dirs"`
 	EnsureLines      []LineInFile        `yaml:"ensure_lines"`

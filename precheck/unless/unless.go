@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base/settings"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
@@ -184,19 +185,19 @@ func getVersion(u Unlessable, s settings.Settings) string {
 
 func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 	var err error
-	var out common.CmdOut
+	var out cmd.Output
 	unless := unlessable.GetUnless()
-	cmd := unless.Cmd
+	unlessCmd := unless.Cmd
 
-	out, err = common.RunCmd(common.CmdIn{Command: cmd, Shell: unless.Shell})
+	out, err = cmd.Run(cmd.Input{Command: unlessCmd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
-		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", cmd, out.Code, unless.ExitCode)
+		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code, unless.ExitCode)
 		return out.Code == unless.ExitCode
 	}
 
 	if err != nil {
-		internal.Log.Debugf("Command %s returned error: %v, output: %s", cmd, err, out.Stderr)
+		internal.Log.Debugf("Command %s returned error: %v, output: %s", unlessCmd, err, out.Stderr)
 		// Command wasn't successfully run, should not skip.
 		return false
 	}
@@ -242,7 +243,7 @@ func sudoStat(target string) bool {
 	internal.Log.Debugf("Trying to access %s with elevated privileges", target)
 
 	statCmd := fmt.Sprintf("stat %s", target)
-	out, cmdErr := common.RunCmd(common.CmdIn{Command: statCmd, Sudo: true})
+	out, cmdErr := cmd.Run(cmd.Input{Command: statCmd, Sudo: true})
 
 	if strings.HasSuffix(strings.TrimSpace(out.Stderr), "No such file or directory") {
 		return false

@@ -11,6 +11,7 @@ var (
 	provisionOrder = []string{
 		"preflight",
 		"archive",
+		"binary",
 		"packages",
 		"remove-packages",
 		"known-hosts",
@@ -39,6 +40,7 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	p := Provisioner{Config: cfg}
 	provisioners := map[string]func(){
 		"archive":         p.extractArchives,
+		"binary":          p.downloadBinaries,
 		"cargo":           p.cargoInstall,
 		"ensure-dirs":     p.ensureDirs,
 		"ensure-lines":    p.ensureLines,

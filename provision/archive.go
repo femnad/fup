@@ -299,27 +299,6 @@ func download(closer io.ReadCloser, target string) error {
 
 }
 
-func createSymlink(symlink base.NamedLink, extractDir string) {
-	symlinkTarget := path.Join(extractDir, symlink.Target)
-	symlinkTarget = internal.ExpandUser(symlinkTarget)
-
-	symlinkBasename := symlink.Name
-	if symlinkBasename == "" {
-		name := symlink.Name
-		if name == "" {
-			name = symlinkTarget
-		}
-		_, symlinkBasename = path.Split(name)
-	}
-	symlinkName := path.Join(binPath, symlinkBasename)
-	symlinkName = internal.ExpandUser(symlinkName)
-
-	err := common.Symlink(symlinkName, symlinkTarget)
-	if err != nil {
-		internal.Log.Errorf("error creating symlink: %v", err)
-	}
-}
-
 func extractArchive(archive base.Archive, s settings.Settings) {
 	url := archive.ExpandURL(s)
 
@@ -340,7 +319,11 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 	}
 
 	for _, symlink := range archive.ExpandSymlinks(s) {
-		createSymlink(symlink, s.ExtractDir)
+		err = createSymlink(symlink, s.ExtractDir)
+		if err != nil {
+			internal.Log.Errorf("error creating symlink for archive %s: %v", url, err)
+			return
+		}
 	}
 
 	version := archive.Version
