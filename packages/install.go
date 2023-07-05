@@ -9,6 +9,9 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
+	"github.com/femnad/mare/cmd"
+
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
@@ -46,8 +49,8 @@ func maybeRunWithSudo(cmds ...string) error {
 		return err
 	}
 
-	cmd := strings.Join(cmds, " ")
-	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Sudo: sudo})
+	cmdstr := strings.Join(cmds, " ")
+	return common.RunCmdNoOutput(common.CmdIn{Command: cmdstr, Sudo: sudo})
 }
 
 type Installer struct {
@@ -85,19 +88,67 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 	return maybeRunWithSudo(installCmd...)
 }
 
-func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage]) error {
+func (i Installer) Version(pkg string) (string, error) {
+	input := cmd.Input{Command: fmt.Sprintf("apt info %s", pkg)}
+	out, err := cmd.RunFormatError(input)
+	if err != nil {
+		return "", err
+	}
+
+	for _, line := range strings.Split(out.Stdout, "\n") {
+		if !strings.HasPrefix(line, "Version: ") {
+			continue
+		}
+		fields := strings.Split(strings.TrimSpace(line), ": ")
+		numFields := len(fields)
+		if numFields != 2 {
+			return "", fmt.Errorf("unexpected number of version fields in line %s", line)
+		}
+		return fields[numFields-1], nil
+	}
+
+	return "", err
+}
+
+func desiredPkgVersion(pkg entity.RemotePackage, s settings.Settings) string {
+	version := pkg.Version
+	if version == "" {
+		version = s.Versions[pkg.Name]
+	}
+
+	return version
+}
+
+func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s settings.Settings) error {
 	available, err := i.installedPackages()
 	if err != nil {
 		return err
 	}
 
 	missing := mapset.NewSet[entity.RemotePackage]()
+
+	var existingVersion string
+	var vErr error
 	desired.Each(func(pkg entity.RemotePackage) bool {
-		if !available.Contains(pkg.Name) {
+		if available.Contains(pkg.Name) {
+			existingVersion, vErr = i.Version(pkg.Name)
+			if vErr != nil {
+				return true
+			}
+
+			if existingVersion != desiredPkgVersion(pkg, s) {
+				missing.Add(pkg)
+			}
+		} else {
 			missing.Add(pkg)
 		}
+
 		return false
 	})
+
+	if vErr != nil {
+		return vErr
+	}
 
 	if missing.Equal(mapset.NewSet[entity.RemotePackage]()) {
 		return nil
@@ -105,9 +156,13 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage]) error
 
 	var urls []string
 	missing.Each(func(pkg entity.RemotePackage) bool {
-		urls = append(urls, pkg.Url)
+		version := desiredPkgVersion(pkg, s)
+		url := settings.ExpandStringWithLookup(s, pkg.Url, map[string]string{"version": version})
+		urls = append(urls, url)
 		return false
 	})
+
+	internal.Log.Debugf("installing remote packages: %s", strings.Join(urls, " "))
 
 	return i.Pkg.RemoteInstall(urls)
 }

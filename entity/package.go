@@ -1,6 +1,7 @@
 package entity
 
 type RemotePackage struct {
-	Name string `yaml:"name"`
-	Url  string `yaml:"url"`
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
+	Url     string `yaml:"url"`
 }

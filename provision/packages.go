@@ -7,6 +7,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/packages"
@@ -114,7 +115,7 @@ func installPackages(spec base.PackageSpec) error {
 	return i.Install(pkgToInstall)
 }
 
-func installRemotePackages(spec base.RemotePackageSpec) error {
+func installRemotePackages(spec base.RemotePackageSpec, s settings.Settings) error {
 	d, err := newDeterminer()
 	if err != nil {
 		return err
@@ -130,7 +131,7 @@ func installRemotePackages(spec base.RemotePackageSpec) error {
 		return err
 	}
 
-	return i.RemoteInstall(pkgToInstall)
+	return i.RemoteInstall(pkgToInstall, s)
 }
 
 func removePackages(spec base.PackageSpec) error {
