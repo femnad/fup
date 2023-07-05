@@ -7,6 +7,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/packages"
 	"github.com/femnad/fup/precheck"
@@ -77,6 +78,27 @@ func (d determiner) matchingPkgs(spec base.PackageSpec) mapset.Set[string] {
 	return pkgToInstall
 }
 
+func (d determiner) matchingRemotePkgs(spec base.RemotePackageSpec) (mapset.Set[entity.RemotePackage], error) {
+	pkgToInstall := mapset.NewSet[entity.RemotePackage]()
+
+	for pattern, pkgs := range spec {
+		match, err := regexp.MatchString(pattern, d.osId)
+		if err != nil {
+			return pkgToInstall, err
+		}
+
+		if !match {
+			continue
+		}
+
+		for _, pkg := range pkgs {
+			pkgToInstall.Add(pkg)
+		}
+	}
+
+	return pkgToInstall, nil
+}
+
 func installPackages(spec base.PackageSpec) error {
 	d, err := newDeterminer()
 	if err != nil {
@@ -90,6 +112,25 @@ func installPackages(spec base.PackageSpec) error {
 
 	pkgToInstall := d.matchingPkgs(spec)
 	return i.Install(pkgToInstall)
+}
+
+func installRemotePackages(spec base.RemotePackageSpec) error {
+	d, err := newDeterminer()
+	if err != nil {
+		return err
+	}
+
+	i, err := d.installer()
+	if err != nil {
+		return err
+	}
+
+	pkgToInstall, err := d.matchingRemotePkgs(spec)
+	if err != nil {
+		return err
+	}
+
+	return i.RemoteInstall(pkgToInstall)
 }
 
 func removePackages(spec base.PackageSpec) error {

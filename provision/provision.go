@@ -125,6 +125,11 @@ func (p Provisioner) installPackages() {
 	if err != nil {
 		internal.Log.Errorf("error installing packages: %v", err)
 	}
+
+	err = installRemotePackages(p.Config.RemotePackages)
+	if err != nil {
+		internal.Log.Errorf("error installing remote packages: %v", err)
+	}
 }
 
 func (p Provisioner) removePackages() {

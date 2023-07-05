@@ -15,6 +15,7 @@ import (
 )
 
 type PackageSpec map[string][]string
+type RemotePackageSpec map[string][]entity.RemotePackage
 
 type Config struct {
 	AcceptHostKeys   []string            `yaml:"accept_host_keys"`
@@ -29,6 +30,7 @@ type Config struct {
 	PostflightTasks  []Task              `yaml:"postflight"`
 	PreflightTasks   []Task              `yaml:"preflight"`
 	Python           []PythonPkg         `yaml:"python"`
+	RemotePackages   RemotePackageSpec   `yaml:"remote_packages"`
 	SelfRepos        []entity.Repo       `yaml:"self_repos"`
 	Services         []Service           `yaml:"services"`
 	Settings         settings.Settings   `yaml:"settings"`

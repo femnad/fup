@@ -10,6 +10,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 )
 
@@ -22,24 +23,31 @@ type PkgManager interface {
 	PkgExec() string
 	PkgNameSeparator() string
 	RemoveCmd() string
+	RemoteInstall(urls []string) error
 }
 
-func maybeRunWithSudo(cmds ...string) error {
+func isUserRoot() (bool, error) {
 	currentUser, err := user.Current()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	userId, err := strconv.ParseInt(currentUser.Uid, 10, 32)
 	if err != nil {
+		return false, err
+	}
+
+	return userId != rootUid, nil
+}
+
+func maybeRunWithSudo(cmds ...string) error {
+	sudo, err := isUserRoot()
+	if err != nil {
 		return err
 	}
 
-	sudo := userId != rootUid
-
 	cmd := strings.Join(cmds, " ")
-	_, err = common.RunCmd(common.CmdIn{Command: cmd, Sudo: sudo})
-	return err
+	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Sudo: sudo})
 }
 
 type Installer struct {
@@ -75,6 +83,33 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
 	installCmd = append(installCmd, missingPkgs...)
 	return maybeRunWithSudo(installCmd...)
+}
+
+func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage]) error {
+	available, err := i.installedPackages()
+	if err != nil {
+		return err
+	}
+
+	missing := mapset.NewSet[entity.RemotePackage]()
+	desired.Each(func(pkg entity.RemotePackage) bool {
+		if !available.Contains(pkg.Name) {
+			missing.Add(pkg)
+		}
+		return false
+	})
+
+	if missing.Equal(mapset.NewSet[entity.RemotePackage]()) {
+		return nil
+	}
+
+	var urls []string
+	missing.Each(func(pkg entity.RemotePackage) bool {
+		urls = append(urls, pkg.Url)
+		return false
+	})
+
+	return i.Pkg.RemoteInstall(urls)
 }
 
 func (i Installer) installedPackages() (mapset.Set[string], error) {
