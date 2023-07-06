@@ -1,4 +1,4 @@
-from fedora:37
+from fedora:38
 run dnf install -y golang
 run mkdir -p /root/fup
 copy . /root/fup/
