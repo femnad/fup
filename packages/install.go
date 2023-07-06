@@ -89,7 +89,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 }
 
 func (i Installer) Version(pkg string) (string, error) {
-	input := cmd.Input{Command: fmt.Sprintf("apt info %s", pkg)}
+	input := cmd.Input{Command: fmt.Sprintf("%s info %s", i.Pkg.PkgExec(), pkg)}
 	out, err := cmd.RunFormatError(input)
 	if err != nil {
 		return "", err
