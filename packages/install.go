@@ -162,7 +162,8 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 		return false
 	})
 
-	internal.Log.Debugf("installing remote packages: %s", strings.Join(urls, " "))
+	sort.Strings(urls)
+	internal.Log.Infof("Remote packages to install: %s", strings.Join(urls, " "))
 
 	return i.Pkg.RemoteInstall(urls)
 }

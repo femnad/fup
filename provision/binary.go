@@ -56,7 +56,7 @@ func downloadBinary(binary entity.Binary, config base.Config) error {
 }
 
 func (p Provisioner) downloadBinaries() {
-	internal.Log.Notice("downloading binaries")
+	internal.Log.Notice("Downloading binaries")
 
 	for _, binary := range p.Config.Binaries {
 		err := downloadBinary(binary, p.Config)
