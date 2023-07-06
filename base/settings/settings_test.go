@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_expand(t *testing.T) {
+func TestExpandString(t *testing.T) {
 	type args struct {
 		s      string
 		lookup map[string]string
