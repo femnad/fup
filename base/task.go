@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
@@ -26,7 +28,8 @@ func runCmd(step Step, cfg Config) error {
 		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 
-	return common.RunCmdNoOutput(common.CmdIn{Command: c, Sudo: step.Sudo, Pwd: pwd})
+	_, err := marecmd.RunFormatError(marecmd.Input{Command: c, Sudo: step.Sudo, Pwd: pwd})
+	return err
 }
 
 func runShellCmd(step Step, cfg Config) error {
@@ -34,7 +37,7 @@ func runShellCmd(step Step, cfg Config) error {
 	lines := strings.TrimSpace(step.Cmd)
 	for _, cmd := range strings.Split(lines, "\n") {
 		cmd = ExpandSettings(cfg.Settings, cmd)
-		err := common.RunCmdNoOutput(common.CmdIn{Command: cmd, Pwd: pwd, Sudo: step.Sudo})
+		_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: step.Sudo})
 		if err != nil {
 			return err
 		}
