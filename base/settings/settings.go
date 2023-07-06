@@ -52,6 +52,7 @@ func expand(s string, lookup map[string]string) string {
 				continue
 			} else {
 				out.WriteRune('$')
+				dollar = false
 			}
 		}
 

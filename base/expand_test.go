@@ -31,6 +31,18 @@ func TestExpandSettings(t *testing.T) {
 			input:    "${extract_dir}/bar/${clone_dir}/qux/${some_var}",
 			expanded: "foo/bar/baz/qux/${some_var}",
 		},
+		{
+			name:     "Don't expand if dollar sign is followed by parentheses",
+			settings: settings.Settings{},
+			input:    "$(rpm)",
+			expanded: "$(rpm)",
+		},
+		{
+			name:     "Dollar sign followed by parentheses inside surrounded by strings",
+			settings: settings.Settings{},
+			input:    "install -y https://example.com/foo-$(rpm -E %fedora) --verbose",
+			expanded: "install -y https://example.com/foo-$(rpm -E %fedora) --verbose",
+		},
 	}
 
 	for _, tt := range tests {
