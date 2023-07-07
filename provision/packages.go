@@ -29,18 +29,27 @@ func matchingPackages(osId, pattern string, packages []string) []string {
 }
 
 func getInstaller(osId string) (packages.Installer, error) {
-	installer := packages.Installer{}
+	var installer packages.Installer
+	var pkg packages.PkgManager
 
 	switch osId {
 	case "debian", "ubuntu":
-		installer.Pkg = packages.Apt{}
+		pkg = packages.Apt{}
 	case "fedora":
-		installer.Pkg = packages.Dnf{}
+		pkg = packages.Dnf{}
 	default:
-		return installer, fmt.Errorf("no installer for OS ID %s", osId)
+		return packages.Installer{}, fmt.Errorf("no installer for OS ID %s", osId)
 	}
 
-	return installer, nil
+	installed, err := installer.InstalledPackages(pkg)
+	if err != nil {
+		return installer, err
+	}
+
+	return packages.Installer{
+		Pkg:       pkg,
+		Installed: installed,
+	}, nil
 }
 
 type determiner struct {
@@ -100,51 +109,43 @@ func (d determiner) matchingRemotePkgs(spec base.RemotePackageSpec) (mapset.Set[
 	return pkgToInstall, nil
 }
 
-func installPackages(spec base.PackageSpec) error {
-	d, err := newDeterminer()
-	if err != nil {
-		return err
-	}
-
-	i, err := d.installer()
-	if err != nil {
-		return err
-	}
-
-	pkgToInstall := d.matchingPkgs(spec)
-	return i.Install(pkgToInstall)
+type packager struct {
+	determiner determiner
+	installer  packages.Installer
 }
 
-func installRemotePackages(spec base.RemotePackageSpec, s settings.Settings) error {
+func newPackager() (packager, error) {
 	d, err := newDeterminer()
 	if err != nil {
-		return err
+		return packager{}, err
 	}
 
 	i, err := d.installer()
 	if err != nil {
-		return err
+		return packager{}, err
 	}
 
-	pkgToInstall, err := d.matchingRemotePkgs(spec)
-	if err != nil {
-		return err
-	}
-
-	return i.RemoteInstall(pkgToInstall, s)
+	return packager{
+		determiner: d,
+		installer:  i,
+	}, nil
 }
 
-func removePackages(spec base.PackageSpec) error {
-	d, err := newDeterminer()
+func (p packager) installPackages(spec base.PackageSpec) error {
+	pkgToInstall := p.determiner.matchingPkgs(spec)
+	return p.installer.Install(pkgToInstall)
+}
+
+func (p packager) installRemotePackages(spec base.RemotePackageSpec, s settings.Settings) error {
+	pkgToInstall, err := p.determiner.matchingRemotePkgs(spec)
 	if err != nil {
 		return err
 	}
 
-	i, err := d.installer()
-	if err != nil {
-		return err
-	}
+	return p.installer.RemoteInstall(pkgToInstall, s)
+}
 
-	pkgToInstall := d.matchingPkgs(spec)
-	return i.Remove(pkgToInstall)
+func (p packager) removePackages(spec base.PackageSpec) error {
+	pkgToInstall := p.determiner.matchingPkgs(spec)
+	return p.installer.Remove(pkgToInstall)
 }

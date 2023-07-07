@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	version = "0.9.0"
+	version = "0.10.0"
 )
 
 type args struct {
@@ -66,6 +66,11 @@ func main() {
 		log.Fatalf("%v\n", err)
 	}
 
-	p := provision.NewProvisioner(config, parsed.Provisioners)
+	p, err := provision.NewProvisioner(config, parsed.Provisioners)
+	if err != nil {
+		internal.Log.Errorf("error building provisioner: %v", err)
+		return
+	}
+
 	p.Apply()
 }

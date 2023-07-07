@@ -1,6 +1,8 @@
 package provision
 
 import (
+	"fmt"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
 )
@@ -33,11 +35,18 @@ var (
 
 type Provisioner struct {
 	Config       base.Config
+	Packager     packager
 	Provisioners map[string]func()
 }
 
-func NewProvisioner(cfg base.Config, provs []string) Provisioner {
-	p := Provisioner{Config: cfg}
+func NewProvisioner(cfg base.Config, provs []string) (Provisioner, error) {
+	pkgr, err := newPackager()
+	if err != nil {
+		return Provisioner{}, err
+	}
+
+	p := Provisioner{Config: cfg, Packager: pkgr}
+
 	provisioners := map[string]func(){
 		"archive":         p.extractArchives,
 		"binary":          p.downloadBinaries,
@@ -61,26 +70,26 @@ func NewProvisioner(cfg base.Config, provs []string) Provisioner {
 	}
 
 	if len(provs) == 0 {
-		return Provisioner{Config: cfg, Provisioners: provisioners}
+		p.Provisioners = provisioners
+		return p, nil
 	}
 
 	filtered := map[string]func(){}
 	for _, desired := range provs {
 		prov, ok := provisioners[desired]
 		if !ok {
-			internal.Log.Warningf("Unknown provisioner %s", desired)
-			return p
+			return p, fmt.Errorf("unknown provisioner %s", desired)
 		}
 
 		filtered[desired] = prov
 	}
 
 	if len(filtered) == 0 {
-		internal.Log.Warningf("Ignoring provisioner filter which returned no results")
-		return p
+		return p, fmt.Errorf("provisioner filter which returned no results")
 	}
 
-	return Provisioner{Config: cfg, Provisioners: filtered}
+	p.Provisioners = filtered
+	return p, nil
 }
 
 func (p Provisioner) Apply() {
@@ -121,12 +130,12 @@ func (p Provisioner) runPostflightTasks() {
 func (p Provisioner) installPackages() {
 	internal.Log.Notice("Installing packages")
 
-	err := installPackages(p.Config.Packages)
+	err := p.Packager.installPackages(p.Config.Packages)
 	if err != nil {
 		internal.Log.Errorf("error installing packages: %v", err)
 	}
 
-	err = installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
+	err = p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
 	if err != nil {
 		internal.Log.Errorf("error installing remote packages: %v", err)
 	}
@@ -135,7 +144,7 @@ func (p Provisioner) installPackages() {
 func (p Provisioner) removePackages() {
 	internal.Log.Notice("Removing unwanted packages")
 
-	err := removePackages(p.Config.UnwantedPackages)
+	err := p.Packager.removePackages(p.Config.UnwantedPackages)
 	if err != nil {
 		internal.Log.Errorf("error removing packages: %v", err)
 	}

@@ -54,7 +54,8 @@ func maybeRunWithSudo(cmds ...string) error {
 }
 
 type Installer struct {
-	Pkg PkgManager
+	Pkg       PkgManager
+	Installed mapset.Set[string]
 }
 
 func setToSlice[T comparable](set mapset.Set[T]) []T {
@@ -68,12 +69,7 @@ func setToSlice[T comparable](set mapset.Set[T]) []T {
 }
 
 func (i Installer) Install(desired mapset.Set[string]) error {
-	available, err := i.installedPackages()
-	if err != nil {
-		return err
-	}
-
-	missing := desired.Difference(available)
+	missing := desired.Difference(i.Installed)
 	missingPkgs := setToSlice(missing)
 
 	if len(missingPkgs) == 0 {
@@ -96,7 +92,7 @@ func (i Installer) Version(pkg string) (string, error) {
 	}
 
 	for _, line := range strings.Split(out.Stdout, "\n") {
-		if !strings.HasPrefix(line, "Version: ") {
+		if !strings.HasPrefix(line, "Version") {
 			continue
 		}
 		fields := strings.Split(strings.TrimSpace(line), ": ")
@@ -120,17 +116,12 @@ func desiredPkgVersion(pkg entity.RemotePackage, s settings.Settings) string {
 }
 
 func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s settings.Settings) error {
-	available, err := i.installedPackages()
-	if err != nil {
-		return err
-	}
-
 	missing := mapset.NewSet[entity.RemotePackage]()
 
 	var existingVersion string
 	var vErr error
 	desired.Each(func(pkg entity.RemotePackage) bool {
-		if available.Contains(pkg.Name) {
+		if i.Installed.Contains(pkg.Name) {
 			existingVersion, vErr = i.Version(pkg.Name)
 			if vErr != nil {
 				return true
@@ -168,8 +159,8 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	return i.Pkg.RemoteInstall(urls)
 }
 
-func (i Installer) installedPackages() (mapset.Set[string], error) {
-	listCmd := fmt.Sprintf("%s list --installed", i.Pkg.PkgExec())
+func (i Installer) InstalledPackages(pkg PkgManager) (mapset.Set[string], error) {
+	listCmd := fmt.Sprintf("%s list --installed", pkg.PkgExec())
 	resp, err := common.RunCmd(common.CmdIn{Command: listCmd})
 	if err != nil {
 		return nil, err
@@ -178,7 +169,7 @@ func (i Installer) installedPackages() (mapset.Set[string], error) {
 	installedPackages := mapset.NewSet[string]()
 	lines := strings.Split(resp.Stdout, "\n")
 	for _, line := range lines {
-		if line == i.Pkg.ListPkgsHeader() {
+		if line == pkg.ListPkgsHeader() {
 			continue
 		}
 		fields := strings.Split(line, " ")
@@ -187,7 +178,7 @@ func (i Installer) installedPackages() (mapset.Set[string], error) {
 		}
 
 		pkgAndVers := fields[0]
-		pkgFields := common.RightSplit(pkgAndVers, i.Pkg.PkgNameSeparator())
+		pkgFields := common.RightSplit(pkgAndVers, pkg.PkgNameSeparator())
 		if len(pkgFields) == 0 {
 			return nil, fmt.Errorf("unexpected package field: %s", pkgFields)
 		}
@@ -200,12 +191,7 @@ func (i Installer) installedPackages() (mapset.Set[string], error) {
 }
 
 func (i Installer) Remove(undesired mapset.Set[string]) error {
-	available, err := i.installedPackages()
-	if err != nil {
-		return err
-	}
-
-	toRemove := available.Intersect(undesired)
+	toRemove := i.Installed.Intersect(undesired)
 	pkgToRemove := setToSlice(toRemove)
 
 	if len(pkgToRemove) == 0 {
