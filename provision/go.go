@@ -8,9 +8,9 @@ import (
 
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/run"
 )
 
 const (
@@ -52,7 +52,7 @@ func goInstall(pkg base.GoPkg, s settings.Settings) {
 	}
 
 	cmd := fmt.Sprintf("go install %s", name)
-	resp, err := common.RunCmd(s, marecmd.Input{Command: cmd})
+	resp, err := run.Cmd(s, marecmd.Input{Command: cmd})
 
 	if err != nil {
 		internal.Log.Errorf("error in installing go package %s: %v, output: %s", name, err, resp.Stderr)

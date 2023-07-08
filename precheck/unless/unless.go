@@ -11,6 +11,7 @@ import (
 
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/run"
 )
 
 type Unless struct {
@@ -183,13 +184,13 @@ func getVersion(u Unlessable, s settings.Settings) string {
 	return s.Versions[name]
 }
 
-func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
+func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	var err error
 	var out marecmd.Output
 	unless := unlessable.GetUnless()
 	unlessCmd := unless.Cmd
 
-	out, err = marecmd.Run(marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
+	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
 		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code, unless.ExitCode)
@@ -202,7 +203,7 @@ func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 		return false
 	}
 
-	version := getVersion(unlessable, settings)
+	version := getVersion(unlessable, s)
 	if version == "" || unlessable.HasPostProc() {
 		// No version specification or no post proc, but command has succeeded so should skip the operation.
 		return true
@@ -215,7 +216,7 @@ func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 		return false
 	}
 
-	vers := getVersion(unlessable, settings)
+	vers := getVersion(unlessable, s)
 	if postProc != vers {
 		internal.Log.Debugf("Existing version `%s`, required version `%s`", postProc, vers)
 		return false

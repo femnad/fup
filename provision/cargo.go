@@ -11,6 +11,7 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/run"
 )
 
 func crateArgs(name string) ([]string, error) {
@@ -49,7 +50,7 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	}
 
 	cmd := strings.Join(installCmd, " ")
-	resp, err := common.RunCmd(s, marecmd.Input{Command: cmd})
+	resp, err := run.Cmd(s, marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error installing cargo package %s: %v, output: %s", name, err, resp.Stderr)
 	}

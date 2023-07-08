@@ -13,6 +13,7 @@ import (
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
+	"github.com/femnad/fup/run"
 )
 
 func createSymlink(step Step, cfg Config) error {
@@ -28,7 +29,7 @@ func runCmd(step Step, cfg Config) error {
 		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 
-	_, err := common.RunCmd(cfg.Settings, marecmd.Input{Command: c, Sudo: step.Sudo, Pwd: pwd})
+	_, err := run.Cmd(cfg.Settings, marecmd.Input{Command: c, Sudo: step.Sudo, Pwd: pwd})
 	return err
 }
 
@@ -37,7 +38,7 @@ func runShellCmd(step Step, cfg Config) error {
 	lines := strings.TrimSpace(step.Cmd)
 	for _, cmd := range strings.Split(lines, "\n") {
 		cmd = ExpandSettings(cfg.Settings, cmd)
-		_, err := common.RunCmd(cfg.Settings, marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: step.Sudo})
+		_, err := run.Cmd(cfg.Settings, marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: step.Sudo})
 		if err != nil {
 			return err
 		}

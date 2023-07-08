@@ -1,4 +1,4 @@
-package common
+package run
 
 import (
 	"fmt"
@@ -35,12 +35,12 @@ func amendEnv(s settings.Settings, input marecmd.Input) marecmd.Input {
 	return input
 }
 
-func RunCmd(s settings.Settings, input marecmd.Input) (marecmd.Output, error) {
+func Cmd(s settings.Settings, input marecmd.Input) (marecmd.Output, error) {
 	input = amendEnv(s, input)
 	return marecmd.RunFormatError(input)
 }
 
-func RunCmdNoOutput(s settings.Settings, input marecmd.Input) error {
+func CmdNoOutput(s settings.Settings, input marecmd.Input) error {
 	input = amendEnv(s, input)
 	return marecmd.RunNoOutput(input)
 }
