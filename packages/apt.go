@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/femnad/mare/cmd"
+	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/remote"
 )
@@ -23,7 +23,10 @@ func (Apt) PkgExec() string {
 }
 
 func (Apt) PkgEnv() map[string]string {
-	return map[string]string{"DEBIAN_FRONTEND": "noninteractive"}
+	return map[string]string{
+		"DEBIAN_FRONTEND": "noninteractive",
+		"DEBIAN_PRIORITY": "critical",
+	}
 }
 
 func (Apt) PkgNameSeparator() string {
@@ -52,8 +55,8 @@ func (Apt) remoteInstall(url string) error {
 		return err
 	}
 
-	input := cmd.Input{Command: fmt.Sprintf("apt install -y %s", target), Sudo: sudo}
-	return cmd.RunNoOutput(input)
+	input := marecmd.Input{Command: fmt.Sprintf("apt install -y %s", target), Sudo: sudo}
+	return marecmd.RunNoOutput(input)
 }
 
 func (Apt) RemoteInstall(urls []string) error {
@@ -80,8 +83,8 @@ func (Apt) RemoteInstall(urls []string) error {
 	}
 
 	targetArgs := strings.Join(targets, " ")
-	input := cmd.Input{Command: fmt.Sprintf("apt install -y %s", targetArgs), Sudo: sudo}
-	_, err = cmd.RunFormatError(input)
+	input := marecmd.Input{Command: fmt.Sprintf("apt install -y %s", targetArgs), Sudo: sudo}
+	_, err = marecmd.RunFormatError(input)
 	if err != nil {
 		return err
 	}

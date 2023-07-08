@@ -66,7 +66,8 @@ func (i Installer) maybeRunWithSudo(cmds ...string) error {
 	}
 
 	cmdstr := strings.Join(cmds, " ")
-	return marecmd.RunNoOutput(marecmd.Input{Command: cmdstr, Sudo: sudo, Env: i.Pkg.PkgEnv()})
+	_, err = marecmd.RunFormatError(marecmd.Input{Command: cmdstr, Sudo: sudo, Env: i.Pkg.PkgEnv()})
+	return err
 }
 
 func (i Installer) Install(desired mapset.Set[string]) error {
