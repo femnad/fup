@@ -18,6 +18,10 @@ func (Dnf) PkgExec() string {
 	return "dnf"
 }
 
+func (Dnf) PkgEnv() map[string]string {
+	return nil
+}
+
 func (Dnf) PkgNameSeparator() string {
 	return "."
 }

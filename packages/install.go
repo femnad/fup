@@ -24,6 +24,7 @@ const (
 type PkgManager interface {
 	ListPkgsHeader() string
 	PkgExec() string
+	PkgEnv() map[string]string
 	PkgNameSeparator() string
 	RemoveCmd() string
 	RemoteInstall(urls []string) error
@@ -43,16 +44,6 @@ func isUserRoot() (bool, error) {
 	return userId != rootUid, nil
 }
 
-func maybeRunWithSudo(cmds ...string) error {
-	sudo, err := isUserRoot()
-	if err != nil {
-		return err
-	}
-
-	cmdstr := strings.Join(cmds, " ")
-	return marecmd.RunNoOutput(marecmd.Input{Command: cmdstr, Sudo: sudo})
-}
-
 type Installer struct {
 	Pkg       PkgManager
 	Installed mapset.Set[string]
@@ -68,6 +59,16 @@ func setToSlice[T comparable](set mapset.Set[T]) []T {
 	return items
 }
 
+func (i Installer) maybeRunWithSudo(cmds ...string) error {
+	sudo, err := isUserRoot()
+	if err != nil {
+		return err
+	}
+
+	cmdstr := strings.Join(cmds, " ")
+	return marecmd.RunNoOutput(marecmd.Input{Command: cmdstr, Sudo: sudo, Env: i.Pkg.PkgEnv()})
+}
+
 func (i Installer) Install(desired mapset.Set[string]) error {
 	missing := desired.Difference(i.Installed)
 	missingPkgs := setToSlice(missing)
@@ -81,7 +82,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 
 	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
 	installCmd = append(installCmd, missingPkgs...)
-	return maybeRunWithSudo(installCmd...)
+	return i.maybeRunWithSudo(installCmd...)
 }
 
 func (i Installer) Version(pkg string) (string, error) {
@@ -204,5 +205,5 @@ func (i Installer) Remove(undesired mapset.Set[string]) error {
 	removeCmd := []string{i.Pkg.PkgExec(), i.Pkg.RemoveCmd(), "-y"}
 	removeCmd = append(removeCmd, pkgToRemove...)
 
-	return maybeRunWithSudo(removeCmd...)
+	return i.maybeRunWithSudo(removeCmd...)
 }

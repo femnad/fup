@@ -22,6 +22,10 @@ func (Apt) PkgExec() string {
 	return "apt"
 }
 
+func (Apt) PkgEnv() map[string]string {
+	return map[string]string{"DEBIAN_FRONTEND": "noninteractive"}
+}
+
 func (Apt) PkgNameSeparator() string {
 	return "/"
 }
