@@ -2,9 +2,12 @@ package common
 
 import (
 	"fmt"
-	"github.com/femnad/fup/base/settings"
-	marecmd "github.com/femnad/mare/cmd"
 	"strings"
+
+	"github.com/femnad/mare"
+	marecmd "github.com/femnad/mare/cmd"
+
+	"github.com/femnad/fup/base/settings"
 )
 
 const (
@@ -13,7 +16,10 @@ const (
 )
 
 func amendEnv(s settings.Settings, input marecmd.Input) marecmd.Input {
-	path := strings.Join(s.EnsurePaths, pathSeparator)
+	ensurePaths := mare.MapToString(s.EnsurePaths, func(s string) string {
+		return mare.ExpandUser(s)
+	})
+	path := strings.Join(ensurePaths, pathSeparator)
 
 	if input.Env == nil {
 		input.Env = map[string]string{}
