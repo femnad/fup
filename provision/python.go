@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
@@ -13,7 +15,7 @@ import (
 
 func pipInstall(pipBin, pkg string) error {
 	cmd := fmt.Sprintf("%s install %s", pipBin, pkg)
-	_, err := common.RunCmdFormatError(common.CmdIn{Command: cmd})
+	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
 		return err
 	}
@@ -32,7 +34,7 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 	venvDir := path.Join(baseDir, name)
 
 	cmd := fmt.Sprintf("virtualenv %s", venvDir)
-	_, err := common.RunCmd(common.CmdIn{Command: cmd})
+	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error creating virtualenv for package %s: %v", name, err)
 		return

@@ -6,7 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/femnad/fup/common"
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/internal"
 )
 
@@ -80,7 +81,7 @@ func neovimReady() (bool, error) {
 }
 
 func sshReady() (bool, error) {
-	resp, _ := common.RunCmd(common.CmdIn{Command: "ssh-add -l"})
+	resp, _ := marecmd.RunFormatError(marecmd.Input{Command: "ssh-add -l"})
 	if resp.Code == 1 {
 		return false, nil
 	}

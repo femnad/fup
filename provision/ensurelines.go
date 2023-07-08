@@ -3,11 +3,14 @@ package provision
 import (
 	"bufio"
 	"fmt"
+	"os"
+
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
-	"os"
 )
 
 func ensureLine(line base.LineInFile) error {
@@ -64,7 +67,7 @@ func ensureLine(line base.LineInFile) error {
 	}
 
 	mv := common.GetMvCmd(tmpPath, line.File)
-	out, err := common.RunCmd(mv)
+	out, err := marecmd.RunFormatError(mv)
 	if err != nil {
 		return fmt.Errorf("error renaming %s to %s: %v, output %s", tmpPath, line.File, err, out.Stderr)
 	}

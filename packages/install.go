@@ -9,7 +9,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
-	"github.com/femnad/mare/cmd"
+	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
@@ -50,7 +50,7 @@ func maybeRunWithSudo(cmds ...string) error {
 	}
 
 	cmdstr := strings.Join(cmds, " ")
-	return common.RunCmdNoOutput(common.CmdIn{Command: cmdstr, Sudo: sudo})
+	return marecmd.RunNoOutput(marecmd.Input{Command: cmdstr, Sudo: sudo})
 }
 
 type Installer struct {
@@ -85,8 +85,8 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 }
 
 func (i Installer) Version(pkg string) (string, error) {
-	input := cmd.Input{Command: fmt.Sprintf("%s info %s", i.Pkg.PkgExec(), pkg)}
-	out, err := cmd.RunFormatError(input)
+	input := marecmd.Input{Command: fmt.Sprintf("%s info %s", i.Pkg.PkgExec(), pkg)}
+	out, err := marecmd.RunFormatError(input)
 	if err != nil {
 		return "", err
 	}
@@ -161,7 +161,7 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 
 func (i Installer) InstalledPackages(pkg PkgManager) (mapset.Set[string], error) {
 	listCmd := fmt.Sprintf("%s list --installed", pkg.PkgExec())
-	resp, err := common.RunCmd(common.CmdIn{Command: listCmd})
+	resp, err := marecmd.RunFormatError(marecmd.Input{Command: listCmd})
 	if err != nil {
 		return nil, err
 	}

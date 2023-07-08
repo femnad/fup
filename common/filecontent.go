@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/internal"
 )
 
@@ -39,19 +41,19 @@ type ManagedFile struct {
 	ValidateCmd string
 }
 
-func GetMvCmd(src, dst string) CmdIn {
+func GetMvCmd(src, dst string) marecmd.Input {
 	cmd := fmt.Sprintf("mv %s %s", src, dst)
 	sudo := !IsHomePath(dst)
 
-	return CmdIn{Command: cmd, Sudo: sudo}
+	return marecmd.Input{Command: cmd, Sudo: sudo}
 }
 
-func getChmodCmd(target string, mode int) CmdIn {
+func getChmodCmd(target string, mode int) marecmd.Input {
 	octal := strconv.FormatInt(int64(mode), 8)
 	cmd := fmt.Sprintf("chmod %s %s", octal, target)
 	sudo := !IsHomePath(target)
 
-	return CmdIn{Command: cmd, Sudo: sudo}
+	return marecmd.Input{Command: cmd, Sudo: sudo}
 }
 
 func Checksum(f string) (string, error) {
@@ -78,7 +80,7 @@ func Checksum(f string) (string, error) {
 
 func getStatSum(f string) (statSum, error) {
 	cmd := fmt.Sprintf("stat -c %%a %s", f)
-	out, err := RunCmdFormatError(CmdIn{Command: cmd, Sudo: true})
+	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: true})
 	if err != nil {
 		if strings.HasSuffix(strings.TrimSpace(out.Stderr), statNoExistsError) {
 			return statSum{}, os.ErrNotExist
@@ -91,7 +93,7 @@ func getStatSum(f string) (statSum, error) {
 		return statSum{}, err
 	}
 
-	out, err = RunCmdFormatError(CmdIn{Command: fmt.Sprintf("sha256sum %s", f), Sudo: true})
+	out, err = marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("sha256sum %s", f), Sudo: true})
 	if err != nil {
 		return statSum{}, err
 	}
@@ -110,7 +112,7 @@ func getent(key, database string) (int, error) {
 		return defaultId, nil
 	}
 
-	out, err := RunCmd(CmdIn{Command: fmt.Sprintf("getent %s %s", database, key)})
+	out, err := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("getent %s %s", database, key)})
 	if err != nil {
 		return 0, err
 	}
@@ -163,7 +165,7 @@ func chown(file, user, group string) error {
 	}
 	chownCmd += " " + file
 
-	return RunCmdNoOutput(CmdIn{Command: chownCmd, Sudo: true})
+	return marecmd.RunNoOutput(marecmd.Input{Command: chownCmd, Sudo: true})
 }
 
 func ensureDir(dir string) error {
@@ -173,7 +175,7 @@ func ensureDir(dir string) error {
 
 	internal.Log.Warningf("escalating privileges to create directory %s", dir)
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
-	return RunCmdNoOutput(CmdIn{Command: mkdirCmd, Sudo: true})
+	return marecmd.RunNoOutput(marecmd.Input{Command: mkdirCmd, Sudo: true})
 }
 
 func WriteContent(file ManagedFile) (bool, error) {
@@ -236,7 +238,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if validateCmd != "" {
 		validateCmd = fmt.Sprintf("%s %s", validateCmd, srcPath)
-		validateErr := RunCmdNoOutput(CmdIn{Command: validateCmd, Sudo: noPermission})
+		validateErr := marecmd.RunNoOutput(marecmd.Input{Command: validateCmd, Sudo: noPermission})
 		if validateErr != nil {
 			return false, validateErr
 		}
@@ -249,7 +251,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	mv := GetMvCmd(srcPath, target)
-	err = RunCmdNoOutput(mv)
+	err = marecmd.RunNoOutput(mv)
 	if err != nil {
 		return changed, err
 	}
@@ -271,14 +273,14 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if currentMode != mode || !dstExists {
 		chmodCmd := getChmodCmd(target, mode)
-		chmodErr := RunCmdNoOutput(chmodCmd)
+		chmodErr := marecmd.RunNoOutput(chmodCmd)
 		if chmodErr != nil {
 			return changed, chmodErr
 		}
 	}
 
 	if noPermission || !IsHomePath(target) {
-		_, err = RunCmd(CmdIn{Command: fmt.Sprintf("chown %s:%s %s", rootUser, rootUser, target), Sudo: true})
+		_, err = marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("chown %s:%s %s", rootUser, rootUser, target), Sudo: true})
 		if err != nil {
 			return changed, err
 		}

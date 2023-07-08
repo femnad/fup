@@ -1,74 +1,40 @@
 package common
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
+	"github.com/femnad/fup/base/settings"
+	marecmd "github.com/femnad/mare/cmd"
 	"strings"
 )
 
-var defaultShell = "sh"
+const (
+	pathEnvKey    = "PATH"
+	pathSeparator = ":"
+)
 
-type CmdIn struct {
-	Command string
-	Pwd     string
-	Shell   bool
-	Sudo    bool
-}
+func amendEnv(s settings.Settings, input marecmd.Input) marecmd.Input {
+	path := strings.Join(s.EnsurePaths, pathSeparator)
 
-type CmdOut struct {
-	Code   int
-	Stdout string
-	Stderr string
-}
+	if input.Env == nil {
+		input.Env = map[string]string{}
+	}
 
-func RunCmd(in CmdIn) (CmdOut, error) {
-	var cmdSlice []string
-	if in.Shell {
-		cmdSlice = append([]string{defaultShell, "-c"}, in.Command)
+	existingPathEnv, ok := input.Env[pathEnvKey]
+	if ok {
+		input.Env[pathEnvKey] = fmt.Sprintf("%s%s%s", existingPathEnv, pathSeparator, path)
 	} else {
-		cmdSlice = strings.Split(in.Command, " ")
-	}
-	if in.Sudo {
-		cmdSlice = append([]string{"sudo"}, cmdSlice...)
+		input.Env[pathEnvKey] = path
 	}
 
-	cmd := exec.Command(cmdSlice[0], cmdSlice[1:]...)
-	if in.Pwd != "" {
-		cmd.Dir = in.Pwd
-	}
-
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-	return CmdOut{Stdout: stdout.String(), Stderr: stderr.String(), Code: cmd.ProcessState.ExitCode()}, err
+	return input
 }
 
-func RunCmdFormatError(in CmdIn) (CmdOut, error) {
-	out, err := RunCmd(in)
-	if err == nil {
-		return out, nil
-	}
-
-	stdout := strings.TrimSpace(out.Stdout)
-	stderr := strings.TrimSpace(out.Stderr)
-	outStr := fmt.Sprintf("error running command %s", in.Command)
-
-	if stdout != "" {
-		outStr += fmt.Sprintf(", stdout: %s", stdout)
-	}
-	if stderr != "" {
-		outStr += fmt.Sprintf(", stderr: %s", stderr)
-	}
-	outStr += fmt.Sprintf(", error: %v", err)
-
-	return out, fmt.Errorf(outStr)
+func RunCmd(s settings.Settings, input marecmd.Input) (marecmd.Output, error) {
+	input = amendEnv(s, input)
+	return marecmd.RunFormatError(input)
 }
 
-func RunCmdNoOutput(in CmdIn) error {
-	_, err := RunCmdFormatError(in)
-	return err
+func RunCmdNoOutput(s settings.Settings, input marecmd.Input) error {
+	input = amendEnv(s, input)
+	return marecmd.RunNoOutput(input)
 }

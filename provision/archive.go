@@ -17,9 +17,10 @@ import (
 
 	"github.com/xi2/xz"
 
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
@@ -334,7 +335,7 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 	for _, cmd := range archive.ExecuteAfter {
 		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
 		internal.Log.Debugf("Running command %s", cmd)
-		err = common.RunCmdNoOutput(common.CmdIn{Command: cmd, Shell: true})
+		err = marecmd.RunNoOutput(marecmd.Input{Command: cmd, Shell: true})
 		if err != nil {
 			internal.Log.Errorf("error running post extract command: %v", err)
 		}

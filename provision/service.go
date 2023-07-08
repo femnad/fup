@@ -12,6 +12,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
@@ -76,7 +78,7 @@ func writeTmpl(s base.Service) (string, error) {
 
 func runSystemctlCmd(cmd string, service base.Service) error {
 	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
-	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Sudo: service.System})
+	return marecmd.RunNoOutput(marecmd.Input{Command: cmd, Sudo: service.System})
 }
 
 func getServiceFilePath(s base.Service) string {
@@ -93,7 +95,7 @@ func writeServiceFile(file, content string) (bool, error) {
 
 func maybeRestart(s base.Service) error {
 	cmd := systemctlCmd("is-active", s.Name, !s.System)
-	out, err := common.RunCmdFormatError(common.CmdIn{Command: cmd})
+	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
 		if strings.TrimSpace(out.Stdout) == "inactive" {
 			return nil
@@ -104,7 +106,7 @@ func maybeRestart(s base.Service) error {
 	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
 
 	cmd = systemctlCmd("restart", s.Name, !s.System)
-	return common.RunCmdNoOutput(common.CmdIn{Command: cmd, Sudo: s.System})
+	return marecmd.RunNoOutput(marecmd.Input{Command: cmd, Sudo: s.System})
 }
 
 func getServiceExec(serviceFile string) (string, error) {
@@ -167,7 +169,7 @@ func persist(s base.Service) error {
 		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
 		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
 		internal.Log.Debugf("running restorecon command %s", restorecon)
-		cmdErr := common.RunCmdNoOutput(common.CmdIn{Command: restorecon, Sudo: true})
+		cmdErr := marecmd.RunNoOutput(marecmd.Input{Command: restorecon, Sudo: true})
 		if cmdErr != nil {
 			return cmdErr
 		}
@@ -243,7 +245,7 @@ func ensure(s base.Service, action string) error {
 	}
 
 	// Don't need sudo for check actions, so don't use runSystemctlCmd
-	resp, _ := common.RunCmd(common.CmdIn{Command: checkCmd})
+	resp, _ := marecmd.RunFormatError(marecmd.Input{Command: checkCmd})
 	if negated && resp.Code != 0 {
 		return nil
 	} else if !negated && resp.Code == 0 {

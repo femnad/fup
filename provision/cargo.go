@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	marecmd "github.com/femnad/mare/cmd"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
@@ -47,7 +49,7 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	}
 
 	cmd := strings.Join(installCmd, " ")
-	resp, err := common.RunCmd(common.CmdIn{Command: cmd})
+	resp, err := common.RunCmd(s, marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error installing cargo package %s: %v, output: %s", name, err, resp.Stderr)
 	}

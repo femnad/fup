@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/femnad/mare/cmd"
+	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
@@ -185,11 +185,11 @@ func getVersion(u Unlessable, s settings.Settings) string {
 
 func shouldSkip(unlessable Unlessable, settings settings.Settings) bool {
 	var err error
-	var out cmd.Output
+	var out marecmd.Output
 	unless := unlessable.GetUnless()
 	unlessCmd := unless.Cmd
 
-	out, err = cmd.Run(cmd.Input{Command: unlessCmd, Shell: unless.Shell})
+	out, err = marecmd.Run(marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
 		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code, unless.ExitCode)
@@ -243,7 +243,7 @@ func sudoStat(target string) bool {
 	internal.Log.Debugf("Trying to access %s with elevated privileges", target)
 
 	statCmd := fmt.Sprintf("stat %s", target)
-	out, cmdErr := cmd.Run(cmd.Input{Command: statCmd, Sudo: true})
+	out, cmdErr := marecmd.Run(marecmd.Input{Command: statCmd, Sudo: true})
 
 	if strings.HasSuffix(strings.TrimSpace(out.Stderr), "No such file or directory") {
 		return false

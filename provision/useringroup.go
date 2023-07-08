@@ -3,18 +3,18 @@ package provision
 import (
 	"fmt"
 	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
+	marecmd "github.com/femnad/mare/cmd"
 	"strings"
 )
 
 func addUserToGroup(user, group string) error {
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
-	return common.RunCmdNoOutput(common.CmdIn{Command: usermod, Sudo: true})
+	return marecmd.RunNoOutput(marecmd.Input{Command: usermod, Sudo: true})
 }
 
 func doEnsureUserInGroups(user string, groups []string) error {
-	out, err := common.RunCmd(common.CmdIn{Command: fmt.Sprintf("groups %s", user)})
+	out, err := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("groups %s", user)})
 	if err != nil {
 		return err
 	}
