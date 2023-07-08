@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/femnad/mare/cmd"
+	marecmd "github.com/femnad/mare/cmd"
 )
 
 type Dnf struct {
@@ -36,7 +36,7 @@ func (Dnf) RemoteInstall(urls []string) error {
 		return err
 	}
 
-	input := cmd.Input{Command: fmt.Sprintf("dnf install -y %s", strings.Join(urls, " ")), Sudo: sudo}
-	_, err = cmd.RunFormatError(input)
+	input := marecmd.Input{Command: fmt.Sprintf("dnf install -y %s", strings.Join(urls, " ")), Sudo: sudo}
+	_, err = marecmd.RunFormatError(input)
 	return err
 }
