@@ -35,7 +35,7 @@ func processUrl(repoUrl string) (cloneUrl, error) {
 
 	repoBase := components[numComponents-1]
 	if strings.HasSuffix(repoBase, gitRepoSuffix) {
-		repoBase = strings.TrimRight(repoBase, gitRepoSuffix)
+		repoBase = repoBase[:len(repoBase)-len(gitRepoSuffix)]
 	}
 	clone.base = repoBase
 
