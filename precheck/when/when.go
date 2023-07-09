@@ -26,6 +26,18 @@ func FactOk(fact string) (bool, error) {
 	return factResult, nil
 }
 
+func evalFact(fact string, negate bool) (bool, error) {
+	result, err := FactOk(fact)
+	if err != nil {
+		return false, fmt.Errorf("error evaluating fact %s: %v", fact, err)
+	}
+
+	if negate {
+		result = !result
+	}
+	return result, nil
+}
+
 func ShouldRun(whenable Whenable) bool {
 	negate := false
 	fact := whenable.RunWhen()
@@ -34,20 +46,21 @@ func ShouldRun(whenable Whenable) bool {
 		return true
 	}
 
-	tokens := strings.Split(fact, " ")
-	if len(tokens) == 2 && tokens[0] == "not" {
+	if strings.HasPrefix(fact, "!") {
+		fact = fact[1:]
 		negate = true
-		fact = tokens[1]
 	}
 
-	result, err := FactOk(fact)
-	if err != nil {
-		internal.Log.Warningf("error evaluating fact %s: %v", fact, err)
-		return false
+	for _, subFact := range strings.Split(fact, " ") {
+		result, err := evalFact(subFact, negate)
+		if err != nil {
+			internal.Log.Warningf("error evaluating fact %s: %v", subFact, err)
+			return false
+		}
+
+		return result
 	}
 
-	if negate {
-		return !result
-	}
-	return result
+	// No facts found
+	return false
 }
