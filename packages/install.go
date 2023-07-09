@@ -135,7 +135,8 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 				return true
 			}
 
-			if existingVersion != desiredPkgVersion(pkg, s) {
+			desiredVersion := desiredPkgVersion(pkg, s)
+			if desiredVersion != "" && existingVersion != desiredPkgVersion(pkg, s) {
 				missing.Add(pkg)
 			}
 		} else {
