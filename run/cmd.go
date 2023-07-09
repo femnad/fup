@@ -32,6 +32,10 @@ func amendEnv(s settings.Settings, input marecmd.Input) marecmd.Input {
 		input.Env[pathEnvKey] = path
 	}
 
+	for k, v := range s.EnsureEnv {
+		input.Env[k] = v
+	}
+
 	return input
 }
 
