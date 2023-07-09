@@ -33,7 +33,7 @@ func amendEnv(s settings.Settings, input marecmd.Input) marecmd.Input {
 	}
 
 	for k, v := range s.EnsureEnv {
-		input.Env[k] = v
+		input.Env[k] = mare.ExpandUser(v)
 	}
 
 	return input
