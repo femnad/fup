@@ -26,6 +26,10 @@ func (Dnf) PkgNameSeparator() string {
 	return "."
 }
 
+func (Dnf) PreserveEnv() bool {
+	return false
+}
+
 func (Dnf) RemoveCmd() string {
 	return "remove"
 }

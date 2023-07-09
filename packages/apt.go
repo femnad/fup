@@ -29,6 +29,10 @@ func (Apt) PkgEnv() map[string]string {
 	}
 }
 
+func (Apt) PreserveEnv() bool {
+	return true
+}
+
 func (Apt) PkgNameSeparator() string {
 	return "/"
 }

@@ -26,6 +26,7 @@ type PkgManager interface {
 	PkgExec() string
 	PkgEnv() map[string]string
 	PkgNameSeparator() string
+	PreserveEnv() bool
 	RemoveCmd() string
 	RemoteInstall(urls []string) error
 }
@@ -66,7 +67,12 @@ func (i Installer) maybeRunWithSudo(cmds ...string) error {
 	}
 
 	cmdstr := strings.Join(cmds, " ")
-	_, err = marecmd.RunFormatError(marecmd.Input{Command: cmdstr, Sudo: sudo, Env: i.Pkg.PkgEnv()})
+	_, err = marecmd.RunFormatError(marecmd.Input{
+		Command:         cmdstr,
+		Sudo:            sudo,
+		SudoPreserveEnv: i.Pkg.PreserveEnv(),
+		Env:             i.Pkg.PkgEnv(),
+	})
 	return err
 }
 
