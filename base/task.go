@@ -49,7 +49,7 @@ func runShellCmd(step Step, cfg Config) error {
 
 func runGitClone(step Step, cfg Config) error {
 	path := ExpandSettings(cfg.Settings, step.Dir)
-	return common.CloneRepo(step.Repo, path)
+	return common.CloneTo(step.Repo, path)
 }
 
 func fileCmd(step Step, cfg Config) error {

@@ -9,7 +9,7 @@ import (
 
 func cloneRepos(repos []entity.Repo, clonePath string) error {
 	for _, repo := range repos {
-		err := common.CloneRepo(repo, clonePath)
+		err := common.CloneUnderPath(repo, clonePath)
 		if err != nil {
 			return err
 		}

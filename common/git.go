@@ -65,18 +65,7 @@ func processUrl(repoUrl string) (cloneUrl, error) {
 	return clone, nil
 }
 
-func CloneRepo(repo entity.Repo, dir string) error {
-	repoUrl, err := processUrl(repo.Name)
-	if err != nil {
-		return err
-	}
-
-	cloneDir := internal.ExpandUser(path.Join(dir, repoUrl.base))
-	_, err = os.Stat(cloneDir)
-	if err == nil {
-		return nil
-	}
-
+func clone(repo entity.Repo, repoUrl cloneUrl, cloneDir string) error {
 	opt := git.CloneOptions{
 		URL: repoUrl.url,
 	}
@@ -109,4 +98,28 @@ func CloneRepo(repo entity.Repo, dir string) error {
 	}
 
 	return nil
+}
+
+func CloneTo(repo entity.Repo, path string) error {
+	repoUrl, err := processUrl(repo.Name)
+	if err != nil {
+		return err
+	}
+
+	return clone(repo, repoUrl, path)
+}
+
+func CloneUnderPath(repo entity.Repo, dir string) error {
+	repoUrl, err := processUrl(repo.Name)
+	if err != nil {
+		return err
+	}
+
+	cloneDir := internal.ExpandUser(path.Join(dir, repoUrl.base))
+	_, err = os.Stat(cloneDir)
+	if err == nil {
+		return nil
+	}
+
+	return clone(repo, repoUrl, cloneDir)
 }
