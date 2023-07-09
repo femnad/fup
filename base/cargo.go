@@ -7,6 +7,7 @@ type CargoPkg struct {
 	Crate   string        `yaml:"name"`
 	Unless  unless.Unless `yaml:"unless"`
 	Version string        `yaml:"version"`
+	When    string        `yaml:"when"`
 }
 
 func (c CargoPkg) GetUnless() unless.Unless {
@@ -23,4 +24,8 @@ func (c CargoPkg) HasPostProc() bool {
 
 func (c CargoPkg) Name() string {
 	return c.Crate
+}
+
+func (c CargoPkg) RunWhen() string {
+	return c.When
 }

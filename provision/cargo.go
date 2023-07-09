@@ -11,6 +11,7 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/run"
 )
 
@@ -30,6 +31,11 @@ func crateArgs(name string) ([]string, error) {
 func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	if unless.ShouldSkip(pkg, s) {
 		internal.Log.Debugf("skipping cargo install for %s", pkg.Crate)
+		return
+	}
+
+	if !when.ShouldRun(pkg) {
+		internal.Log.Debugf("skipping cargo intall for %s", pkg.Crate)
 		return
 	}
 
