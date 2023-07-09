@@ -1,6 +1,7 @@
 package when
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/femnad/fup/internal"
@@ -9,6 +10,20 @@ import (
 
 type Whenable interface {
 	RunWhen() string
+}
+
+func FactOk(fact string) (bool, error) {
+	factFn, ok := precheck.Facts[fact]
+	if !ok {
+		return false, fmt.Errorf("no fact evaluator for fact %s exists", fact)
+	}
+
+	factResult, err := factFn()
+	if err != nil {
+		return false, fmt.Errorf("error running evaluator for fact %s: %v", fact, err)
+	}
+
+	return factResult, nil
 }
 
 func ShouldRun(whenable Whenable) bool {
@@ -25,22 +40,14 @@ func ShouldRun(whenable Whenable) bool {
 		fact = tokens[1]
 	}
 
-	factFn, ok := precheck.Facts[fact]
-	if !ok {
-		internal.Log.Warningf("no fact evaluator for fact %s exists", fact)
-		// Has a fact defined but we can't locate it, prefer not to run.
-		return false
-	}
-
-	factResult, err := factFn()
+	result, err := FactOk(fact)
 	if err != nil {
-		internal.Log.Errorf("error running evaluator for fact %s: %v", fact, err)
-		// Has a fact defined, we can locate it but there's an error when evaluating it, prefer not to run.
+		internal.Log.Warningf("error evaluating fact %s: %v", fact, err)
 		return false
 	}
 
 	if negate {
-		return !factResult
+		return !result
 	}
-	return factResult
+	return result
 }

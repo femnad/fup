@@ -5,7 +5,10 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/precheck/when"
 )
+
+const selfCloneFact = "ssh-ready"
 
 func cloneRepos(repos []entity.Repo, clonePath string) error {
 	for _, repo := range repos {
@@ -19,7 +22,18 @@ func cloneRepos(repos []entity.Repo, clonePath string) error {
 }
 
 func selfClone(config base.Config) {
-	err := cloneRepos(config.SelfRepos, config.Settings.SelfClonePath)
+	ok, err := when.FactOk(selfCloneFact)
+	if err != nil {
+		internal.Log.Errorf("error checking if self cloning is ok: %v", err)
+		return
+	}
+
+	if !ok {
+		internal.Log.Debugf("not proceeding with self cloning as fact check evaluated to fals")
+		return
+	}
+
+	err = cloneRepos(config.SelfRepos, config.Settings.SelfClonePath)
 	if err != nil {
 		internal.Log.Errorf("error cloning own repo: %v", err)
 	}
