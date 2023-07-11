@@ -12,13 +12,13 @@ func Test_processUrl(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    cloneUrl
+		want    cloneRef
 		wantErr bool
 	}{
 		{
 			name: "URL with scheme and host",
 			args: args{repoUrl: "https://github.com/foo/bar.git"},
-			want: cloneUrl{
+			want: cloneRef{
 				url:  "https://github.com/foo/bar.git",
 				base: "bar",
 			},
@@ -26,7 +26,7 @@ func Test_processUrl(t *testing.T) {
 		{
 			name: "URL with scheme and host, no git suffix ",
 			args: args{repoUrl: "https://github.com/foo/bar"},
-			want: cloneUrl{
+			want: cloneRef{
 				url:  "https://github.com/foo/bar.git",
 				base: "bar",
 			},
@@ -34,7 +34,7 @@ func Test_processUrl(t *testing.T) {
 		{
 			name: "URL with no scheme",
 			args: args{repoUrl: "github.com/foo/bar"},
-			want: cloneUrl{
+			want: cloneRef{
 				url:  "git@github.com:foo/bar.git",
 				base: "bar",
 			},
@@ -42,7 +42,7 @@ func Test_processUrl(t *testing.T) {
 		{
 			name: "URL with no host",
 			args: args{repoUrl: "foo/bar"},
-			want: cloneUrl{
+			want: cloneRef{
 				url:  "git@github.com:foo/bar.git",
 				base: "bar",
 			},

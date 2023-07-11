@@ -21,37 +21,37 @@ const (
 	gitRepoSuffix = ".git"
 )
 
-type cloneUrl struct {
+type cloneRef struct {
 	url  string
 	base string
 }
 
-func processUrl(repoUrl string) (cloneUrl, error) {
-	var clone cloneUrl
+func processUrl(repoUrl string) (cloneRef, error) {
+	var ref cloneRef
 	components := strings.Split(repoUrl, "/")
 	numComponents := len(components)
 	if numComponents == 0 {
-		return clone, fmt.Errorf("unexpected repo URL: %s", repoUrl)
+		return ref, fmt.Errorf("unexpected repo URL: %s", repoUrl)
 	}
 
 	repoBase := components[numComponents-1]
 	if strings.HasSuffix(repoBase, gitRepoSuffix) {
 		repoBase = repoBase[:len(repoBase)-len(gitRepoSuffix)]
 	}
-	clone.base = repoBase
+	ref.base = repoBase
 
 	// Doesn't expect git@<host>:<user>/<repo> URLs.
 	parsed, err := url.Parse(repoUrl)
 	if err != nil {
-		return clone, err
+		return ref, err
 	}
 
 	if parsed.Scheme != "" && parsed.Host != "" {
 		if !strings.HasSuffix(repoUrl, gitRepoSuffix) {
 			repoUrl += gitRepoSuffix
 		}
-		clone.url = repoUrl
-		return clone, nil
+		ref.url = repoUrl
+		return ref, nil
 	}
 
 	// Assume given URL expects an SSH git clone from this point on.
@@ -61,9 +61,9 @@ func processUrl(repoUrl string) (cloneUrl, error) {
 		// URL has host part, change first slash to colon.
 		repoUrl = strings.Replace(repoUrl, "/", ":", 1)
 	}
-	clone.url = fmt.Sprintf("git@%s.git", repoUrl)
+	ref.url = fmt.Sprintf("git@%s.git", repoUrl)
 
-	return clone, nil
+	return ref, nil
 }
 
 func update(cloneDir string) error {
@@ -85,7 +85,7 @@ func update(cloneDir string) error {
 	return err
 }
 
-func clone(repo entity.Repo, repoUrl cloneUrl, cloneDir string) error {
+func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 	_, err := os.Stat(cloneDir)
 	if err == nil {
 		return update(cloneDir)
