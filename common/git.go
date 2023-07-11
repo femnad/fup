@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -65,7 +66,33 @@ func processUrl(repoUrl string) (cloneUrl, error) {
 	return clone, nil
 }
 
+func update(cloneDir string) error {
+	r, err := git.PlainOpen(cloneDir)
+	if err != nil {
+		return err
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = w.Pull(&git.PullOptions{RemoteName: defaultRemote})
+	if errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return nil
+	}
+
+	return err
+}
+
 func clone(repo entity.Repo, repoUrl cloneUrl, cloneDir string) error {
+	_, err := os.Stat(cloneDir)
+	if err == nil {
+		return update(cloneDir)
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
 	opt := git.CloneOptions{
 		URL: repoUrl.url,
 	}

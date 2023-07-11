@@ -78,7 +78,8 @@ func writeTmpl(s base.Service) (string, error) {
 
 func runSystemctlCmd(cmd string, service base.Service) error {
 	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
-	return marecmd.RunNoOutput(marecmd.Input{Command: cmd, Sudo: service.System})
+	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: service.System})
+	return err
 }
 
 func getServiceFilePath(s base.Service) string {
