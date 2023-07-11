@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	version = "0.13.2"
+	version = "0.14.0"
 )
 
 type args struct {
@@ -27,7 +27,7 @@ type args struct {
 }
 
 func (args) Version() string {
-	return fmt.Sprintf("fup %s", version)
+	return fmt.Sprintf("fup v%s", version)
 }
 
 func determineConfigFile(a args) (cfg string) {
