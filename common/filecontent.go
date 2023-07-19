@@ -169,7 +169,12 @@ func chown(file, user, group string) error {
 }
 
 func ensureDir(dir string) error {
-	if HasPerms(dir) {
+	hasPerms, err := HasPerms(dir)
+	if err != nil {
+		return err
+	}
+
+	if hasPerms {
 		return os.MkdirAll(dir, 0o755)
 	}
 

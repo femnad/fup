@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -24,19 +25,22 @@ func IsHomePath(path string) bool {
 	return strings.HasPrefix(path, home)
 }
 
-func HasPerms(targetPath string) bool {
+func HasPerms(targetPath string) (bool, error) {
 	_, err := os.Stat(targetPath)
 	if os.IsNotExist(err) {
 		if strings.HasSuffix(targetPath, "/") {
 			targetPath = targetPath[:len(targetPath)-1]
 		}
 		lastSlash := strings.LastIndex(targetPath, "/")
+		if lastSlash < 0 {
+			return false, fmt.Errorf("expected path %s to have at least one /", targetPath)
+		}
 		parent := targetPath[:lastSlash]
 		if parent == "" {
-			return false
+			return false, nil
 		}
 		return HasPerms(parent)
 	}
 
-	return err == nil
+	return err == nil, nil
 }
