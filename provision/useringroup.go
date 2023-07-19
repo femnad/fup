@@ -10,7 +10,12 @@ import (
 
 func addUserToGroup(user, group string) error {
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
-	return marecmd.RunNoOutput(marecmd.Input{Command: usermod, Sudo: true})
+	_, err := marecmd.RunFormatError(marecmd.Input{Command: usermod, Sudo: true})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func doEnsureUserInGroups(user string, groups []string) error {
