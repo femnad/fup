@@ -17,7 +17,7 @@ func removeDirs(dirs []string) error {
 		} else if err != nil {
 			return err
 		}
-		err = os.Remove(dir)
+		err = os.RemoveAll(dir)
 		if err != nil {
 			return fmt.Errorf("error removing directory %s: %v", dir, err)
 		}

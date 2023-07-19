@@ -120,7 +120,7 @@ func (p Provisioner) runPreflightTasks() {
 }
 
 func (p Provisioner) runPostflightTasks() {
-	internal.Log.Notice("Running postlight tasks")
+	internal.Log.Notice("Running postflight tasks")
 
 	for _, task := range p.Config.PostflightTasks {
 		runTask(task, p.Config)
