@@ -35,7 +35,7 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	}
 
 	if !when.ShouldRun(pkg) {
-		internal.Log.Debugf("skipping cargo intall for %s", pkg.Crate)
+		internal.Log.Debugf("skipping cargo install for %s", pkg.Crate)
 		return
 	}
 
