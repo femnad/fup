@@ -27,6 +27,10 @@ func shouldUpdateSymlink(name, target string) (bool, bool) {
 }
 
 func Symlink(symlinkName, symlinkTarget string) error {
+	if symlinkName == "" || symlinkTarget == "" {
+		return fmt.Errorf("symlink name and target must be both set")
+	}
+
 	exists, update := shouldUpdateSymlink(symlinkName, symlinkTarget)
 	if !update {
 		internal.Log.Debugf("Symlink %s already exists", symlinkName)
@@ -36,7 +40,7 @@ func Symlink(symlinkName, symlinkTarget string) error {
 	symlinkDir, _ := path.Split(symlinkName)
 	err := os.MkdirAll(symlinkDir, dirMode)
 	if err != nil {
-		return fmt.Errorf("Error creating symlink dir %s: %v", symlinkDir, err)
+		return fmt.Errorf("error creating symlink dir %s: %v", symlinkDir, err)
 	}
 
 	internal.Log.Debugf("Creating symlink target=%s, name=%s", symlinkTarget, symlinkName)

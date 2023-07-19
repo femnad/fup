@@ -102,7 +102,7 @@ func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 
 	r, err := git.PlainClone(cloneDir, false, &opt)
 	if err != nil {
-		return fmt.Errorf("error cloning repo %s: %v", repo.Name, err)
+		return fmt.Errorf("error cloning repo %s to %s: %v", repo.Name, cloneDir, err)
 	}
 
 	for remote, remoteUrl := range repo.Remotes {
