@@ -21,7 +21,7 @@ type Config struct {
 	AcceptHostKeys   []string            `yaml:"accept_host_keys"`
 	Archives         []Archive           `yaml:"archives"`
 	Binaries         []entity.Binary     `yaml:"binaries"`
-	Cargo            []CargoPkg          `yaml:"cargo"`
+	Cargo            []CargoPkg          `yaml:"rust"`
 	EnsureDirs       []string            `yaml:"ensure_dirs"`
 	EnsureLines      []LineInFile        `yaml:"ensure_lines"`
 	GithubUserKey    UserKey             `yaml:"github_user_keys"`

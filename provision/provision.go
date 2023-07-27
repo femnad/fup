@@ -151,7 +151,7 @@ func (p Provisioner) removePackages() {
 }
 
 func (p Provisioner) cargoInstall() {
-	internal.Log.Noticef("Installing Cargo packages")
+	internal.Log.Noticef("Installing Rust packages")
 
 	cargoInstallPkgs(p.Config)
 }
