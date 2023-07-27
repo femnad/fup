@@ -3,7 +3,6 @@ package base
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	marecmd "github.com/femnad/mare/cmd"
 
@@ -35,16 +34,9 @@ func runCmd(step Step, cfg Config) error {
 
 func runShellCmd(step Step, cfg Config) error {
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
-	lines := strings.TrimSpace(step.Cmd)
-	for _, cmd := range strings.Split(lines, "\n") {
-		cmd = ExpandSettings(cfg.Settings, cmd)
-		_, err := run.Cmd(cfg.Settings, marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: step.Sudo})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	cmd := ExpandSettings(cfg.Settings, step.Cmd)
+	_, err := run.Cmd(cfg.Settings, marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: step.Sudo})
+	return err
 }
 
 func runGitClone(step Step, cfg Config) error {
