@@ -1,9 +1,7 @@
-package unless_test
+package unless
 
 import (
 	"testing"
-
-	precheck "github.com/femnad/fup/precheck/unless"
 )
 
 func TestCut(t *testing.T) {
@@ -24,12 +22,12 @@ func TestCut(t *testing.T) {
 		},
 	} {
 		t.Run(tc.input, func(t *testing.T) {
-			cut, err := precheck.Cut(tc.input, tc.index)
+			cutOut, err := cut(tc.input, tc.index)
 			if err != nil {
 				t.Logf("unexpected cut error: %v", err)
 			}
-			if cut != tc.expected {
-				t.Logf("actual output doesn't match expected output: %s != %s", cut, tc.expected)
+			if cutOut != tc.expected {
+				t.Logf("actual output doesn't match expected output: %s != %s", cutOut, tc.expected)
 				t.Fail()
 			}
 		})

@@ -75,8 +75,8 @@ func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
 	return processed, nil
 }
 
-func Cut(s string, i int) (string, error) {
-	processed, err := processString("Cut", "", s, i, func(tokens []string, index int) string {
+func cut(s string, i int) (string, error) {
+	processed, err := processString("cut", "", s, i, func(tokens []string, index int) string {
 		lenTokens := len(tokens)
 		if i > 0 {
 			return strings.Join(tokens[i:lenTokens], "")
@@ -91,28 +91,41 @@ func Cut(s string, i int) (string, error) {
 	return processed, nil
 }
 
-func Head(s string, i int) (string, error) {
-	return delimitAndReturn("Head", "\n", s, i)
+func head(s string, i int) (string, error) {
+	return delimitAndReturn("head", "\n", s, i)
 }
 
-func Split(s string, i int) (string, error) {
-	return delimitAndReturn("Split", " ", s, i)
+func split(s string, i int) (string, error) {
+	return delimitAndReturn("split", " ", s, i)
 }
 
-func SplitByDash(s string, i int) (string, error) {
-	return delimitAndReturn("SplitByDash", "-", s, i)
+func splitBy(separator string) func(string, int) (string, error) {
+	return func(s string, i int) (string, error) {
+		fnName := fmt.Sprintf("SplitBy%s", separator)
+		return delimitAndReturn(fnName, separator, s, i)
+	}
+}
+
+func splitByDash(s string, i int) (string, error) {
+	return splitBy("-")(s, i)
+}
+
+func splitByComma(s string, i int) (string, error) {
+	return splitBy(",")(s, i)
 }
 
 func getPostProcFn(op string) (func(string, int) (string, error), error) {
 	switch op {
 	case "cut":
-		return Cut, nil
+		return cut, nil
 	case "head":
-		return Head, nil
+		return head, nil
 	case "split":
-		return Split, nil
+		return split, nil
 	case "split-":
-		return SplitByDash, nil
+		return splitByDash, nil
+	case "split,":
+		return splitByComma, nil
 	default:
 		return nil, fmt.Errorf("error locating post processing function for %s", op)
 	}
