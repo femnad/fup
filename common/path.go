@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"syscall"
+
+	"github.com/femnad/fup/internal"
 )
 
 func EnsureDir(dir string) error {
@@ -26,8 +29,10 @@ func IsHomePath(path string) bool {
 }
 
 func HasPerms(targetPath string) (bool, error) {
-	_, err := os.Stat(targetPath)
-	if os.IsNotExist(err) {
+	fi, err := os.Stat(targetPath)
+	if os.IsPermission(err) {
+		return false, err
+	} else if os.IsNotExist(err) {
 		if strings.HasSuffix(targetPath, "/") {
 			targetPath = targetPath[:len(targetPath)-1]
 		}
@@ -42,5 +47,15 @@ func HasPerms(targetPath string) (bool, error) {
 		return HasPerms(parent)
 	}
 
-	return err == nil, nil
+	stat, ok := fi.Sys().(*syscall.Stat_t)
+	if !ok {
+		return false, fmt.Errorf("error determining owner of %s", targetPath)
+	}
+
+	userId, err := internal.GetCurrentUserId()
+	if err != nil {
+		return false, err
+	}
+
+	return stat.Uid == uint32(userId), nil
 }

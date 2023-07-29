@@ -2,9 +2,7 @@ package packages
 
 import (
 	"fmt"
-	"os/user"
 	"sort"
-	"strconv"
 	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
@@ -32,12 +30,7 @@ type PkgManager interface {
 }
 
 func isUserRoot() (bool, error) {
-	currentUser, err := user.Current()
-	if err != nil {
-		return false, err
-	}
-
-	userId, err := strconv.ParseInt(currentUser.Uid, 10, 32)
+	userId, err := internal.GetCurrentUserId()
 	if err != nil {
 		return false, err
 	}
