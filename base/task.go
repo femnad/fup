@@ -35,7 +35,13 @@ func runCmd(step Step, cfg Config) error {
 func runShellCmd(step Step, cfg Config) error {
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
 	cmd := ExpandSettings(cfg.Settings, step.Cmd)
-	_, err := run.Cmd(cfg.Settings, marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: step.Sudo})
+	_, err := run.Cmd(cfg.Settings, marecmd.Input{
+		Command:  cmd,
+		Pwd:      pwd,
+		Shell:    true,
+		ShellCmd: step.Shell,
+		Sudo:     step.Sudo,
+	})
 	return err
 }
 
@@ -101,6 +107,7 @@ type Step struct {
 	Repo    entity.Repo `yaml:"repo"`
 	// For link and rename
 	Src      string `yaml:"src"`
+	Shell    string `yaml:"src"`
 	StepName string `yaml:"name"`
 	Sudo     bool   `yaml:"sudo"`
 	// For download, file, link and rename

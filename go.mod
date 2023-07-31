@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/alexflint/go-arg v1.4.3
 	github.com/deckarep/golang-set/v2 v2.1.0
-	github.com/femnad/mare v0.9.0
+	github.com/femnad/mare v0.10.0
 	github.com/go-git/go-git/v5 v5.5.1
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8
