@@ -39,7 +39,7 @@ func newProvisioners(allProvisioners []provisionFn, filter []string) (provisione
 
 	for _, prov := range allProvisioners {
 		provMap[prov.name] = prov.fn
-		if hasFilter {
+		if !hasFilter {
 			order = append(order, prov.name)
 		}
 	}
