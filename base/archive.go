@@ -61,7 +61,7 @@ func (a Archive) ExpandSymlinks(s settings.Settings) []NamedLink {
 	}
 
 	links = append(links, a.NamedLink...)
-	for _, symlink := range a.Symlink {
+	for _, symlink := range symlinks {
 		links = append(links, NamedLink{
 			Target: symlink,
 		})
