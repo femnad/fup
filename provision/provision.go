@@ -36,10 +36,56 @@ var (
 type Provisioner struct {
 	Config       base.Config
 	Packager     packager
-	Provisioners map[string]func()
+	provisioners provisioners
 }
 
-func NewProvisioner(cfg base.Config, provs []string) (Provisioner, error) {
+type provisionFn struct {
+	name string
+	fn   func()
+}
+
+type provisioners struct {
+	provMap map[string]func()
+	order   []string
+}
+
+func (p provisioners) apply() {
+	for _, fnName := range p.order {
+		fn := p.provMap[fnName]
+		fn()
+	}
+}
+
+func newProvisioners(allProvisioners []provisionFn, filter []string) (provisioners, error) {
+	provMap := make(map[string]func())
+	var order []string
+	var hasFilter = len(filter) > 0
+
+	for _, prov := range allProvisioners {
+		provMap[prov.name] = prov.fn
+		if hasFilter {
+			order = append(order, prov.name)
+		}
+	}
+
+	if hasFilter {
+		for _, fnName := range filter {
+			_, ok := provMap[fnName]
+			if !ok {
+				return provisioners{}, fmt.Errorf("%s is not a provisioning function", fnName)
+			}
+
+			order = append(order, fnName)
+		}
+	}
+
+	return provisioners{
+		provMap: provMap,
+		order:   order,
+	}, nil
+}
+
+func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 	pkgr, err := newPackager()
 	if err != nil {
 		return Provisioner{}, err
@@ -47,60 +93,39 @@ func NewProvisioner(cfg base.Config, provs []string) (Provisioner, error) {
 
 	p := Provisioner{Config: cfg, Packager: pkgr}
 
-	provisioners := map[string]func(){
-		"archive":         p.extractArchives,
-		"binary":          p.downloadBinaries,
-		"cargo":           p.cargoInstall,
-		"ensure-dirs":     p.ensureDirs,
-		"ensure-lines":    p.ensureLines,
-		"github-key":      p.githubUserKey,
-		"go":              p.goInstall,
-		"known-hosts":     p.acceptHostKeys,
-		"packages":        p.installPackages,
-		"postflight":      p.runPostflightTasks,
-		"preflight":       p.runPreflightTasks,
-		"python":          p.pythonInstall,
-		"remove-packages": p.removePackages,
-		"self-clone":      p.selfClone,
-		"services":        p.initServices,
-		"tasks":           p.runTasks,
-		"template":        p.applyTemplates,
-		"unwanted-dirs":   p.unwantedDirs,
-		"user-in-group":   p.userInGroup,
+	all := []provisionFn{
+		{"preflight", p.runPreflightTasks},
+		{"archive", p.extractArchives},
+		{"binary", p.downloadBinaries},
+		{"packages", p.installPackages},
+		{"remove-packages", p.removePackages},
+		{"known-hosts", p.acceptHostKeys},
+		{"github-key", p.githubUserKey},
+		{"cargo", p.cargoInstall},
+		{"go", p.goInstall},
+		{"python", p.pythonInstall},
+		{"tasks", p.runTasks},
+		{"template", p.applyTemplates},
+		{"services", p.initServices},
+		{"ensure-dirs", p.ensureDirs},
+		{"ensure-lines", p.ensureLines},
+		{"self-clone", p.selfClone},
+		{"unwanted-dirs", p.unwantedDirs},
+		{"user-in-group", p.userInGroup},
+		{"postflight", p.runPostflightTasks},
 	}
 
-	if len(provs) == 0 {
-		p.Provisioners = provisioners
-		return p, nil
+	provs, err := newProvisioners(all, filter)
+	if err != nil {
+		return p, err
 	}
 
-	filtered := map[string]func(){}
-	for _, desired := range provs {
-		prov, ok := provisioners[desired]
-		if !ok {
-			return p, fmt.Errorf("unknown provisioner %s", desired)
-		}
-
-		filtered[desired] = prov
-	}
-
-	if len(filtered) == 0 {
-		return p, fmt.Errorf("provisioner filter which returned no results")
-	}
-
-	p.Provisioners = filtered
+	p.provisioners = provs
 	return p, nil
 }
 
 func (p Provisioner) Apply() {
-	for _, prov := range provisionOrder {
-		fn, ok := p.Provisioners[prov]
-		if !ok {
-			continue
-		}
-
-		fn()
-	}
+	p.provisioners.apply()
 }
 
 func (p Provisioner) extractArchives() {
