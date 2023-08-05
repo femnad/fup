@@ -106,8 +106,8 @@ type Step struct {
 	Pwd     string      `yaml:"pwd"`
 	Repo    entity.Repo `yaml:"repo"`
 	// For link and rename
+	Shell    string `yaml:"shell"`
 	Src      string `yaml:"src"`
-	Shell    string `yaml:"src"`
 	StepName string `yaml:"name"`
 	Sudo     bool   `yaml:"sudo"`
 	// For download, file, link and rename
