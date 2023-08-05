@@ -18,7 +18,7 @@ type Settings struct {
 	EnsurePaths   []string          `yaml:"ensure_paths"`
 	ExtractDir    string            `yaml:"extract_dir"`
 	HostFacts     FactMap           `yaml:"host_facts"`
-	SelfClonePath string            `yaml:"self_clone_path"`
+	SSHCloneDir   string            `yaml:"ssh_clone_dir"`
 	TemplateDir   string            `yaml:"template_dir"`
 	Versions      map[string]string `yaml:"versions"`
 	VirtualEnvDir string            `yaml:"virtualenv_dir"`

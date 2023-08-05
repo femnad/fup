@@ -9,30 +9,6 @@ import (
 
 const binPath = "~/bin"
 
-var (
-	provisionOrder = []string{
-		"preflight",
-		"archive",
-		"binary",
-		"packages",
-		"remove-packages",
-		"known-hosts",
-		"github-key",
-		"cargo",
-		"go",
-		"python",
-		"tasks",
-		"template",
-		"services",
-		"ensure-dirs",
-		"ensure-lines",
-		"self-clone",
-		"unwanted-dirs",
-		"user-in-group",
-		"postflight",
-	}
-)
-
 type Provisioner struct {
 	Config       base.Config
 	Packager     packager
@@ -97,20 +73,20 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"preflight", p.runPreflightTasks},
 		{"archive", p.extractArchives},
 		{"binary", p.downloadBinaries},
-		{"packages", p.installPackages},
-		{"remove-packages", p.removePackages},
+		{"package", p.installPackages},
+		{"rm-package", p.removePackages},
 		{"known-hosts", p.acceptHostKeys},
 		{"github-key", p.githubUserKey},
 		{"cargo", p.cargoInstall},
 		{"go", p.goInstall},
 		{"python", p.pythonInstall},
-		{"tasks", p.runTasks},
+		{"task", p.runTasks},
 		{"template", p.applyTemplates},
-		{"services", p.initServices},
-		{"ensure-dirs", p.ensureDirs},
-		{"ensure-lines", p.ensureLines},
-		{"self-clone", p.selfClone},
-		{"unwanted-dirs", p.unwantedDirs},
+		{"service", p.initServices},
+		{"ensure-dir", p.ensureDirs},
+		{"ensure-line", p.ensureLines},
+		{"ssh-clone", p.sshClone},
+		{"unwanted-dir", p.unwantedDirs},
 		{"user-in-group", p.userInGroup},
 		{"postflight", p.runPostflightTasks},
 	}
@@ -237,10 +213,10 @@ func (p Provisioner) ensureLines() {
 	ensureLines(p.Config)
 }
 
-func (p Provisioner) selfClone() {
-	internal.Log.Noticef("Cloning own repos")
+func (p Provisioner) sshClone() {
+	internal.Log.Noticef("Cloning repos via SSH")
 
-	selfClone(p.Config)
+	sshClone(p.Config)
 }
 
 func (p Provisioner) unwantedDirs() {

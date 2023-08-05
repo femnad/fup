@@ -31,7 +31,7 @@ type Config struct {
 	PreflightTasks   []Task              `yaml:"preflight"`
 	Python           []PythonPkg         `yaml:"python"`
 	RemotePackages   RemotePackageSpec   `yaml:"remote_packages"`
-	SelfRepos        []entity.Repo       `yaml:"self_repos"`
+	Repos            []entity.Repo       `yaml:"repos"`
 	Services         []Service           `yaml:"services"`
 	Settings         settings.Settings   `yaml:"settings"`
 	Tasks            []Task              `yaml:"tasks"`

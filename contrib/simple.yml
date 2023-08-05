@@ -1,7 +1,7 @@
 settings:
   clone_dir: ~/foo # only referenced in this file
   extract_dir: ~/bar # only referenced in this file
-  self_clone_path: ~/baz # self-clone provisioner references this
+  ssh_clone_dir: ~/baz # ssh-clone provisioner references this
   template_dir: ~/fup/templates # template provisioner references this
   virtualenv_dir: ~/venv # python provisioner references this
   # Lookup based on host name, only references in this file
@@ -140,7 +140,7 @@ accept_host_keys:
 unwanted_dirs:
   - ~/snap
 
-self_repos:
+repos:
   - name: cli/cli
   - name: https://gitlab.com/gitlab-org/cli/
   - name: qmk/qmk_firmware

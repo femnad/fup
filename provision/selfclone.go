@@ -8,7 +8,7 @@ import (
 	"github.com/femnad/fup/precheck/when"
 )
 
-const selfCloneFact = "ssh-ready"
+const sshCloneFact = "ssh-ready"
 
 func cloneRepos(repos []entity.Repo, clonePath string) error {
 	for _, repo := range repos {
@@ -21,20 +21,20 @@ func cloneRepos(repos []entity.Repo, clonePath string) error {
 	return nil
 }
 
-func selfClone(config base.Config) {
-	ok, err := when.FactOk(selfCloneFact)
+func sshClone(config base.Config) {
+	ok, err := when.FactOk(sshCloneFact)
 	if err != nil {
-		internal.Log.Errorf("error checking if self cloning is ok: %v", err)
+		internal.Log.Errorf("error checking if SSH cloning is ok: %v", err)
 		return
 	}
 
 	if !ok {
-		internal.Log.Debugf("not proceeding with self cloning as fact check evaluated to fals")
+		internal.Log.Debugf("not proceeding with SSH cloning as fact check evaluated to false")
 		return
 	}
 
-	err = cloneRepos(config.SelfRepos, config.Settings.SelfClonePath)
+	err = cloneRepos(config.Repos, config.Settings.SSHCloneDir)
 	if err != nil {
-		internal.Log.Errorf("error cloning own repo: %v", err)
+		internal.Log.Errorf("error SSH cloning repo: %v", err)
 	}
 }
