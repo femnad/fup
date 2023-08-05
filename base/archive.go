@@ -14,6 +14,7 @@ type NamedLink struct {
 }
 
 type Archive struct {
+	DontLink     bool          `yaml:"dont_link"`
 	ExecuteAfter []string      `yaml:"execute_after"`
 	Ref          string        `yaml:"name"`
 	NamedLink    []NamedLink   `yaml:"named_link"`
@@ -53,6 +54,11 @@ func (a Archive) ExpandURL(s settings.Settings) string {
 func (a Archive) ExpandSymlinks(s settings.Settings) []NamedLink {
 	var links []NamedLink
 	var expanded []NamedLink
+
+	symlinks := a.Symlink
+	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink {
+		symlinks = []string{fmt.Sprintf("%s/%s", a.Ref, a.Ref)}
+	}
 
 	links = append(links, a.NamedLink...)
 	for _, symlink := range a.Symlink {
