@@ -57,7 +57,8 @@ func (a Archive) ExpandSymlinks(s settings.Settings) []NamedLink {
 
 	symlinks := a.Symlink
 	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink {
-		symlinks = []string{fmt.Sprintf("%s/%s", a.Ref, a.Ref)}
+		name := a.Name()
+		symlinks = []string{fmt.Sprintf("%s/%s", name, name)}
 	}
 
 	links = append(links, a.NamedLink...)
@@ -101,7 +102,10 @@ func (a Archive) HasPostProc() bool {
 }
 
 func (a Archive) Name() string {
-	return a.Ref
+	if a.Ref != "" {
+		return a.Ref
+	}
+	return a.Target
 }
 
 func (a Archive) RunWhen() string {
