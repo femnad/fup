@@ -131,14 +131,14 @@ func (p Provisioner) runPostflightTasks() {
 func (p Provisioner) installPackages() {
 	internal.Log.Notice("Installing packages")
 
-	err := p.Packager.installPackages(p.Config.Packages)
-	if err != nil {
-		internal.Log.Errorf("error installing packages: %v", err)
-	}
-
-	err = p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
+	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
 	if err != nil {
 		internal.Log.Errorf("error installing remote packages: %v", err)
+	}
+
+	err = p.Packager.installPackages(p.Config.Packages)
+	if err != nil {
+		internal.Log.Errorf("error installing packages: %v", err)
 	}
 }
 
