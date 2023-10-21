@@ -43,3 +43,8 @@ func Cmd(s settings.Settings, input marecmd.Input) (marecmd.Output, error) {
 	input = amendEnv(s, input)
 	return marecmd.RunFormatError(input)
 }
+
+func CmdNoOutput(s settings.Settings, input marecmd.Input) error {
+	input = amendEnv(s, input)
+	return marecmd.RunNoOutput(input)
+}
