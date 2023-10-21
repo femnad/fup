@@ -29,6 +29,8 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 		return
 	}
 
+	internal.Log.Infof("Installing Python package %s", pkg.Name())
+
 	name := pkg.Name()
 	baseDir := internal.ExpandUser(cfg.Settings.VirtualEnvDir)
 	venvDir := path.Join(baseDir, name)

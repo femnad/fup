@@ -44,7 +44,7 @@ func goInstall(pkg base.GoPkg, s settings.Settings) {
 		return
 	}
 
-	internal.Log.Infof("Installing go package %s", pkg.Name())
+	internal.Log.Infof("Installing Go package %s", pkg.Name())
 
 	name, err := qualifyPkg(pkg)
 	if err != nil {
