@@ -197,10 +197,9 @@ func getVersion(u Unlessable, s settings.Settings) string {
 	return s.Versions[name]
 }
 
-func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
+func shouldSkip(unlessable Unlessable, unless Unless, s settings.Settings) bool {
 	var err error
 	var out marecmd.Output
-	unless := unlessable.GetUnless()
 	unlessCmd := unless.Cmd
 
 	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
@@ -291,9 +290,8 @@ func ShouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	}
 
 	if unless.Cmd == "" {
-		// No stat or command checks, should not skip.
-		return false
+		unless.Cmd = fmt.Sprintf("%s --version", unlessable.Name())
 	}
 
-	return shouldSkip(unlessable, s)
+	return shouldSkip(unlessable, unless, s)
 }
