@@ -39,6 +39,7 @@ func (u Unless) String() string {
 }
 
 type Unlessable interface {
+	DefaultVersionCmd() string
 	GetUnless() Unless
 	GetVersion() string
 	HasPostProc() bool
@@ -202,6 +203,9 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	var out marecmd.Output
 	unless := unlessable.GetUnless()
 	unlessCmd := unless.Cmd
+	if unlessCmd == "" {
+		unlessCmd = unlessable.DefaultVersionCmd()
+	}
 
 	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
 
@@ -290,7 +294,7 @@ func ShouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return fileExists(stat)
 	}
 
-	if unless.Cmd == "" {
+	if unless.Cmd == "" && unlessable.DefaultVersionCmd() == "" {
 		// No stat or command checks, should not skip.
 		return false
 	}

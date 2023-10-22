@@ -46,6 +46,10 @@ func (a Archive) version(s settings.Settings) string {
 	return s.Versions[a.Name()]
 }
 
+func (a Archive) DefaultVersionCmd() string {
+	return fmt.Sprintf("%s --version", a.Name())
+}
+
 func (a Archive) ExpandURL(s settings.Settings) string {
 	a.Version = a.version(s)
 	return os.Expand(a.Url, a.expand)

@@ -1,12 +1,20 @@
 package base
 
-import "github.com/femnad/fup/precheck/unless"
+import (
+	"fmt"
+
+	"github.com/femnad/fup/precheck/unless"
+)
 
 type PythonPkg struct {
 	Pkg      string        `yaml:"name"`
 	Reqs     []string      `yaml:"reqs"`
 	BinLinks []string      `yaml:"link"`
 	Unless   unless.Unless `yaml:"unless"`
+}
+
+func (p PythonPkg) DefaultVersionCmd() string {
+	return fmt.Sprintf("%s -V", p.Name())
 }
 
 func (p PythonPkg) GetUnless() unless.Unless {

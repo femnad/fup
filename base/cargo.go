@@ -1,6 +1,10 @@
 package base
 
-import "github.com/femnad/fup/precheck/unless"
+import (
+	"fmt"
+
+	"github.com/femnad/fup/precheck/unless"
+)
 
 type CargoPkg struct {
 	Bins    bool          `yaml:"bins"`
@@ -8,6 +12,10 @@ type CargoPkg struct {
 	Unless  unless.Unless `yaml:"unless"`
 	Version string        `yaml:"version"`
 	When    string        `yaml:"when"`
+}
+
+func (c CargoPkg) DefaultVersionCmd() string {
+	return fmt.Sprintf("%s --version", c.Name())
 }
 
 func (c CargoPkg) GetUnless() unless.Unless {

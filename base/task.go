@@ -150,6 +150,10 @@ func (Step) Name() string {
 	return ""
 }
 
+func (Step) DefaultVersionCmd() string {
+	return ""
+}
+
 type Task struct {
 	Desc   string        `yaml:"task"`
 	Steps  []Step        `yaml:"steps"`
@@ -175,14 +179,8 @@ func runStep(step Step, cfg Config) error {
 	return nil
 }
 
-func (t Task) Run(cfg Config) {
-	for _, step := range t.Steps {
-		err := runStep(step, cfg)
-		if err != nil {
-			internal.Log.Errorf("error running task %s: %v", t.Name(), err)
-			return
-		}
-	}
+func (t Task) DefaultVersionCmd() string {
+	return ""
 }
 
 func (t Task) GetUnless() unless.Unless {
@@ -199,4 +197,14 @@ func (t Task) HasPostProc() bool {
 
 func (t Task) Name() string {
 	return t.Desc
+}
+
+func (t Task) Run(cfg Config) {
+	for _, step := range t.Steps {
+		err := runStep(step, cfg)
+		if err != nil {
+			internal.Log.Errorf("error running task %s: %v", t.Name(), err)
+			return
+		}
+	}
 }

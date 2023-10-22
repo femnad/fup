@@ -1,6 +1,10 @@
 package entity
 
-import "github.com/femnad/fup/precheck/unless"
+import (
+	"fmt"
+
+	"github.com/femnad/fup/precheck/unless"
+)
 
 type Binary struct {
 	BinName string        `yaml:"name"`
@@ -8,6 +12,10 @@ type Binary struct {
 	Url     string        `yaml:"url"`
 	Unless  unless.Unless `yaml:"unless"`
 	Version string        `yaml:"version"`
+}
+
+func (b Binary) DefaultVersionCmd() string {
+	return fmt.Sprintf("%s --version", b.Name())
 }
 
 func (b Binary) GetUnless() unless.Unless {
