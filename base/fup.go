@@ -16,29 +16,30 @@ import (
 
 type PackageSpec map[string][]string
 type RemotePackageSpec map[string][]entity.RemotePackage
+type UserInGroupSpec map[string][]entity.Group
 
 type Config struct {
-	AcceptHostKeys   []string            `yaml:"accept_host_keys"`
-	Archives         []Archive           `yaml:"archives"`
-	Binaries         []entity.Binary     `yaml:"binaries"`
-	Cargo            []CargoPkg          `yaml:"rust"`
-	EnsureDirs       []string            `yaml:"ensure_dirs"`
-	EnsureLines      []LineInFile        `yaml:"ensure_lines"`
-	GithubUserKey    UserKey             `yaml:"github_user_keys"`
-	Go               []GoPkg             `yaml:"go"`
-	Packages         PackageSpec         `yaml:"packages"`
-	PostflightTasks  []Task              `yaml:"postflight"`
-	PreflightTasks   []Task              `yaml:"preflight"`
-	Python           []PythonPkg         `yaml:"python"`
-	RemotePackages   RemotePackageSpec   `yaml:"remote_packages"`
-	Repos            []entity.Repo       `yaml:"repos"`
-	Services         []Service           `yaml:"services"`
-	Settings         settings.Settings   `yaml:"settings"`
-	Tasks            []Task              `yaml:"tasks"`
-	Templates        []Template          `yaml:"template"`
-	UserInGroup      map[string][]string `yaml:"user_in_group"`
-	UnwantedDirs     []string            `yaml:"unwanted_dirs"`
-	UnwantedPackages PackageSpec         `yaml:"unwanted_packages"`
+	AcceptHostKeys   []string          `yaml:"accept_host_keys"`
+	Archives         []Archive         `yaml:"archives"`
+	Binaries         []entity.Binary   `yaml:"binaries"`
+	Cargo            []CargoPkg        `yaml:"rust"`
+	EnsureDirs       []string          `yaml:"ensure_dirs"`
+	EnsureLines      []LineInFile      `yaml:"ensure_lines"`
+	GithubUserKey    UserKey           `yaml:"github_user_keys"`
+	Go               []GoPkg           `yaml:"go"`
+	Packages         PackageSpec       `yaml:"packages"`
+	PostflightTasks  []Task            `yaml:"postflight"`
+	PreflightTasks   []Task            `yaml:"preflight"`
+	Python           []PythonPkg       `yaml:"python"`
+	RemotePackages   RemotePackageSpec `yaml:"remote_packages"`
+	Repos            []entity.Repo     `yaml:"repos"`
+	Services         []Service         `yaml:"services"`
+	Settings         settings.Settings `yaml:"settings"`
+	Tasks            []Task            `yaml:"tasks"`
+	Templates        []Template        `yaml:"template"`
+	UserInGroup      UserInGroupSpec   `yaml:"user_in_group"`
+	UnwantedDirs     []string          `yaml:"unwanted_dirs"`
+	UnwantedPackages PackageSpec       `yaml:"unwanted_packages"`
 }
 
 func readLocalConfigFile(config string) (io.Reader, error) {
