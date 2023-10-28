@@ -13,9 +13,9 @@ import (
 
 const (
 	batteryDevicePattern = "^BAT[0-9]+$"
+	gcloudCredentials    = "~/.local/share/password-store"
 	gopathEnvKey         = "GOPATH"
 	neovimPluginsDir     = "~/.local/share/plugged"
-	passwordStoreDir     = "~/.local/share/password-store"
 	sysClassPower        = "/sys/class/power_supply"
 	tmuxEnvKey           = "TMUX"
 )
@@ -108,7 +108,7 @@ func sshReady() (bool, error) {
 }
 
 func sshPullReady() (bool, error) {
-	d := internal.ExpandUser(passwordStoreDir)
+	d := internal.ExpandUser(gcloudCredentials)
 	_, err := os.Stat(d)
 	return err == nil, nil
 }
