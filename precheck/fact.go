@@ -13,8 +13,6 @@ import (
 
 const (
 	batteryDevicePattern = "^BAT[0-9]+$"
-	gcloudCredentials    = "~/.local/share/password-store"
-	gopathEnvKey         = "GOPATH"
 	neovimPluginsDir     = "~/.local/share/plugged"
 	sysClassPower        = "/sys/class/power_supply"
 	tmuxEnvKey           = "TMUX"

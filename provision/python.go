@@ -60,6 +60,10 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 
 	home := os.Getenv("HOME")
 	homeBin := path.Join(home, "bin")
+
+	if len(pkg.BinLinks) == 0 {
+		pkg.BinLinks = []string{pkg.Name()}
+	}
 	for _, link := range pkg.BinLinks {
 		linkName := path.Join(homeBin, link)
 		linkTarget := path.Join(venvDir, "bin", link)
