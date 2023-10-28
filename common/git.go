@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
@@ -85,6 +86,16 @@ func update(cloneDir string) error {
 	return err
 }
 
+func getRef(repo entity.Repo) string {
+	if repo.Branch != "" {
+		return fmt.Sprintf("refs/head/%s", repo.Branch)
+	} else if repo.Tag != "" {
+		return fmt.Sprintf("refs/tags/%s", repo.Tag)
+	}
+
+	return ""
+}
+
 func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 	_, err := os.Stat(cloneDir)
 	if err == nil {
@@ -98,6 +109,10 @@ func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 	}
 	if repo.Submodule {
 		opt.RecurseSubmodules = git.DefaultSubmoduleRecursionDepth
+	}
+	ref := getRef(repo)
+	if ref != "" {
+		opt.ReferenceName = plumbing.ReferenceName(ref)
 	}
 
 	r, err := git.PlainClone(cloneDir, false, &opt)
