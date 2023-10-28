@@ -6,4 +6,5 @@ type Repo struct {
 	Remotes   map[string]string `yaml:"remotes"`
 	Submodule bool              `yaml:"submodule"`
 	Tag       string            `yaml:"tag"`
+	Update    bool              `yaml:"update"`
 }

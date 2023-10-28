@@ -67,7 +67,11 @@ func processUrl(repoUrl string) (cloneRef, error) {
 	return ref, nil
 }
 
-func update(cloneDir string) error {
+func update(repo entity.Repo, cloneDir string) error {
+	if !repo.Update {
+		return nil
+	}
+
 	r, err := git.PlainOpen(cloneDir)
 	if err != nil {
 		return err
@@ -77,6 +81,8 @@ func update(cloneDir string) error {
 	if err != nil {
 		return err
 	}
+
+	internal.Log.Info("Updating repo %s", repo.Name)
 
 	err = w.Pull(&git.PullOptions{RemoteName: defaultRemote})
 	if errors.Is(err, git.NoErrAlreadyUpToDate) {
@@ -99,7 +105,7 @@ func getRef(repo entity.Repo) string {
 func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 	_, err := os.Stat(cloneDir)
 	if err == nil {
-		return update(cloneDir)
+		return update(repo, cloneDir)
 	} else if !os.IsNotExist(err) {
 		return err
 	}
@@ -114,6 +120,8 @@ func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 	if ref != "" {
 		opt.ReferenceName = plumbing.ReferenceName(ref)
 	}
+
+	internal.Log.Info("Cloning repo %s", repo.Name)
 
 	r, err := git.PlainClone(cloneDir, false, &opt)
 	if err != nil {
