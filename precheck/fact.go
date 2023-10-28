@@ -24,10 +24,6 @@ var (
 	batteryDeviceRegex = regexp.MustCompile(batteryDevicePattern)
 )
 
-func goPathSet() (bool, error) {
-	return os.Getenv(gopathEnvKey) != "", nil
-}
-
 func isLaptop() (bool, error) {
 	_, err := os.Stat(sysClassPower)
 	if err != nil {
@@ -107,20 +103,12 @@ func sshReady() (bool, error) {
 	return false, nil
 }
 
-func sshPullReady() (bool, error) {
-	d := internal.ExpandUser(gcloudCredentials)
-	_, err := os.Stat(d)
-	return err == nil, nil
-}
-
 var Facts = map[string]func() (bool, error){
-	"gopath-set":     goPathSet,
-	"is-laptop":      isLaptop,
-	"in-tmux":        inTmux,
-	"is-debian":      isDebian,
-	"is-fedora":      isFedora,
-	"is-ubuntu":      isUbuntu,
-	"neovim-ready":   neovimReady,
-	"ssh-pull-ready": sshPullReady,
-	"ssh-ready":      sshReady,
+	"is-laptop":    isLaptop,
+	"in-tmux":      inTmux,
+	"is-debian":    isDebian,
+	"is-fedora":    isFedora,
+	"is-ubuntu":    isUbuntu,
+	"neovim-ready": neovimReady,
+	"ssh-ready":    sshReady,
 }
