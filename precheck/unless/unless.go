@@ -249,7 +249,6 @@ func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string
 	if version == "" {
 		version = s.Versions[unlessable.Name()]
 	}
-
 	if version != "" {
 		lookup["version"] = version
 	}

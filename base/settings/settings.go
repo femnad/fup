@@ -91,6 +91,7 @@ func addHostFacts(lookup map[string]string, factMap FactMap) map[string]string {
 		internal.Log.Errorf("error determining hostname: %v", err)
 		return lookup
 	}
+	lookup["hostname"] = hostName
 
 	for fact, hostFacts := range factMap {
 		facts := make([]string, 0, len(hostFacts))
