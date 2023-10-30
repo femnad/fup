@@ -85,6 +85,7 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"service", p.initServices},
 		{"ensure-dir", p.ensureDirs},
 		{"ensure-line", p.ensureLines},
+		{"snap", p.snapInstall},
 		{"ssh-clone", p.sshClone},
 		{"unwanted-dir", p.unwantedDirs},
 		{"user-in-group", p.userInGroup},
@@ -211,6 +212,12 @@ func (p Provisioner) ensureLines() {
 	internal.Log.Noticef("Ensuring lines in files")
 
 	ensureLines(p.Config)
+}
+
+func (p Provisioner) snapInstall() {
+	internal.Log.Noticef("Installing snap packages")
+
+	snapInstall(p.Config)
 }
 
 func (p Provisioner) sshClone() {

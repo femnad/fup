@@ -35,6 +35,7 @@ type Config struct {
 	Repos            []entity.Repo     `yaml:"repos"`
 	Services         []Service         `yaml:"services"`
 	Settings         settings.Settings `yaml:"settings"`
+	SnapPackages     []entity.Snap     `yaml:"snap"`
 	Tasks            []Task            `yaml:"tasks"`
 	Templates        []Template        `yaml:"template"`
 	UserInGroup      UserInGroupSpec   `yaml:"user_in_group"`
