@@ -33,13 +33,19 @@ func ensureLine(line base.LineInFile) error {
 	scanner := bufio.NewScanner(srcFile)
 	scanner.Split(bufio.ScanLines)
 
+	replacements := make(map[string]string)
+	for _, replacement := range line.Replace {
+		replacements[replacement.Old] = replacement.New
+	}
+
 	found := false
 	for scanner.Scan() {
 		var lineToWrite string
 		l := scanner.Text()
 
-		if l == line.Text {
-			lineToWrite = line.Replace
+		newLine, ok := replacements[l]
+		if ok {
+			lineToWrite = newLine
 			found = true
 		} else {
 			lineToWrite = l
