@@ -25,6 +25,7 @@ type Config struct {
 	Cargo            []CargoPkg        `yaml:"rust"`
 	EnsureDirs       []string          `yaml:"ensure_dirs"`
 	EnsureLines      []LineInFile      `yaml:"ensure_lines"`
+	Flatpak          entity.Flatpak    `yaml:"flatpak"`
 	GithubUserKey    UserKey           `yaml:"github_user_keys"`
 	Go               []GoPkg           `yaml:"go"`
 	Packages         PackageSpec       `yaml:"packages"`
