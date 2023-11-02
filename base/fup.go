@@ -19,6 +19,8 @@ type RemotePackageSpec map[string][]entity.RemotePackage
 type UserInGroupSpec map[string][]entity.Group
 
 type Config struct {
+	file             string
+	isRemote         bool
 	AcceptHostKeys   []string          `yaml:"accept_host_keys"`
 	Archives         []Archive         `yaml:"archives"`
 	Binaries         []entity.Binary   `yaml:"binaries"`
@@ -44,6 +46,19 @@ type Config struct {
 	UnwantedPackages PackageSpec       `yaml:"unwanted_packages"`
 }
 
+func (c Config) IsRemote() bool {
+	return c.isRemote
+}
+
+func (c Config) Url() string {
+	return c.file
+}
+
+type configReader struct {
+	reader   io.Reader
+	isRemote bool
+}
+
 func readLocalConfigFile(config string) (io.Reader, error) {
 	f, err := os.Open(config)
 	if err != nil {
@@ -61,27 +76,38 @@ func readRemoteConfigFile(config string) (io.Reader, error) {
 	return response.Body, nil
 }
 
-func getConfigReader(config string) (io.Reader, error) {
+func getConfigReader(config string) (configReader, error) {
 	parsed, err := url.Parse(config)
 	if err != nil {
-		return nil, err
+		return configReader{}, err
 	}
 
+	var readerFn func(string) (io.Reader, error)
+	var isRemote bool
 	if parsed.Scheme == "" {
-		return readLocalConfigFile(config)
+		readerFn = readLocalConfigFile
+		isRemote = false
+	} else {
+		readerFn = readRemoteConfigFile
+		isRemote = true
 	}
 
-	return readRemoteConfigFile(config)
+	reader, err := readerFn(config)
+	if err != nil {
+		return configReader{}, err
+	}
+
+	return configReader{reader: reader, isRemote: isRemote}, nil
 }
 
 func decodeConfig(filename string) (Config, error) {
 	config := Config{}
-	reader, err := getConfigReader(filename)
+	cfgReader, err := getConfigReader(filename)
 	if err != nil {
 		return config, err
 	}
 
-	data, err := io.ReadAll(reader)
+	data, err := io.ReadAll(cfgReader.reader)
 	if err != nil {
 		return config, err
 	}
@@ -91,6 +117,8 @@ func decodeConfig(filename string) (Config, error) {
 		return config, fmt.Errorf("error deserializing config from %s: %v", filename, err)
 	}
 
+	config.isRemote = cfgReader.isRemote
+	config.file = filename
 	return config, nil
 }
 

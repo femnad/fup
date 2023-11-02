@@ -63,6 +63,15 @@ func ReadResponseBody(url string) (Response, error) {
 	return response, nil
 }
 
+func ReadResponseBytes(url string) ([]byte, error) {
+	response, err := ReadResponseBody(url)
+	if err != nil {
+		return nil, err
+	}
+
+	return io.ReadAll(response.Body)
+}
+
 func Download(url, target string) error {
 	if url == "" {
 		return fmt.Errorf("download URL is empty")
