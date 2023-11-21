@@ -121,7 +121,7 @@ func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 		opt.ReferenceName = plumbing.ReferenceName(ref)
 	}
 
-	internal.Log.Info("Cloning repo %s", repo.Name)
+	internal.Log.Infof("Cloning repo %s", repo.Name)
 
 	r, err := git.PlainClone(cloneDir, false, &opt)
 	if err != nil {

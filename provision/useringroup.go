@@ -1,9 +1,9 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"os/user"
-	"strings"
 
 	marecmd "github.com/femnad/mare/cmd"
 
@@ -37,14 +37,11 @@ func groupAdd(group entity.Group) error {
 }
 
 func ensureGroup(group entity.Group) error {
-	if !group.Ensure {
-		return nil
-	}
-
+	var unknownGroupError user.UnknownGroupError
 	_, err := user.LookupGroup(group.Name)
 	if err == nil {
 		return nil
-	} else if !strings.HasPrefix(err.Error(), "group: unknown group ") {
+	} else if !errors.As(err, &unknownGroupError) {
 		return err
 	}
 
@@ -55,6 +52,17 @@ func doEnsureUserInGroups(username string, groups []entity.Group) error {
 	u, err := user.Lookup(username)
 	if err != nil {
 		return err
+	}
+
+	for _, g := range groups {
+		if !g.Ensure {
+			continue
+		}
+
+		err = ensureGroup(g)
+		if err != nil {
+			return err
+		}
 	}
 
 	groupIds, err := u.GroupIds()
@@ -69,17 +77,6 @@ func doEnsureUserInGroups(username string, groups []entity.Group) error {
 			return err
 		}
 		userGroups = append(userGroups, groupName.Name)
-	}
-
-	for _, g := range groups {
-		if !g.Ensure {
-			continue
-		}
-
-		err = ensureGroup(g)
-		if err != nil {
-			return err
-		}
 	}
 
 	desiredGroups := mare.MapToString(groups, func(group entity.Group) string {
