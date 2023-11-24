@@ -58,9 +58,10 @@ func (a Archive) ExpandSymlinks(s settings.Settings, target string) []NamedLink 
 	var links []NamedLink
 	var expanded []NamedLink
 
+	name := a.Name()
 	symlinks := a.Symlink
-	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink {
-		symlinks = []string{target}
+	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink && name != "" {
+		symlinks = []string{name}
 	}
 
 	links = append(links, a.NamedLink...)
