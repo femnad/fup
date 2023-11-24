@@ -236,8 +236,11 @@ func getTarInfo(tempfile string, response remote.Response) (archiveInfo, error) 
 	if !hasRootDir {
 		if len(execs) == 1 {
 			target = execs[0]
-			firstSlash := strings.Index(target, "/")
-			target = target[:firstSlash]
+			if strings.Index(target, "/") >= 0 {
+				firstSlash := strings.Index(target, "/")
+				target = target[:firstSlash]
+				hasRootDir = true
+			}
 		} else {
 			return archiveInfo{}, fmt.Errorf("unable to determine root for archive: %s", response.URL)
 		}
