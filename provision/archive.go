@@ -236,12 +236,22 @@ func getTarInfo(tempfile string, response remote.Response) (archiveInfo, error) 
 	if !hasRootDir {
 		if len(execs) == 1 {
 			target = execs[0]
+			firstSlash := strings.Index(target, "/")
+			target = target[:firstSlash]
 		} else {
 			return archiveInfo{}, fmt.Errorf("unable to determine root for archive: %s", response.URL)
 		}
 	}
 
 	return archiveInfo{hasRootDir: hasRootDir, target: target}, nil
+}
+
+func getOutputPath(info archiveInfo, fileName, dirName string) string {
+	if info.hasRootDir {
+		return filepath.Join(dirName, fileName)
+	}
+
+	return filepath.Join(dirName, info.target, fileName)
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
@@ -272,7 +282,8 @@ func untar(response remote.Response, dirName string) (string, error) {
 		} else if err != nil {
 			panic(err)
 		}
-		outputPath := filepath.Join(dirName, header.Name)
+
+		outputPath := getOutputPath(aInfo, header.Name, dirName)
 		err = extractCompressedFile(header.FileInfo(), outputPath, tarReader)
 		if err != nil {
 			return "", err
