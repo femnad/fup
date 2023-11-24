@@ -38,6 +38,11 @@ type archiveInfo struct {
 	target     string
 }
 
+type archiveEntry struct {
+	info os.FileInfo
+	name string
+}
+
 func processDownload(archive base.Archive, s settings.Settings) (string, error) {
 	url := archive.ExpandURL(s)
 	if url == "" {
@@ -198,6 +203,33 @@ func getFilename(response remote.Response) string {
 	return filename
 }
 
+func getArchiveInfo(target string) archiveInfo {
+	if strings.Index(target, "/") >= 0 {
+		firstSlash := strings.Index(target, "/")
+		target = target[:firstSlash]
+	}
+	return archiveInfo{target: target, hasRootDir: true}
+}
+
+func inspectEntries(entries []archiveEntry, url string) (archiveInfo, error) {
+	var execs []string
+	for _, entry := range entries {
+		info := entry.info
+		name := entry.name
+		if info.IsDir() {
+			return getArchiveInfo(entry.name), nil
+		} else if isExec(info) {
+			execs = append(execs, name)
+		}
+	}
+
+	if len(execs) == 1 {
+		return getArchiveInfo(execs[0]), nil
+	}
+
+	return archiveInfo{}, fmt.Errorf("unable to determine root for archive: %s", url)
+}
+
 func getTarInfo(tempfile string, response remote.Response) (archiveInfo, error) {
 	f, err := os.Open(tempfile)
 	if err != nil {
@@ -210,10 +242,8 @@ func getTarInfo(tempfile string, response remote.Response) (archiveInfo, error) 
 		return archiveInfo{}, err
 	}
 
+	var entries []archiveEntry
 	tarReader := tar.NewReader(reader)
-	var hasRootDir bool
-	var execs []string
-	var target string
 	for {
 		header, err := tarReader.Next()
 		if errors.Is(err, io.EOF) {
@@ -222,35 +252,13 @@ func getTarInfo(tempfile string, response remote.Response) (archiveInfo, error) 
 			panic(err)
 		}
 
-		info := header.FileInfo()
-		name := header.Name
-		// Check first entry
-		if !hasRootDir && info.IsDir() {
-			hasRootDir = true
-			target = name
-			if strings.Index(target, "/") >= 0 {
-				firstSlash := strings.Index(target, "/")
-				target = target[:firstSlash]
-			}
-		} else if isExec(info) {
-			execs = append(execs, name)
-		}
+		entries = append(entries, archiveEntry{
+			info: header.FileInfo(),
+			name: header.Name,
+		})
 	}
 
-	if !hasRootDir {
-		if len(execs) == 1 {
-			target = execs[0]
-			if strings.Index(target, "/") >= 0 {
-				firstSlash := strings.Index(target, "/")
-				target = target[:firstSlash]
-				hasRootDir = true
-			}
-		} else {
-			return archiveInfo{}, fmt.Errorf("unable to determine root for archive: %s", response.URL)
-		}
-	}
-
-	return archiveInfo{hasRootDir: hasRootDir, target: target}, nil
+	return inspectEntries(entries, response.URL)
 }
 
 func getOutputPath(info archiveInfo, fileName, dirName string) string {
@@ -305,41 +313,44 @@ func untar(response remote.Response, dirName string) (string, error) {
 	return aInfo.target, nil
 }
 
+func getZipInfo(tempFile string, response remote.Response) (archiveInfo, error) {
+	zipArchive, err := zip.OpenReader(tempFile)
+	if err != nil {
+		return archiveInfo{}, err
+	}
+
+	var entries []archiveEntry
+	for _, f := range zipArchive.File {
+		entries = append(entries, archiveEntry{
+			info: f.FileInfo(),
+			name: f.Name,
+		})
+	}
+
+	err = zipArchive.Close()
+	if err != nil {
+		return archiveInfo{}, err
+	}
+
+	return inspectEntries(entries, response.URL)
+}
+
 func unzip(response remote.Response, dirName string) (string, error) {
 	tempFile, err := downloadTempFile(response)
+
+	aInfo, err := getZipInfo(tempFile, response)
+	if err != nil {
+		return "", err
+	}
 
 	zipArchive, err := zip.OpenReader(tempFile)
 	if err != nil {
 		return "", err
 	}
 
-	var entries []zip.File
-	var execs []string
-	var hasRootDir bool
-	var target string
 	for _, f := range zipArchive.File {
-		info := f.FileInfo()
-		// Check first entry
-		if !hasRootDir && info.IsDir() {
-			hasRootDir = true
-			target = info.Name()
-		} else if isExec(info) {
-			execs = append(execs, f.Name)
-		}
-		entries = append(entries, *f)
-	}
-
-	if !hasRootDir {
-		if len(execs) == 1 {
-			target = execs[0]
-		} else {
-			return "", fmt.Errorf("unable to determine root for archive: %s", response.URL)
-		}
-	}
-
-	for _, f := range entries {
-		fp := filepath.Join(dirName, target, f.Name)
-		err = unzipFile(&f, fp)
+		output := getOutputPath(aInfo, f.Name, dirName)
+		err = unzipFile(f, output)
 		if err != nil {
 			return "", err
 		}
@@ -350,7 +361,7 @@ func unzip(response remote.Response, dirName string) (string, error) {
 		return "", err
 	}
 
-	return target, nil
+	return aInfo.target, nil
 }
 
 func getExtractionFn(archive base.Archive, s settings.Settings, contentDisposition string) (func(remote.Response, string) (string, error), error) {
