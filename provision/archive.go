@@ -227,7 +227,11 @@ func getTarInfo(tempfile string, response remote.Response) (archiveInfo, error) 
 		// Check first entry
 		if !hasRootDir && info.IsDir() {
 			hasRootDir = true
-			target = info.Name()
+			target = name
+			if strings.Index(target, "/") >= 0 {
+				firstSlash := strings.Index(target, "/")
+				target = target[:firstSlash]
+			}
 		} else if isExec(info) {
 			execs = append(execs, name)
 		}
