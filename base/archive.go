@@ -19,7 +19,6 @@ type Archive struct {
 	Ref          string        `yaml:"name"`
 	NamedLink    []NamedLink   `yaml:"named_link"`
 	Symlink      []string      `yaml:"link"`
-	Target       string        `yaml:"target"`
 	Unless       unless.Unless `yaml:"unless"`
 	Url          string        `yaml:"url"`
 	Version      string        `yaml:"version"`
@@ -55,14 +54,13 @@ func (a Archive) ExpandURL(s settings.Settings) string {
 	return os.Expand(a.Url, a.expand)
 }
 
-func (a Archive) ExpandSymlinks(s settings.Settings) []NamedLink {
+func (a Archive) ExpandSymlinks(s settings.Settings, target string) []NamedLink {
 	var links []NamedLink
 	var expanded []NamedLink
 
 	symlinks := a.Symlink
 	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink {
-		name := a.Name()
-		symlinks = []string{fmt.Sprintf("%s/%s", name, name)}
+		symlinks = []string{target}
 	}
 
 	links = append(links, a.NamedLink...)
@@ -109,7 +107,7 @@ func (a Archive) Name() string {
 	if a.Ref != "" {
 		return a.Ref
 	}
-	return a.Target
+	return ""
 }
 
 func (a Archive) RunWhen() string {
