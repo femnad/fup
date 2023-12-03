@@ -8,7 +8,7 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
-func createSymlink(symlink base.NamedLink, linkDir string) error {
+func createSymlink(symlink base.NamedLink, linkDir, binPath string) error {
 	symlinkTarget := path.Join(linkDir, symlink.Target)
 	symlinkTarget = internal.ExpandUser(symlinkTarget)
 

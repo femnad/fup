@@ -10,9 +10,12 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
+const defaultBinPath = "~/bin"
+
 type FactMap map[string]map[string]string
 
 type Settings struct {
+	BinDir        string            `yaml:"bin_dir"`
 	CloneDir      string            `yaml:"clone_dir"`
 	EnsureEnv     map[string]string `yaml:"ensure_env"`
 	EnsurePaths   []string          `yaml:"ensure_paths"`
@@ -22,6 +25,14 @@ type Settings struct {
 	TemplateDir   string            `yaml:"template_dir"`
 	Versions      map[string]string `yaml:"versions"`
 	VirtualEnvDir string            `yaml:"virtualenv_dir"`
+}
+
+func (s Settings) GetBinPath() string {
+	if s.BinDir != "" {
+		return s.BinDir
+	}
+
+	return defaultBinPath
 }
 
 func expand(s string, lookup map[string]string) string {

@@ -1,7 +1,12 @@
 on:
+  pull_request:
+    types:
+      - opened
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
 
 jobs:
   test:
@@ -10,4 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: go test ./...
+      - name: Run Go tests
+        run: go test ./...
+
+      - name: Run integration tests
+        run: |
+          go install
+          python3 tests/test_archives.py

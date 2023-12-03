@@ -54,7 +54,7 @@ func downloadBinary(binary entity.Binary, config base.Config) error {
 		return err
 	}
 
-	return createSymlink(base.NamedLink{Target: name}, binaryDir)
+	return createSymlink(base.NamedLink{Target: name}, binaryDir, s.BinDir)
 }
 
 func (p Provisioner) downloadBinaries() {
