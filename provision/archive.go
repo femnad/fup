@@ -486,7 +486,7 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 	}
 
 	for _, symlink := range archive.ExpandSymlinks(s, target) {
-		err = createSymlink(symlink, target, s.BinDir)
+		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
 			internal.Log.Errorf("error creating symlink for archive %s: %v", url, err)
 			return
