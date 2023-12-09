@@ -36,7 +36,14 @@ jobs:
           apt update
           apt install -y ca-certificates curl gnupg2 golang
           go install
+          cd cmd
+          go build -o fup-verify
+          cp fup-verify ~/go/bin
 
       - name: Provision
         run: |
-          ~/go/bin/fup -f contrib/test.yml -b
+          ~/go/bin/fup -f contrib/test.yml -l 0
+
+      - name: Verify
+        run: |
+          ~/go/bin/fup-verify -c contrib/test.yml -f contrib/verify-test.yml

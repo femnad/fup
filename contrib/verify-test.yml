@@ -1,0 +1,14 @@
+executables:
+  - docker
+  - nvim
+
+paths:
+  - path: ~/.local/share/chezmoi
+    type: dir
+  - path: ~/bin/chm
+    type: exec
+  - path: ~/.config/fup/fup.yml
+    type: file
+  - path: ~/bin/chezmoi
+    type: symlink
+    target: ${extract_dir}/chezmoi/chezmoi
