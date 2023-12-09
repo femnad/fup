@@ -1,6 +1,8 @@
 from ubuntu:mantic
 
-run apt update && apt install -y ca-certificates golang
+arg branch=main
+
+run apt update && apt install -y ca-certificates git golang
 workdir /root
 run git clone https://github.com/femnad/fup.git
 workdir /root/fup
