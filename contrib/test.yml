@@ -1,3 +1,6 @@
+settings:
+  extract_dir: ext
+
 preflight:
   - task: Enable Docker repo (Debian|Ubuntu)
     when: is-debian is-ubuntu

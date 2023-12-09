@@ -54,7 +54,7 @@ func main() {
 
 	err = p.Apply()
 	if err != nil {
-		fmt.Printf("Some provisioners had errors: %v", err)
+		fmt.Printf("Some provisioners had errors: %v\n", err)
 		os.Exit(1)
 	}
 }

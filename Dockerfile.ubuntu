@@ -2,4 +2,4 @@ from ubuntu:mantic
 
 run apt update && apt install -y ca-certificates golang
 run go install github.com/femnad/fup@latest
-run ~/go/bin/fup -f 
+run ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/ci-test/contrib/test.yml -b

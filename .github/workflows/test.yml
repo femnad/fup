@@ -20,3 +20,7 @@ jobs:
         run: |
           go install
           python3 tests/test_archives.py
+
+      - name: Run provisioning command
+        run: |
+          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/ci-test/contrib/test.yml -b
