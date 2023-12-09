@@ -20,7 +20,7 @@ type args struct {
 	DebugToStderr bool     `arg:"-b,--debug-to-stderr" help:"Write logs to stderr"`
 	File          string   `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml" help:"Config file path"`
 	LogFile       string   `arg:"--logfile" default:"~/.local/share/fup/fup.log" help:"Log file path"`
-	LogLevel      int      `arg:"-l,--loglevel" default:"5" help:"Log level as integer, 0 least, 5 most"`
+	LogLevel      int      `arg:"-l,--loglevel" default:"4" help:"Log level as integer, 0 least, 5 most"`
 	NoLogs        bool     `arg:"-n,--nologs" help:"Don't write logs to a file"`
 	Provisioners  []string `arg:"-p,--provisioners" help:"List of provisioners to run"`
 }
