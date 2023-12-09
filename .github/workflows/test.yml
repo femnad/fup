@@ -73,7 +73,7 @@ jobs:
           event="${{ github.event_name }}"
           head_ref="${{ github.head_ref }}"
           ref_name="${{ github.ref_name }}"
-          if [ "$event" == 'pull_request' ]
+          if [ "$event" = 'pull_request' ]
           then
             branch="$head_ref"
           else
