@@ -3,6 +3,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import sys
 import unittest
 
 import yaml
@@ -137,4 +138,5 @@ if __name__ == '__main__':
     for case in TESTS_CASES:
         test_method = gen_test(case)
         setattr(BaseTestCase, f'test_{case.name}', test_method)
-    unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(BaseTestCase))
+    if not unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(BaseTestCase)).wasSuccessful():
+        sys.exit(1)
