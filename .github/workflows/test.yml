@@ -42,8 +42,33 @@ jobs:
 
       - name: Provision
         run: |
-          ~/go/bin/fup -f contrib/test.yml -l 0
+          ~/go/bin/fup -f contrib/test.yml -l 0 -n
 
       - name: Verify
         run: |
           ~/go/bin/fup-verify -c contrib/test.yml -f contrib/verify-test.yml
+
+  container-remote-config-test:
+    name: Run provisioning in a container via a remote config
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:mantic
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup container
+        run: |
+          apt update
+          apt install -y ca-certificates curl gnupg2 golang
+          go install
+          cd cmd
+          go build -o fup-verify
+          cp fup-verify ~/go/bin
+
+      - name: Provision
+        run: |
+          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/main/contrib/test.yml -l 0 -n
+
+      - name: Verify
+        run: |
+          ~/go/bin/fup-verify -c https://raw.githubusercontent.com/femnad/fup/main/contrib/test.yml -f contrib/verify-test.yml
