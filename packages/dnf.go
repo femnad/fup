@@ -36,12 +36,12 @@ func (Dnf) RemoveCmd() string {
 }
 
 func (Dnf) RemoteInstall(urls []string) error {
-	sudo, err := common.IsUserRoot()
+	isRoot, err := common.IsUserRoot()
 	if err != nil {
 		return err
 	}
 
-	input := marecmd.Input{Command: fmt.Sprintf("dnf install -y %s", strings.Join(urls, " ")), Sudo: sudo}
+	input := marecmd.Input{Command: fmt.Sprintf("dnf install -y %s", strings.Join(urls, " ")), Sudo: !isRoot}
 	_, err = marecmd.RunFormatError(input)
 	return err
 }

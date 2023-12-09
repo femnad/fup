@@ -55,12 +55,12 @@ func (Apt) remoteInstall(url string) error {
 		return err
 	}
 
-	sudo, err := common.IsUserRoot()
+	isRoot, err := common.IsUserRoot()
 	if err != nil {
 		return err
 	}
 
-	input := marecmd.Input{Command: fmt.Sprintf("apt install -y %s", target), Sudo: sudo}
+	input := marecmd.Input{Command: fmt.Sprintf("apt install -y %s", target), Sudo: !isRoot}
 	return marecmd.RunNoOutput(input)
 }
 
@@ -82,13 +82,13 @@ func (Apt) RemoteInstall(urls []string) error {
 		targets = append(targets, target)
 	}
 
-	sudo, err := common.IsUserRoot()
+	isRoot, err := common.IsUserRoot()
 	if err != nil {
 		return err
 	}
 
 	targetArgs := strings.Join(targets, " ")
-	input := marecmd.Input{Command: fmt.Sprintf("apt install -y %s", targetArgs), Sudo: sudo}
+	input := marecmd.Input{Command: fmt.Sprintf("apt install -y %s", targetArgs), Sudo: !isRoot}
 	_, err = marecmd.RunFormatError(input)
 	if err != nil {
 		return err
