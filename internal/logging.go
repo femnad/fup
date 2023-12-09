@@ -12,9 +12,8 @@ import (
 var Log = logging.MustGetLogger("fup")
 
 const (
-	stderrLogLevel = logging.INFO
-	fileFormat     = `%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message}`
-	stderrFormat   = `%{color}%{message}%{color:reset}`
+	fileFormat   = `%{time:2006-01-02 15:04:05} %{level:.6s} %{shortfunc} %{message}`
+	stderrFormat = `%{color}%{message}%{color:reset}`
 )
 
 func initBackend(format string, writer io.Writer, level logging.Level) logging.LeveledBackend {
@@ -49,7 +48,7 @@ func getFileBackend(level int, logFile string) logging.LeveledBackend {
 }
 
 func InitLogging(level int, logFile string, debugToStderr bool) {
-	stderrBackend := initBackend(stderrFormat, os.Stderr, stderrLogLevel)
+	stderrBackend := initBackend(stderrFormat, os.Stderr, logging.Level(level))
 	backends := []logging.Backend{stderrBackend}
 
 	if logFile != "" {

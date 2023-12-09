@@ -19,13 +19,42 @@ const (
 	tmpDir = "/tmp"
 )
 
-func getTemplateContent(config base.Config, tmplSrc string) ([]byte, error) {
-	if !config.IsRemote() {
-		tmplPath := path.Join(internal.ExpandUser(config.Settings.TemplateDir), tmplSrc)
-		return os.ReadFile(tmplPath)
+func getTemplateDir(config base.Config) (string, error) {
+	templateDir := internal.ExpandUser(config.Settings.TemplateDir)
+	if path.IsAbs(templateDir) {
+		return templateDir, nil
 	}
 
-	configBase, _ := path.Split(config.Url())
+	configPath := config.File()
+	configDir, _ := path.Split(configPath)
+	if path.IsAbs(configDir) {
+		return path.Join(configDir, templateDir), nil
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(wd, configDir, templateDir), nil
+}
+
+func getLocalTemplate(config base.Config, tmplSrc string) ([]byte, error) {
+	templateDir, err := getTemplateDir(config)
+	if err != nil {
+		return nil, err
+	}
+
+	tmplPath := path.Join(templateDir, tmplSrc)
+	return os.ReadFile(tmplPath)
+}
+
+func getTemplateContent(config base.Config, tmplSrc string) ([]byte, error) {
+	if !config.IsRemote() {
+		return getLocalTemplate(config, tmplSrc)
+	}
+
+	configBase, _ := path.Split(config.File())
 	_, relTmplDir := path.Split(config.Settings.TemplateDir)
 	tmplUrl, err := url.JoinPath(configBase, relTmplDir, tmplSrc)
 	if err != nil {

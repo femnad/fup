@@ -20,6 +20,7 @@ import (
 
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
@@ -197,10 +198,6 @@ func downloadTempFile(response remote.Response) (string, error) {
 	return tempFilePath, nil
 }
 
-func isExecutableFile(info os.FileInfo) bool {
-	return !info.IsDir() && info.Mode().Perm()&0100 != 0
-}
-
 func getFilename(response remote.Response) string {
 	filename := response.URL
 	if response.ContentDisposition != "" {
@@ -244,7 +241,7 @@ func getArchiveInfo(archive base.Archive, entries []archiveEntry) (archiveInfo, 
 	for _, entry := range entries {
 		rootDir := strings.Split(entry.name, "/")
 		roots.Add(rootDir[0])
-		if isExecutableFile(entry.info) {
+		if common.IsExecutableFile(entry.info) {
 			execs = append(execs, entry)
 		}
 	}

@@ -1,5 +1,6 @@
 settings:
-  extract_dir: ext
+  extract_dir: ~/ext
+  template_dir: tmpl
   versions:
     chezmoi: 2.42.2
 
@@ -21,10 +22,8 @@ preflight:
 
 packages:
   debian|ubuntu:
-    - docker-buildx-plugin
     - docker-ce
-    - docker-ce-cli
-    - docker-compose-plugin
+    - neovim
 
 archives:
   - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
@@ -44,3 +43,8 @@ tasks:
         dir: ~/.local/share/chezmoi
       - name: cmd
         cmd: ~/bin/chezmoi apply --force
+
+template:
+  - src: unattended-upgrades.conf
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    when: is-ubuntu

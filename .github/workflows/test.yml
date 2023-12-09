@@ -21,7 +21,7 @@ jobs:
       - name: Run integration tests
         run: |
           go install
-          python3 tests/test_archives.py
+          python3 tests/integration/test_archives.py
 
   container-test:
     name: Run provisioning in a container
@@ -36,7 +36,55 @@ jobs:
           apt update
           apt install -y ca-certificates curl gnupg2 golang
           go install
+          cd cmd
+          go build -o fup-verify
+          cp fup-verify ~/go/bin
 
       - name: Provision
         run: |
-          ~/go/bin/fup -f contrib/test.yml -b
+          ~/go/bin/fup -f tests/config/test.yml -l 0 -n -b
+
+      - name: Verify
+        run: |
+          ~/go/bin/fup-verify -c tests/config/test.yml -f tests/config/verify-test.yml
+
+  container-remote-config-test:
+    name: Run provisioning in a container via a remote config
+    runs-on: ubuntu-latest
+    container:
+      image: femnad/fup:ubuntu-ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup container
+        run: |
+          # apt update
+          # apt install -y ca-certificates curl gnupg2 golang
+          go install
+          cd cmd
+          go build -o fup-verify
+          cp fup-verify ~/go/bin
+
+      - name: Get branch
+        id: get-branch
+        run: |
+          event="${{ github.event_name }}"
+          head_ref="${{ github.head_ref }}"
+          ref_name="${{ github.ref_name }}"
+
+          if [ "$event" = 'pull_request' ]
+          then
+            branch="$head_ref"
+          else
+            branch="$ref_name"
+          fi
+
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+
+      - name: Provision
+        run: |
+          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/${{ steps.get-branch.outputs.branch }}/tests/config/test-remote.yml -l 0 -n -b
+
+      - name: Verify
+        run: |
+          ~/go/bin/fup-verify -c https://raw.githubusercontent.com/femnad/fup/${{ steps.get-branch.outputs.branch }}/tests/config/test-remote.yml -f tests/config/verify-test-remote.yml

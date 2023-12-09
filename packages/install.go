@@ -7,16 +7,11 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
-	marecmd "github.com/femnad/mare/cmd"
-
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
-)
-
-const (
-	rootUid = 0
+	marecmd "github.com/femnad/mare/cmd"
 )
 
 type PkgManager interface {
@@ -27,15 +22,6 @@ type PkgManager interface {
 	PreserveEnv() bool
 	RemoveCmd() string
 	RemoteInstall(urls []string) error
-}
-
-func isUserRoot() (bool, error) {
-	userId, err := internal.GetCurrentUserId()
-	if err != nil {
-		return false, err
-	}
-
-	return userId != rootUid, nil
 }
 
 type Installer struct {
@@ -54,7 +40,7 @@ func setToSlice[T comparable](set mapset.Set[T]) []T {
 }
 
 func (i Installer) maybeRunWithSudo(cmds ...string) error {
-	sudo, err := isUserRoot()
+	isRoot, err := common.IsUserRoot()
 	if err != nil {
 		return err
 	}
@@ -62,7 +48,7 @@ func (i Installer) maybeRunWithSudo(cmds ...string) error {
 	cmdstr := strings.Join(cmds, " ")
 	_, err = marecmd.RunFormatError(marecmd.Input{
 		Command:         cmdstr,
-		Sudo:            sudo,
+		Sudo:            !isRoot,
 		SudoPreserveEnv: i.Pkg.PreserveEnv(),
 		Env:             i.Pkg.PkgEnv(),
 	})
