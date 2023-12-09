@@ -75,12 +75,17 @@ func neovimReady() (bool, error) {
 }
 
 func sshReady() (bool, error) {
-	resp, _ := marecmd.RunFormatError(marecmd.Input{Command: "ssh-add -l"})
-	if resp.Code == 1 {
+	resp, err := marecmd.RunFormatError(marecmd.Input{Command: "ssh-add -l"})
+	if err != nil {
+		internal.Log.Debugf("error checking ssh-add output: %v", err)
 		return false, nil
 	}
 
 	output := strings.TrimSpace(resp.Stdout)
+	if output == "" {
+		return false, nil
+	}
+
 	for _, line := range strings.Split(output, "\n") {
 		fields := strings.Split(line, " ")
 		if len(fields) != 4 {

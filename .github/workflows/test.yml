@@ -1,3 +1,5 @@
+name: Run tests
+
 on:
   pull_request:
   push:
@@ -8,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Run tests
+    name: Run unit and integration tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +22,21 @@ jobs:
         run: |
           go install
           python3 tests/test_archives.py
+
+  container-test:
+    name: Run provisioning in a container
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:mantic
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup container
+        run: |
+          apt update
+          apt install -y ca-certificates curl gnupg2 golang
+          go install
+
+      - name: Provision
+        run: |
+          ~/go/bin/fup -f contrib/test.yml -b
