@@ -9,6 +9,7 @@ preflight:
     steps:
       - name: shell
         shell: bash
+        sudo: true
         cmd: |
           set -euEo pipefail
           mkdir -p /etc/apt/keyrings
