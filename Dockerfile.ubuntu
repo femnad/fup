@@ -2,9 +2,9 @@ from ubuntu:mantic
 
 arg branch=main
 
-run apt update && apt install -y ca-certificates git golang
+run apt update && apt install -y ca-certificates curl git gnupg2 golang
 workdir /root
-run git clone https://github.com/femnad/fup.git
+run git clone https://github.com/femnad/fup.git -b $branch
 workdir /root/fup
 run go install
 entrypoint ["/root/go/bin/fup", "-f", "contrib/test.yml", "-b"]
