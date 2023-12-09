@@ -304,6 +304,10 @@ func getOutputPath(archiveRoot archiveRoot, fileName, dirName string) string {
 }
 
 func getAbsTarget(dirName string, root archiveRoot) (string, error) {
+	if path.IsAbs(dirName) {
+		return path.Join(dirName, root.target), nil
+	}
+
 	wd, err := os.Getwd()
 	if err != nil {
 		return "", err
