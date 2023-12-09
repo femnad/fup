@@ -170,7 +170,7 @@ func persist(s base.Service) error {
 		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
 		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
 		internal.Log.Debugf("running restorecon command %s", restorecon)
-		cmdErr := marecmd.RunNoOutput(marecmd.Input{Command: restorecon, Sudo: true})
+		_, cmdErr := marecmd.RunFormatError(marecmd.Input{Command: restorecon, Sudo: true})
 		if cmdErr != nil {
 			return cmdErr
 		}
