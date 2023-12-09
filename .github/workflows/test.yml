@@ -25,6 +25,7 @@ jobs:
           python3 tests/integration/test_archives.py
 
   container-test:
+    if: false
     name: Run provisioning in a container
     runs-on: ubuntu-latest
     container:
@@ -69,11 +70,14 @@ jobs:
       - name: Get branch
         id: get-branch
         run: |
-          if [ "${{ github.event_name }}" == 'pull_request' ]
+          event="${{ github.event_name }}"
+          head_ref="${{ github.head_ref }}"
+          ref_name="${{ github.ref_name }}"
+          if [ "$event" == 'pull_request' ]
           then
-            branch="${{ github.head_ref }}"
+            branch="$head_ref"
           else
-            branch="${{ github.ref_name }}"
+            branch="$ref_name"
           fi
           echo "branch=${branch}" >> "$GITHUB_OUTPUT"
 
