@@ -108,10 +108,7 @@ func (a Archive) HasPostProc() bool {
 }
 
 func (a Archive) Name() string {
-	if a.Ref != "" {
-		return a.Ref
-	}
-	return ""
+	return a.Ref
 }
 
 func (a Archive) RunWhen() string {

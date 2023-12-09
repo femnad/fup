@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,10 +29,11 @@ import (
 )
 
 const (
-	bufferSize   = 8192
-	dirMode      = 0755
-	xzDictMax    = 1 << 27
-	tarFileRegex = `\.tar(\.(gz|bz2|xz))?$`
+	bufferSize         = 8192
+	dirMode            = 0755
+	githubReleaseRegex = "https://github.com/[a-z_-]+/[a-z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
+	xzDictMax          = 1 << 27
+	tarFileRegex       = `\.tar(\.(gz|bz2|xz))?$`
 )
 
 type archiveEntry struct {
@@ -490,29 +492,51 @@ func download(closer io.ReadCloser, target string) error {
 
 }
 
+func guessArchiveName(releaseUrl string) (string, error) {
+	pattern := regexp.MustCompile(githubReleaseRegex)
+	if !pattern.MatchString(releaseUrl) {
+		return "", nil
+	}
+
+	parsed, err := url.Parse(releaseUrl)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.Split(parsed.Path, "/")[2], nil
+}
+
 func extractArchive(archive base.Archive, s settings.Settings) error {
-	url := archive.ExpandURL(s)
+	archiveUrl := archive.ExpandURL(s)
 
 	if !when.ShouldRun(archive) {
-		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
+		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", archiveUrl, archive.When)
 		return nil
 	}
 
+	if archive.Name() == "" {
+		name, err := guessArchiveName(archiveUrl)
+		if err != nil {
+			return err
+		}
+		archive.Ref = name
+	}
+
 	if unless.ShouldSkip(archive, s) {
-		internal.Log.Debugf("Skipping download: %s", url)
+		internal.Log.Debugf("Skipping download: %s", archiveUrl)
 		return nil
 	}
 
 	info, err := Extract(archive, s)
 	if err != nil {
-		internal.Log.Errorf("Error downloading archive %s: %v", url, err)
+		internal.Log.Errorf("Error downloading archive %s: %v", archiveUrl, err)
 		return err
 	}
 
 	for _, symlink := range archive.ExpandSymlinks(s, info.maybeExec) {
 		err = createSymlink(symlink, info.target, s.GetBinPath())
 		if err != nil {
-			internal.Log.Errorf("error creating symlink for archive %s: %v", url, err)
+			internal.Log.Errorf("error creating symlink for archive %s: %v", archiveUrl, err)
 			return err
 		}
 	}
