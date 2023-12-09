@@ -1,5 +1,5 @@
 settings:
-  extract_dir: ext
+  extract_dir: ~/ext
   versions:
     chezmoi: 2.42.2
 
