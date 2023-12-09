@@ -52,23 +52,35 @@ jobs:
     name: Run provisioning in a container via a remote config
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:mantic
+      image: femnad/fup:ubuntu-ci
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup container
         run: |
-          apt update
-          apt install -y ca-certificates curl gnupg2 golang
+          # apt update
+          # apt install -y ca-certificates curl gnupg2 golang
           go install
           cd cmd
           go build -o fup-verify
           cp fup-verify ~/go/bin
 
+      - name: Get branch
+        id: get-branch
+        run: |
+          branch=main
+          if [ "${{ github.event_name }}" == 'pull_request' ]
+          then
+            branch="${{ github.head_ref}}#refs/heads/"
+          else
+            branch="${{ github.ref}}#refs/heads/"
+          fi
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+
       - name: Provision
         run: |
-          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/${{ github.ref_name }}/tests/config/test-remote.yml -l 0 -n
+          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/${{ steps.get-branch.outputs.branch }}/tests/config/test-remote.yml -l 0 -n -b
 
       - name: Verify
         run: |
-          ~/go/bin/fup-verify -c https://raw.githubusercontent.com/femnad/fup/${{ github.ref_name }}/tests/config/test-remote.yml -f tests/config/verify-test-remote.yml
+          ~/go/bin/fup-verify -c https://raw.githubusercontent.com/femnad/fup/${{ steps.get-branch.outputs.branch }}/tests/config/test-remote.yml -f tests/config/verify-test-remote.yml
