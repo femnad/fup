@@ -7,8 +7,6 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
-const binPath = "~/bin"
-
 type Provisioner struct {
 	Config       base.Config
 	Packager     packager
@@ -108,6 +106,11 @@ func (p Provisioner) Apply() {
 
 func (p Provisioner) extractArchives() {
 	internal.Log.Notice("Extracting archives")
+
+	if p.Config.Settings.ExtractDir == "" {
+		internal.Log.Errorf("Empty archive extraction directory")
+		return
+	}
 
 	for _, archive := range p.Config.Archives {
 		extractArchive(archive, p.Config.Settings)
