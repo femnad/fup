@@ -1,0 +1,49 @@
+settings:
+  extract_dir: ~/ext
+  versions:
+    chezmoi: 2.42.2
+
+preflight:
+  - task: Enable Docker repo (Debian|Ubuntu)
+    when: is-debian is-ubuntu
+    unless:
+      stat: /etc/apt/sources.list.d/docker.list
+    steps:
+      - name: shell
+        shell: bash
+        cmd: |
+          set -euEo pipefail
+          mkdir -p /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" > /etc/apt/sources.list.d/docker.list
+          apt update
+
+packages:
+  debian|ubuntu:
+    - docker-ce
+    - neovim
+
+archives:
+  - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
+    name: chezmoi
+    unless:
+      cmd: chezmoi --version
+      post: split 2 | cut 1 | cut -1
+
+tasks:
+  - task: Clone chezmoi
+    unless:
+      stat: ~/.local/share/chezmoi
+    steps:
+      - name: git
+        repo:
+          name: https://gitlab.com/femnad/chezmoi.git
+        dir: ~/.local/share/chezmoi
+      - name: cmd
+        cmd: ~/bin/chezmoi apply --force
+
+template:
+  - src: unattended-upgrades.conf
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    when: is-ubuntu

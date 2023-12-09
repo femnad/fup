@@ -42,3 +42,8 @@ tasks:
         dir: ~/.local/share/chezmoi
       - name: cmd
         cmd: ~/bin/chezmoi apply --force
+
+template:
+  - src: unattended-upgrades.conf
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    when: is-ubuntu

@@ -6,7 +6,13 @@ type DirEntry struct {
 	Type   string `yaml:"type"`
 }
 
+type FileContent struct {
+	Content string `yaml:"content"`
+	Path    string `yaml:"path"`
+}
+
 type expect struct {
-	Executables []string   `yaml:"executables"`
-	DirEntries  []DirEntry `yaml:"paths"`
+	Executables []string      `yaml:"executables"`
+	DirEntries  []DirEntry    `yaml:"paths"`
+	Files       []FileContent `yaml:"file_content"`
 }

@@ -90,6 +90,19 @@ func ensureCorrectDirEntry(entry DirEntry, fupConfig base.Config) error {
 	return nil
 }
 
+func ensureFileContent(content FileContent) error {
+	bytes, err := os.ReadFile(content.Path)
+	if err != nil {
+		return err
+	}
+
+	if content.Content != string(bytes) {
+		return fmt.Errorf("file %s doesn't have expected content")
+	}
+
+	return nil
+}
+
 func readConfig(config string) (expect, error) {
 	var e expect
 	f, err := os.Open(config)
@@ -116,6 +129,11 @@ func Verify(config string, fupConfig base.Config) error {
 
 	for _, entry := range e.DirEntries {
 		err := ensureCorrectDirEntry(entry, fupConfig)
+		errs = append(errs, err)
+	}
+
+	for _, content := range e.Files {
+		err := ensureFileContent(content)
 		errs = append(errs, err)
 	}
 
