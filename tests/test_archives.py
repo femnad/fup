@@ -3,6 +3,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import sys
 import unittest
 
 import yaml
@@ -122,7 +123,9 @@ def gen_test(test_case: ArchiveTest):
         with open(f'{ARTIFACTS_DIR}/fup.yml', 'wt') as fd:
             yaml.dump(config, Dumper=yaml.SafeDumper, stream=fd)
 
-        cmd = shlex.split(f'fup -p archive -f {ARTIFACTS_DIR}/fup.yml -b')
+        go_path = os.getenv('GOPATH', os.path.expanduser('~/go'))
+        fup_bin = os.path.join(go_path, 'bin', 'fup')
+        cmd = shlex.split(f'{fup_bin} -p archive -f {ARTIFACTS_DIR}/fup.yml -b')
         proc = subprocess.run(cmd)
         self.assertTrue(proc.returncode == 0)
 
@@ -137,4 +140,5 @@ if __name__ == '__main__':
     for case in TESTS_CASES:
         test_method = gen_test(case)
         setattr(BaseTestCase, f'test_{case.name}', test_method)
-    unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(BaseTestCase))
+    if not unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(BaseTestCase)).wasSuccessful():
+        sys.exit(1)
