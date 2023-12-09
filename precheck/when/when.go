@@ -51,6 +51,7 @@ func ShouldRun(whenable Whenable) bool {
 		negate = true
 	}
 
+	var anyTrue bool
 	for _, subFact := range strings.Split(fact, " ") {
 		result, err := evalFact(subFact, negate)
 		if err != nil {
@@ -58,9 +59,10 @@ func ShouldRun(whenable Whenable) bool {
 			return false
 		}
 
-		return result
+		if result {
+			anyTrue = result
+		}
 	}
 
-	// No facts found
-	return false
+	return anyTrue
 }

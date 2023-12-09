@@ -501,7 +501,7 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 	for _, cmd := range archive.ExecuteAfter {
 		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
 		internal.Log.Debugf("Running command %s", cmd)
-		err = marecmd.RunNoOutput(marecmd.Input{Command: cmd, Shell: true})
+		_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Shell: true})
 		if err != nil {
 			internal.Log.Errorf("error running post extract command: %v", err)
 		}
