@@ -7,16 +7,11 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
-	marecmd "github.com/femnad/mare/cmd"
-
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
-)
-
-const (
-	rootUid = 0
+	marecmd "github.com/femnad/mare/cmd"
 )
 
 type PkgManager interface {
