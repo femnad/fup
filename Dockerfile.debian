@@ -1,8 +1,0 @@
-from debian:bookworm
-run apt update
-run apt install -y ca-certificates golang-go
-run mkdir -p /root/fup
-copy . /root/fup/
-workdir /root/fup
-run go install
-entrypoint ["/root/go/bin/fup"]

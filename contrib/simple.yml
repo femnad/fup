@@ -151,16 +151,18 @@ repos:
 user_in_group:
   # Made up example
   root:
-    - video
+    - name: video
 
 ensure_lines:
   - name: replace
     file: /etc/dnf/automatic.conf
-    text: apply_updates = no
-    replace: apply_updates = yes
+    replace:
+      - old: apply_updates = no
+        new: apply_updates = yes
     when: is-fedora
   - name: replace
     file: /etc/systemd/logind.conf
-    text: '#HandleLidSwitchDocked=ignore'
-    replace: HandleLidSwitchDocked=suspend
+    replace:
+      - old: '#HandleLidSwitchDocked=ignore'
+        new: HandleLidSwitchDocked=suspend
     when: is-laptop

@@ -1,4 +1,4 @@
-from golang:bullseye
+from golang:bookworm
 run mkdir -p /root/fup
 copy . /root/fup/
 workdir /root/fup
