@@ -2,6 +2,7 @@ package provision
 
 import (
 	"fmt"
+	"github.com/femnad/fup/common"
 
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
@@ -220,6 +221,11 @@ func (p Provisioner) ensureLines() {
 
 func (p Provisioner) flatpakInstall() {
 	internal.Log.Noticef("Installing flatpak packages")
+
+	_, err := common.Which("flatpak")
+	if err != nil {
+		return
+	}
 
 	flatpakInstall(p.Config)
 }
