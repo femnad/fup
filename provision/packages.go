@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -148,4 +149,22 @@ func (p packager) installRemotePackages(spec base.RemotePackageSpec, s settings.
 func (p packager) removePackages(spec base.PackageSpec) error {
 	pkgToInstall := p.determiner.matchingPkgs(spec)
 	return p.installer.Remove(pkgToInstall)
+}
+
+func installPackages(p Provisioner) error {
+	var pkgErrs []error
+
+	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
+	if err != nil {
+		internal.Log.Errorf("error installing remote packages: %v", err)
+	}
+	pkgErrs = append(pkgErrs, err)
+
+	err = p.Packager.installPackages(p.Config.Packages)
+	if err != nil {
+		internal.Log.Errorf("error installing packages: %v", err)
+	}
+	pkgErrs = append(pkgErrs, err)
+
+	return errors.Join(pkgErrs...)
 }

@@ -470,30 +470,30 @@ func download(closer io.ReadCloser, target string) error {
 
 }
 
-func extractArchive(archive base.Archive, s settings.Settings) {
+func extractArchive(archive base.Archive, s settings.Settings) error {
 	url := archive.ExpandURL(s)
 
 	if !when.ShouldRun(archive) {
 		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", url, archive.When)
-		return
+		return nil
 	}
 
 	if unless.ShouldSkip(archive, s) {
 		internal.Log.Debugf("Skipping download: %s", url)
-		return
+		return nil
 	}
 
 	target, err := Extract(archive, s)
 	if err != nil {
 		internal.Log.Errorf("Error downloading archive %s: %v", url, err)
-		return
+		return err
 	}
 
 	for _, symlink := range archive.ExpandSymlinks(s, target) {
 		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
 			internal.Log.Errorf("error creating symlink for archive %s: %v", url, err)
-			return
+			return err
 		}
 	}
 
@@ -508,6 +508,19 @@ func extractArchive(archive base.Archive, s settings.Settings) {
 		_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Shell: true})
 		if err != nil {
 			internal.Log.Errorf("error running post extract command: %v", err)
+			return err
 		}
 	}
+
+	return nil
+}
+
+func extractArchives(archives []base.Archive, s settings.Settings) error {
+	var archiveErrs []error
+	for _, archive := range archives {
+		err := extractArchive(archive, s)
+		archiveErrs = append(archiveErrs, err)
+	}
+
+	return errors.Join(archiveErrs...)
 }

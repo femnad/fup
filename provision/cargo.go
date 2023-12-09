@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -28,15 +29,15 @@ func crateArgs(name string) ([]string, error) {
 	return []string{"--git", name, crate}, nil
 }
 
-func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
+func cargoInstall(pkg base.CargoPkg, s settings.Settings) error {
 	if unless.ShouldSkip(pkg, s) {
 		internal.Log.Debugf("skipping cargo install for %s", pkg.Crate)
-		return
+		return nil
 	}
 
 	if !when.ShouldRun(pkg) {
 		internal.Log.Debugf("skipping cargo install for %s", pkg.Crate)
-		return
+		return nil
 	}
 
 	name := pkg.Crate
@@ -47,7 +48,7 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	crate, err := crateArgs(name)
 	if err != nil {
 		internal.Log.Errorf("error getting crate name for %s: %v", name, err)
-		return
+		return err
 	}
 	installCmd = append(installCmd, crate...)
 
@@ -59,11 +60,18 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) {
 	resp, err := run.Cmd(s, marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error installing cargo package %s: %v, output: %s", name, err, resp.Stderr)
+		return err
 	}
+
+	return nil
 }
 
-func cargoInstallPkgs(cfg base.Config) {
+func cargoInstallPkgs(cfg base.Config) error {
+	var cargoErr []error
 	for _, pkg := range cfg.Cargo {
-		cargoInstall(pkg, cfg.Settings)
+		err := cargoInstall(pkg, cfg.Settings)
+		cargoErr = append(cargoErr, err)
 	}
+
+	return errors.Join(cargoErr...)
 }

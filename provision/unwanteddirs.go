@@ -26,9 +26,12 @@ func removeDirs(dirs []string) error {
 	return nil
 }
 
-func removeUnwantedDirs(config base.Config) {
+func removeUnwantedDirs(config base.Config) error {
 	err := removeDirs(config.UnwantedDirs)
 	if err != nil {
 		internal.Log.Errorf("error removing unwanted dirs: %v", err)
+		return err
 	}
+
+	return nil
 }

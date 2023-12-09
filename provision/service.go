@@ -3,6 +3,7 @@ package provision
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -311,10 +312,10 @@ func expandService(s base.Service, cfg base.Config) (base.Service, error) {
 	return s, nil
 }
 
-func initService(s base.Service, cfg base.Config) {
+func initService(s base.Service, cfg base.Config) error {
 	if !when.ShouldRun(s) {
 		internal.Log.Debugf("Skipping initializing %s as when condition %s evaluated to false", s.Name, s.When)
-		return
+		return nil
 	}
 
 	if s.Disable {
@@ -322,30 +323,42 @@ func initService(s base.Service, cfg base.Config) {
 		if err != nil {
 			internal.Log.Errorf("error disabling service %s, %v", s.Name, err)
 		}
-		return
+		return err
 	}
 
 	s, err := expandService(s, cfg)
 	if err != nil {
 		internal.Log.Errorf("error expanding service %s: %v", s.Name, err)
-		return
+		return err
 	}
 
 	err = persist(s)
 	if err != nil {
 		internal.Log.Errorf("error persisting service %s: %v", s.Name, err)
-		return
+		return err
 	}
 
 	err = enable(s)
 	if err != nil {
 		internal.Log.Errorf("error enabling service %s: %v", s.Name, err)
-		return
+		return err
 	}
 
 	err = start(s)
 	if err != nil {
 		internal.Log.Errorf("error starting service %s: %v", s.Name, err)
-		return
+		return err
 	}
+
+	return nil
+}
+
+func initServices(config base.Config) error {
+	var svcErr []error
+	for _, svc := range config.Services {
+		err := initService(svc, config)
+		svcErr = append(svcErr, err)
+	}
+
+	return errors.Join(svcErr...)
 }

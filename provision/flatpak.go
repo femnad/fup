@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/entity"
@@ -36,13 +37,16 @@ func ensureRemote(remote entity.FlatpakRemote) error {
 	return nil
 }
 
-func ensureRemotes(remotes []entity.FlatpakRemote) {
+func ensureRemotes(remotes []entity.FlatpakRemote) error {
 	for _, remote := range remotes {
 		err := ensureRemote(remote)
 		if err != nil {
 			internal.Log.Error(err)
 		}
+		return err
 	}
+
+	return nil
 }
 
 func ensureInstalled(flatpak entity.FlatpakPkg) error {
@@ -81,20 +85,29 @@ func ensureLauncher(flatpak entity.FlatpakPkg) error {
 	return os.WriteFile(launcherPath, []byte(launcherContent), 0755)
 }
 
-func installFlatpak(flatpak entity.FlatpakPkg) {
+func installFlatpak(flatpak entity.FlatpakPkg) error {
 	for _, step := range steps {
 		err := step(flatpak)
 		if err != nil {
 			internal.Log.Error(err)
-			return
+			return err
 		}
 	}
+
+	return nil
 }
 
-func flatpakInstall(config base.Config) {
-	ensureRemotes(config.Flatpak.Remotes)
-
-	for _, flatpak := range config.Flatpak.Packages {
-		installFlatpak(flatpak)
+func flatpakInstall(config base.Config) error {
+	err := ensureRemotes(config.Flatpak.Remotes)
+	if err != nil {
+		return err
 	}
+
+	var flatpakErr []error
+	for _, flatpak := range config.Flatpak.Packages {
+		err = installFlatpak(flatpak)
+		flatpakErr = append(flatpakErr, err)
+	}
+
+	return errors.Join(flatpakErr...)
 }

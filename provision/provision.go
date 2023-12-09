@@ -1,10 +1,11 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
-	"github.com/femnad/fup/common"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
@@ -16,23 +17,27 @@ type Provisioner struct {
 
 type provisionFn struct {
 	name string
-	fn   func()
+	fn   func() error
 }
 
 type provisioners struct {
-	provMap map[string]func()
+	provMap map[string]func() error
 	order   []string
 }
 
-func (p provisioners) apply() {
+func (p provisioners) apply() error {
+	var provErrs []error
 	for _, fnName := range p.order {
 		fn := p.provMap[fnName]
-		fn()
+		err := fn()
+		provErrs = append(provErrs, err)
 	}
+
+	return errors.Join(provErrs...)
 }
 
 func newProvisioners(allProvisioners []provisionFn, filter []string) (provisioners, error) {
-	provMap := make(map[string]func())
+	provMap := make(map[string]func() error)
 	var order []string
 	var hasFilter = len(filter) > 0
 
@@ -89,7 +94,7 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"ssh-clone", p.sshClone},
 		{"unwanted-dir", p.unwantedDirs},
 		{"user-in-group", p.userInGroup},
-		{"postflight", p.runPostflightTasks},
+		{"postflight", p.runPostFlightTasks},
 	}
 
 	provs, err := newProvisioners(all, filter)
@@ -101,155 +106,142 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 	return p, nil
 }
 
-func (p Provisioner) Apply() {
-	p.provisioners.apply()
+func (p Provisioner) Apply() error {
+	return p.provisioners.apply()
 }
 
-func (p Provisioner) extractArchives() {
+func (p Provisioner) extractArchives() error {
 	internal.Log.Notice("Extracting archives")
 
 	if p.Config.Settings.ExtractDir == "" {
-		internal.Log.Errorf("Empty archive extraction directory")
-		return
+		return errors.New("empty archive extraction directory")
 	}
 
-	for _, archive := range p.Config.Archives {
-		extractArchive(archive, p.Config.Settings)
-	}
+	return extractArchives(p.Config.Archives, p.Config.Settings)
 }
 
-func (p Provisioner) runPreflightTasks() {
+func (p Provisioner) runPreflightTasks() error {
 	internal.Log.Notice("Running preflight tasks")
 
-	for _, task := range p.Config.PreflightTasks {
-		runTask(task, p.Config)
-	}
+	return runTasks(p.Config, p.Config.PreflightTasks)
 }
 
-func (p Provisioner) runPostflightTasks() {
+func (p Provisioner) runPostFlightTasks() error {
 	internal.Log.Notice("Running postflight tasks")
 
-	for _, task := range p.Config.PostflightTasks {
-		runTask(task, p.Config)
-	}
+	return runTasks(p.Config, p.Config.PostflightTasks)
 }
 
-func (p Provisioner) installPackages() {
+func (p Provisioner) installPackages() error {
 	internal.Log.Notice("Installing packages")
 
-	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
-	if err != nil {
-		internal.Log.Errorf("error installing remote packages: %v", err)
-	}
-
-	err = p.Packager.installPackages(p.Config.Packages)
-	if err != nil {
-		internal.Log.Errorf("error installing packages: %v", err)
-	}
+	return installPackages(p)
 }
 
-func (p Provisioner) removePackages() {
+func (p Provisioner) removePackages() error {
 	internal.Log.Notice("Removing unwanted packages")
 
 	err := p.Packager.removePackages(p.Config.UnwantedPackages)
 	if err != nil {
 		internal.Log.Errorf("error removing packages: %v", err)
+		return err
 	}
+
+	return nil
 }
 
-func (p Provisioner) cargoInstall() {
+func (p Provisioner) cargoInstall() error {
 	internal.Log.Noticef("Installing Rust packages")
 
-	cargoInstallPkgs(p.Config)
+	return cargoInstallPkgs(p.Config)
 }
 
-func (p Provisioner) githubUserKey() {
+func (p Provisioner) githubUserKey() error {
 	internal.Log.Noticef("Adding GitHub user keys")
 
-	addGithubUserKeys(p.Config)
+	return addGithubUserKeys(p.Config)
 }
 
-func (p Provisioner) goInstall() {
+func (p Provisioner) goInstall() error {
 	internal.Log.Noticef("Installing Go packages")
 
-	goInstallPkgs(p.Config)
+	return goInstallPkgs(p.Config)
 }
 
-func (p Provisioner) acceptHostKeys() {
+func (p Provisioner) acceptHostKeys() error {
 	internal.Log.Noticef("Adding known hosts")
 
-	acceptHostKeys(p.Config)
+	return acceptHostKeys(p.Config)
 }
 
-func (p Provisioner) initServices() {
+func (p Provisioner) initServices() error {
 	internal.Log.Noticef("Initializing services")
 
-	for _, s := range p.Config.Services {
-		initService(s, p.Config)
-	}
+	return initServices(p.Config)
 }
 
-func (p Provisioner) pythonInstall() {
+func (p Provisioner) pythonInstall() error {
 	internal.Log.Notice("Installing Python packages")
 
-	pythonInstallPkgs(p.Config)
+	return pythonInstallPkgs(p.Config)
 }
 
-func (p Provisioner) runTasks() {
+func (p Provisioner) runTasks() error {
 	internal.Log.Noticef("Running tasks")
 
-	runTasks(p.Config)
+	return runTasks(p.Config, p.Config.Tasks)
 }
 
-func (p Provisioner) applyTemplates() {
+func (p Provisioner) applyTemplates() error {
 	internal.Log.Noticef("Applying templates")
 
-	applyTemplates(p.Config)
+	return applyTemplates(p.Config)
 }
 
-func (p Provisioner) ensureDirs() {
+func (p Provisioner) ensureDirs() error {
 	internal.Log.Noticef("Creating desired dirs")
 
-	ensureDirs(p.Config)
+	return ensureDirs(p.Config)
 }
 
-func (p Provisioner) ensureLines() {
+func (p Provisioner) ensureLines() error {
 	internal.Log.Noticef("Ensuring lines in files")
 
-	ensureLines(p.Config)
+	return ensureLines(p.Config)
 }
 
-func (p Provisioner) flatpakInstall() {
+func (p Provisioner) flatpakInstall() error {
 	internal.Log.Noticef("Installing flatpak packages")
 
 	_, err := common.Which("flatpak")
 	if err != nil {
-		return
+		internal.Log.Debug("Skipping Flatpak packages installation as Flatpak is not available")
+		return nil
 	}
 
-	flatpakInstall(p.Config)
+	return flatpakInstall(p.Config)
 }
 
-func (p Provisioner) snapInstall() {
+func (p Provisioner) snapInstall() error {
 	internal.Log.Noticef("Installing snap packages")
 
-	snapInstall(p.Config)
+	return snapInstall(p.Config)
 }
 
-func (p Provisioner) sshClone() {
+func (p Provisioner) sshClone() error {
 	internal.Log.Noticef("Cloning repos via SSH")
 
-	sshClone(p.Config)
+	return sshClone(p.Config)
 }
 
-func (p Provisioner) unwantedDirs() {
+func (p Provisioner) unwantedDirs() error {
 	internal.Log.Noticef("Removing unwanted dirs")
 
-	removeUnwantedDirs(p.Config)
+	return removeUnwantedDirs(p.Config)
 }
 
-func (p Provisioner) userInGroup() {
+func (p Provisioner) userInGroup() error {
 	internal.Log.Noticef("Ensuring user is in desired groups")
 
-	userInGroup(p.Config)
+	return userInGroup(p.Config)
 }

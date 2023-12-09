@@ -199,12 +199,14 @@ func (t Task) Name() string {
 	return t.Desc
 }
 
-func (t Task) Run(cfg Config) {
+func (t Task) Run(cfg Config) error {
 	for _, step := range t.Steps {
 		err := runStep(step, cfg)
 		if err != nil {
 			internal.Log.Errorf("error running task %s: %v", t.Name(), err)
-			return
+			return err
 		}
 	}
+
+	return nil
 }

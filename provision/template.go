@@ -2,6 +2,7 @@ package provision
 
 import (
 	"bytes"
+	"errors"
 	"net/url"
 	"os"
 	"path"
@@ -35,6 +36,10 @@ func getTemplateContent(config base.Config, tmplSrc string) ([]byte, error) {
 }
 
 func applyTemplate(tmpl base.Template, config base.Config) error {
+	if !when.ShouldRun(tmpl) {
+		return nil
+	}
+
 	templateContent, err := getTemplateContent(config, tmpl.Src)
 	if err != nil {
 		return err
@@ -57,19 +62,17 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 	}
 
 	return nil
-
 }
 
-func applyTemplates(config base.Config) {
+func applyTemplates(config base.Config) error {
+	var tmplErr []error
 	for _, tmpl := range config.Templates {
-		if !when.ShouldRun(tmpl) {
-			continue
-		}
-
 		err := applyTemplate(tmpl, config)
 		if err != nil {
 			internal.Log.Errorf("error applying template: %v", err)
-			continue
 		}
+		tmplErr = append(tmplErr, err)
 	}
+
+	return errors.Join(tmplErr...)
 }

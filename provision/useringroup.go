@@ -111,9 +111,12 @@ func ensureUserInGroups(userGroupsMap base.UserInGroupSpec) error {
 	return nil
 }
 
-func userInGroup(config base.Config) {
+func userInGroup(config base.Config) error {
 	err := ensureUserInGroups(config.UserInGroup)
 	if err != nil {
 		internal.Log.Errorf("error ensuring user in groups: %v", err)
+		return err
 	}
+
+	return nil
 }

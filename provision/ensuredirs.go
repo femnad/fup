@@ -19,9 +19,12 @@ func doEnsureDirs(dirs []string) error {
 	return nil
 }
 
-func ensureDirs(config base.Config) {
+func ensureDirs(config base.Config) error {
 	err := doEnsureDirs(config.EnsureDirs)
 	if err != nil {
 		internal.Log.Errorf("error ensuring dirs: %v", err)
+		return err
 	}
+
+	return nil
 }

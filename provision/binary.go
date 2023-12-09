@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -57,13 +58,17 @@ func downloadBinary(binary entity.Binary, config base.Config) error {
 	return createSymlink(base.NamedLink{Target: name}, binaryDir, s.GetBinPath())
 }
 
-func (p Provisioner) downloadBinaries() {
+func (p Provisioner) downloadBinaries() error {
 	internal.Log.Notice("Downloading binaries")
 
+	var binErrs []error
 	for _, binary := range p.Config.Binaries {
 		err := downloadBinary(binary, p.Config)
 		if err != nil {
 			internal.Log.Errorf("error downloading binary %s: %v", binary.Url, err)
 		}
+		binErrs = append(binErrs, err)
 	}
+
+	return errors.Join(binErrs...)
 }

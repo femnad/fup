@@ -81,11 +81,14 @@ func ensureLine(line base.LineInFile) error {
 	return nil
 }
 
-func ensureLines(config base.Config) {
+func ensureLines(config base.Config) error {
 	for _, line := range config.EnsureLines {
 		err := ensureLine(line)
 		if err != nil {
 			internal.Log.Errorf("error ensuring lines in file: %v", err)
+			return err
 		}
 	}
+
+	return nil
 }

@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -23,10 +24,10 @@ func pipInstall(pipBin, pkg string) error {
 	return nil
 }
 
-func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
+func pythonInstall(pkg base.PythonPkg, cfg base.Config) error {
 	if unless.ShouldSkip(pkg, cfg.Settings) {
 		internal.Log.Debugf("skipping pip install for %s", pkg.Name())
-		return
+		return nil
 	}
 
 	internal.Log.Infof("Installing Python package %s", pkg.Name())
@@ -39,7 +40,7 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error creating virtualenv for package %s: %v", name, err)
-		return
+		return err
 	}
 
 	venvPip := path.Join(venvDir, "bin", "pip")
@@ -47,14 +48,14 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 	err = pipInstall(venvPip, name)
 	if err != nil {
 		internal.Log.Errorf("error installing pip package %s: %v", name, err)
-		return
+		return err
 	}
 
 	for _, req := range pkg.Reqs {
 		err = pipInstall(venvPip, req)
 		if err != nil {
 			internal.Log.Errorf("error installing required pip package %s for %s: %v", req, name, err)
-			return
+			return err
 		}
 	}
 
@@ -70,13 +71,19 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) {
 		err = common.Symlink(linkName, linkTarget)
 		if err != nil {
 			internal.Log.Errorf("error linking from %s to %s for pkg %s: %v", linkName, linkTarget, name, err)
-			return
+			return err
 		}
 	}
+
+	return nil
 }
 
-func pythonInstallPkgs(cfg base.Config) {
+func pythonInstallPkgs(cfg base.Config) error {
+	var pyErr []error
 	for _, pkg := range cfg.Python {
-		pythonInstall(pkg, cfg)
+		err := pythonInstall(pkg, cfg)
+		pyErr = append(pyErr, err)
 	}
+
+	return errors.Join(pyErr...)
 }

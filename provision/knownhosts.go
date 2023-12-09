@@ -47,9 +47,12 @@ func addKnownHosts(hosts []string) error {
 	return nil
 }
 
-func acceptHostKeys(config base.Config) {
+func acceptHostKeys(config base.Config) error {
 	err := addKnownHosts(config.AcceptHostKeys)
 	if err != nil {
 		internal.Log.Errorf("error accepting host keys: %v", err)
+		return err
 	}
+
+	return nil
 }

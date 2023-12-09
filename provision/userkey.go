@@ -91,15 +91,17 @@ func ensureUserKeys(user string) error {
 	return err
 }
 
-func addGithubUserKeys(config base.Config) {
+func addGithubUserKeys(config base.Config) error {
 	user := config.GithubUserKey.User
 	if user == "" {
-		return
+		return nil
 	}
 
 	err := ensureUserKeys(user)
 	if err != nil {
 		internal.Log.Errorf("error ensuring GitHub keys for user %s: %v", user, err)
-		return
+		return err
 	}
+
+	return nil
 }
