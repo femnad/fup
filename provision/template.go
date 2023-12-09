@@ -2,6 +2,7 @@ package provision
 
 import (
 	"bytes"
+	"net/url"
 	"os"
 	"path"
 	"text/template"
@@ -24,8 +25,13 @@ func getTemplateContent(config base.Config, tmplSrc string) ([]byte, error) {
 	}
 
 	configBase, _ := path.Split(config.Url())
-	tmplPath := path.Join(configBase, config.Settings.TemplateDir, tmplSrc)
-	return remote.ReadResponseBytes(tmplPath)
+	_, relTmplDir := path.Split(config.Settings.TemplateDir)
+	tmplUrl, err := url.JoinPath(configBase, relTmplDir, tmplSrc)
+	if err != nil {
+		return nil, err
+	}
+
+	return remote.ReadResponseBytes(tmplUrl)
 }
 
 func applyTemplate(tmpl base.Template, config base.Config) error {
@@ -33,6 +39,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 	if err != nil {
 		return err
 	}
+
 	parsed, err := template.New("tmpl").Parse(string(templateContent))
 	if err != nil {
 		return err
