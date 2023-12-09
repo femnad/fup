@@ -91,13 +91,14 @@ func ensureCorrectDirEntry(entry DirEntry, fupConfig base.Config) error {
 }
 
 func ensureFileContent(content FileContent) error {
-	bytes, err := os.ReadFile(content.Path)
+	path := internal.ExpandUser(content.Path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
 	if content.Content != string(bytes) {
-		return fmt.Errorf("file %s doesn't have expected content")
+		return fmt.Errorf("file %s doesn't have expected content", path)
 	}
 
 	return nil
