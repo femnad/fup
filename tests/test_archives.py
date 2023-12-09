@@ -1,12 +1,10 @@
 import dataclasses
 import os
-import shlex
 import shutil
-import subprocess
 import sys
 import unittest
 
-import yaml
+import fup_test
 
 ABSOLUTE_ARTIFACTS_DIR = os.path.expanduser('~/out')
 RELATIVE_ARTIFACTS_DIR = 'out'
@@ -130,16 +128,8 @@ def gen_test(test_case: ArchiveTest):
 
         artifacts_dir = RELATIVE_ARTIFACTS_DIR if test_case.relative else ABSOLUTE_ARTIFACTS_DIR
 
-        if not os.path.exists(artifacts_dir):
-            os.mkdir(artifacts_dir)
-        with open(f'{artifacts_dir}/fup.yml', 'wt') as fd:
-            yaml.dump(config, Dumper=yaml.SafeDumper, stream=fd)
-
-        go_path = os.getenv('GOPATH', os.path.expanduser('~/go'))
-        fup_bin = os.path.join(go_path, 'bin', 'fup')
-        cmd = shlex.split(f'{fup_bin} -p archive -f {artifacts_dir}/fup.yml -l 0 -n')
-        proc = subprocess.run(cmd)
-        self.assertTrue(proc.returncode == 0)
+        return_code = fup_test.run_fup(config, f'{artifacts_dir}/fup.yml', 'archive')
+        self.assertTrue(return_code == 0)
 
         link_name = ensure_abs(test_case.symlink.link_name, artifacts_dir)
         target = ensure_abs(test_case.symlink.target, artifacts_dir)
