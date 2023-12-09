@@ -21,6 +21,20 @@ jobs:
           go install
           python3 tests/test_archives.py
 
-      - name: Run provisioning command
+  container-test:
+    name: Run provisioning in a container
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:mantic
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup container
         run: |
-          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/ci-test/contrib/test.yml -b
+          apt update
+          apt install -y ca-certificates golang
+          go install
+
+      - name: Provision
+        run: |
+          ~/go/bin/fup -f contrib/test.yml -b
