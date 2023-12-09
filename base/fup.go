@@ -50,7 +50,7 @@ func (c Config) IsRemote() bool {
 	return c.isRemote
 }
 
-func (c Config) Url() string {
+func (c Config) File() string {
 	return c.file
 }
 
