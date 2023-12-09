@@ -32,7 +32,7 @@ import (
 const (
 	bufferSize         = 8192
 	dirMode            = 0755
-	githubReleaseRegex = "https://github.com/[a-z_-]+/[a-z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
+	githubReleaseRegex = "https://github.com/[a-zA-Z_-]+/[a-zA-Z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
 	xzDictMax          = 1 << 27
 	tarFileRegex       = `\.tar(\.(gz|bz2|xz))?$`
 )
