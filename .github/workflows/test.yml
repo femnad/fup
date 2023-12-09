@@ -69,12 +69,11 @@ jobs:
       - name: Get branch
         id: get-branch
         run: |
-          branch=main
           if [ "${{ github.event_name }}" == 'pull_request' ]
           then
-            branch="${{ github.base_ref}}"
+            branch="${{ github.head_ref }}"
           else
-            branch="${{ github.ref}}"
+            branch="${{ github.ref_name }}"
           fi
           echo "branch=${branch}" >> "$GITHUB_OUTPUT"
 
