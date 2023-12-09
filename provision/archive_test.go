@@ -63,7 +63,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    archiveRoot
+		want    archiveInfo
 		wantErr bool
 	}{
 		{
@@ -74,8 +74,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 					name: "dir/foo",
 				}},
 			},
-			want: archiveRoot{
+			want: archiveInfo{
 				hasRootDir: true,
+				maybeExec:  "dir/foo",
 				target:     "dir",
 			},
 		},
@@ -87,8 +88,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 					name: "foo",
 				}},
 			},
-			want: archiveRoot{
+			want: archiveInfo{
 				hasRootDir: false,
+				maybeExec:  "foo",
 				target:     "foo",
 			},
 		},
@@ -111,8 +113,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: archiveRoot{
+			want: archiveInfo{
 				hasRootDir: false,
+				maybeExec:  "foo",
 				target:     "qux",
 			},
 		},
@@ -134,8 +137,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: archiveRoot{
+			want: archiveInfo{
 				hasRootDir: false,
+				maybeExec:  "foo",
 				target:     "foo",
 			},
 		},
@@ -157,15 +161,16 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: archiveRoot{
+			want: archiveInfo{
 				hasRootDir: true,
+				maybeExec:  "qux/baz/foo",
 				target:     "qux",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := determineArchiveRoot(tt.args.archive, tt.args.entries)
+			got, err := getArchiveInfo(tt.args.archive, tt.args.entries)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("determineArchiveRoot() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -39,33 +39,35 @@ type archiveEntry struct {
 	name string
 }
 
-// archiveRoot stores an archive's root dir and species if the root dir is part of the archive files.
-type archiveRoot struct {
+// archiveInfo stores an archive's root dir and species if the root dir is part of the archive files.
+type archiveInfo struct {
 	hasRootDir bool
+	maybeExec  string
 	target     string
 }
 
-func processDownload(archive base.Archive, s settings.Settings) (string, error) {
+func processDownload(archive base.Archive, s settings.Settings) (archiveInfo, error) {
+	var info archiveInfo
 	url := archive.ExpandURL(s)
 	if url == "" {
-		return "", fmt.Errorf("no URL given for archive %v", archive)
+		return info, fmt.Errorf("no URL given for archive %v", archive)
 	}
 	internal.Log.Infof("Downloading %s", url)
 
 	response, err := remote.ReadResponseBody(url)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
 	extractFn, err := getExtractionFn(archive, s, response.ContentDisposition)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
 	dirName := internal.ExpandUser(s.ExtractDir)
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
 	return extractFn(archive, response, dirName)
@@ -230,7 +232,7 @@ func commonPrefix(names []string) string {
 	return first[:minLength]
 }
 
-func determineArchiveRoot(archive base.Archive, entries []archiveEntry) (archiveRoot, error) {
+func getArchiveInfo(archive base.Archive, entries []archiveEntry) (archiveInfo, error) {
 	names := mare.Map(entries, func(entry archiveEntry) string {
 		return entry.name
 	})
@@ -245,12 +247,13 @@ func determineArchiveRoot(archive base.Archive, entries []archiveEntry) (archive
 		}
 	}
 
+	var maybeExec string
 	var hasRootDir bool
 	var target string
 	if roots.Cardinality() == 1 {
 		root, ok := roots.Pop()
 		if !ok {
-			return archiveRoot{}, fmt.Errorf("error determining root dir for %s", archive.Url)
+			return archiveInfo{}, fmt.Errorf("error determining root dir for %s", archive.Url)
 		}
 
 		hasRootDir = strings.Index(prefix, "/") > -1
@@ -261,19 +264,23 @@ func determineArchiveRoot(archive base.Archive, entries []archiveEntry) (archive
 		target = execs[0].name
 	}
 
-	return archiveRoot{hasRootDir: hasRootDir, target: target}, nil
+	if len(execs) == 1 {
+		maybeExec = execs[0].name
+	}
+
+	return archiveInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target}, nil
 }
 
-func getTarInfo(archive base.Archive, response remote.Response, tempfile string) (archiveRoot, error) {
+func getTarInfo(archive base.Archive, response remote.Response, tempfile string) (archiveInfo, error) {
 	f, err := os.Open(tempfile)
 	if err != nil {
-		return archiveRoot{}, err
+		return archiveInfo{}, err
 	}
 	defer f.Close()
 
 	reader, err := getReader(response, f)
 	if err != nil {
-		return archiveRoot{}, err
+		return archiveInfo{}, err
 	}
 
 	var entries []archiveEntry
@@ -292,20 +299,20 @@ func getTarInfo(archive base.Archive, response remote.Response, tempfile string)
 		})
 	}
 
-	return determineArchiveRoot(archive, entries)
+	return getArchiveInfo(archive, entries)
 }
 
-func getOutputPath(archiveRoot archiveRoot, fileName, dirName string) string {
-	if archiveRoot.hasRootDir {
+func getOutputPath(info archiveInfo, fileName, dirName string) string {
+	if info.hasRootDir {
 		return filepath.Join(dirName, fileName)
 	}
 
-	return filepath.Join(dirName, archiveRoot.target, fileName)
+	return filepath.Join(dirName, info.target, fileName)
 }
 
-func getAbsTarget(dirName string, root archiveRoot) (string, error) {
+func getAbsTarget(dirName string, info archiveInfo) (string, error) {
 	if path.IsAbs(dirName) {
-		return path.Join(dirName, root.target), nil
+		return path.Join(dirName, info.target), nil
 	}
 
 	wd, err := os.Getwd()
@@ -313,27 +320,28 @@ func getAbsTarget(dirName string, root archiveRoot) (string, error) {
 		return "", err
 	}
 
-	return path.Join(wd, dirName, root.target), nil
+	return path.Join(wd, dirName, info.target), nil
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive base.Archive, response remote.Response, dirName string) (string, error) {
+func untar(archive base.Archive, response remote.Response, dirName string) (archiveInfo, error) {
+	var info archiveInfo
 	tempfile, err := downloadTempFile(response)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
-	root, err := getTarInfo(archive, response, tempfile)
+	info, err = getTarInfo(archive, response, tempfile)
 
 	f, err := os.Open(tempfile)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 	defer f.Close()
 
 	reader, err := getReader(response, f)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
 	tarReader := tar.NewReader(reader)
@@ -345,25 +353,31 @@ func untar(archive base.Archive, response remote.Response, dirName string) (stri
 			panic(err)
 		}
 
-		outputPath := getOutputPath(root, header.Name, dirName)
+		outputPath := getOutputPath(info, header.Name, dirName)
 		err = extractCompressedFile(header.FileInfo(), outputPath, tarReader)
 		if err != nil {
-			return "", err
+			return info, err
 		}
 	}
 
 	err = os.Remove(tempfile)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
-	return getAbsTarget(dirName, root)
+	info.target, err = getAbsTarget(dirName, info)
+	if err != nil {
+		return info, err
+	}
+
+	return info, nil
 }
 
-func getZipInfo(archive base.Archive, tempFile string) (archiveRoot, error) {
+func getZipInfo(archive base.Archive, tempFile string) (archiveInfo, error) {
+	var info archiveInfo
 	zipArchive, err := zip.OpenReader(tempFile)
 	if err != nil {
-		return archiveRoot{}, err
+		return info, err
 	}
 
 	var entries []archiveEntry
@@ -376,42 +390,48 @@ func getZipInfo(archive base.Archive, tempFile string) (archiveRoot, error) {
 
 	err = zipArchive.Close()
 	if err != nil {
-		return archiveRoot{}, err
+		return info, err
 	}
 
-	return determineArchiveRoot(archive, entries)
+	return getArchiveInfo(archive, entries)
 }
 
-func unzip(archive base.Archive, response remote.Response, dirName string) (string, error) {
+func unzip(archive base.Archive, response remote.Response, dirName string) (archiveInfo, error) {
+	var info archiveInfo
 	tempFile, err := downloadTempFile(response)
 
 	root, err := getZipInfo(archive, tempFile)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
 	zipArchive, err := zip.OpenReader(tempFile)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
 	for _, f := range zipArchive.File {
 		output := getOutputPath(root, f.Name, dirName)
 		err = unzipFile(f, output)
 		if err != nil {
-			return "", err
+			return info, err
 		}
 	}
 
 	err = os.Remove(tempFile)
 	if err != nil {
-		return "", err
+		return info, err
 	}
 
-	return getAbsTarget(dirName, root)
+	info.target, err = getAbsTarget(dirName, root)
+	if err != nil {
+		return info, err
+	}
+
+	return info, nil
 }
 
-func getExtractionFn(archive base.Archive, s settings.Settings, contentDisposition string) (func(base.Archive, remote.Response, string) (string, error), error) {
+func getExtractionFn(archive base.Archive, s settings.Settings, contentDisposition string) (func(base.Archive, remote.Response, string) (archiveInfo, error), error) {
 	fileName := archive.ExpandURL(s)
 	if contentDisposition != "" {
 		fileName = contentDisposition
@@ -429,7 +449,7 @@ func getExtractionFn(archive base.Archive, s settings.Settings, contentDispositi
 	return nil, fmt.Errorf("unable to find extraction method for URL %s", fileName)
 }
 
-func Extract(archive base.Archive, s settings.Settings) (string, error) {
+func Extract(archive base.Archive, s settings.Settings) (archiveInfo, error) {
 	return processDownload(archive, s)
 }
 
@@ -483,14 +503,14 @@ func extractArchive(archive base.Archive, s settings.Settings) error {
 		return nil
 	}
 
-	target, err := Extract(archive, s)
+	info, err := Extract(archive, s)
 	if err != nil {
 		internal.Log.Errorf("Error downloading archive %s: %v", url, err)
 		return err
 	}
 
-	for _, symlink := range archive.ExpandSymlinks(s, target) {
-		err = createSymlink(symlink, target, s.GetBinPath())
+	for _, symlink := range archive.ExpandSymlinks(s, info.maybeExec) {
+		err = createSymlink(symlink, info.target, s.GetBinPath())
 		if err != nil {
 			internal.Log.Errorf("error creating symlink for archive %s: %v", url, err)
 			return err

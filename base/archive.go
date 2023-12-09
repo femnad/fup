@@ -54,11 +54,14 @@ func (a Archive) ExpandURL(s settings.Settings) string {
 	return os.Expand(a.Url, a.expand)
 }
 
-func (a Archive) ExpandSymlinks(s settings.Settings, target string) []NamedLink {
+func (a Archive) ExpandSymlinks(s settings.Settings, maybeExec string) []NamedLink {
 	var links []NamedLink
 	var expanded []NamedLink
 
 	name := a.Name()
+	if name == "" && maybeExec != "" {
+		name = maybeExec
+	}
 	symlinks := a.Symlink
 	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink && name != "" {
 		symlinks = []string{name}
