@@ -1,5 +1,8 @@
 from ubuntu:mantic
 
 run apt update && apt install -y ca-certificates golang
-run go install github.com/femnad/fup@latest
-entrypoint ["/root/go/bin/fup", "-f", "https://raw.githubusercontent.com/femnad/fup/ci-test/contrib/test.yml", "-b"]
+workdir /root
+run git clone https://github.com/femnad/fup.git
+workdir /root/fup
+run go install
+entrypoint ["/root/go/bin/fup", "-f", "contrib/test.yml", "-b"]

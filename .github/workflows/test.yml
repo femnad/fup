@@ -32,7 +32,7 @@ jobs:
       - name: Setup container
         run: |
           apt update
-          apt install -y ca-certificates golang
+          apt install -y ca-certificates curl golang
           go install
 
       - name: Provision
