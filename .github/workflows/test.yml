@@ -10,7 +10,6 @@ on:
 
 jobs:
   test:
-    if: false
     name: Run unit and integration tests
     runs-on: ubuntu-latest
     steps:
@@ -25,7 +24,6 @@ jobs:
           python3 tests/integration/test_archives.py
 
   container-test:
-    if: false
     name: Run provisioning in a container
     runs-on: ubuntu-latest
     container:
