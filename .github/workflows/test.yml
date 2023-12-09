@@ -42,7 +42,7 @@ jobs:
 
       - name: Provision
         run: |
-          ~/go/bin/fup -f tests/config/test.yml -l 0 -n
+          ~/go/bin/fup -f tests/config/test.yml -l 0 -n -b
 
       - name: Verify
         run: |
@@ -67,8 +67,8 @@ jobs:
 
       - name: Provision
         run: |
-          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/main/tests/config/test-remote.yml -l 0 -n
+          ~/go/bin/fup -f https://raw.githubusercontent.com/femnad/fup/${{ github.ref_name }}/tests/config/test-remote.yml -l 0 -n
 
       - name: Verify
         run: |
-          ~/go/bin/fup-verify -c https://raw.githubusercontent.com/femnad/fup/main/tests/config/test-remote.yml -f tests/config/verify-test-remote.yml
+          ~/go/bin/fup-verify -c https://raw.githubusercontent.com/femnad/fup/${{ github.ref_name }}/tests/config/test-remote.yml -f tests/config/verify-test-remote.yml

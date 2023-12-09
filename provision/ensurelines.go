@@ -72,7 +72,11 @@ func ensureLine(line base.LineInFile) error {
 		return nil
 	}
 
-	mv := common.GetMvCmd(tmpPath, line.File)
+	mv, err := common.GetMvCmd(tmpPath, line.File)
+	if err != nil {
+		return err
+	}
+
 	out, err := marecmd.RunFormatError(mv)
 	if err != nil {
 		return fmt.Errorf("error renaming %s to %s: %v, output %s", tmpPath, line.File, err, out.Stderr)

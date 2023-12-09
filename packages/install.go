@@ -29,15 +29,6 @@ type PkgManager interface {
 	RemoteInstall(urls []string) error
 }
 
-func isUserRoot() (bool, error) {
-	userId, err := internal.GetCurrentUserId()
-	if err != nil {
-		return false, err
-	}
-
-	return userId != rootUid, nil
-}
-
 type Installer struct {
 	Pkg       PkgManager
 	Installed mapset.Set[string]
@@ -54,7 +45,7 @@ func setToSlice[T comparable](set mapset.Set[T]) []T {
 }
 
 func (i Installer) maybeRunWithSudo(cmds ...string) error {
-	sudo, err := isUserRoot()
+	sudo, err := common.IsUserRoot()
 	if err != nil {
 		return err
 	}
