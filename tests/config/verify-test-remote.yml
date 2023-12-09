@@ -16,18 +16,6 @@ paths:
 file_content:
   - path: /etc/apt/apt.conf.d/50unattended-upgrades
     content: |
-      Unattended-Upgrade::Allowed-Origins {
-              "${distro_id}:${distro_codename}";
-              "${distro_id}:${distro_codename}-security";
-              "${distro_id}ESM:${distro_codename}";
-              "${distro_id}ESM:${distro_codename}-security";
-              "${distro_id}:${distro_codename}-updates";
-              "${distro_id}:${distro_codename}-proposed";
-              "${distro_id}:${distro_codename}-backports";
-      };
-
-      Unattended-Upgrade::Remove-Unused-Dependencies "true";
-
       Unattended-Upgrade::MinimalSteps "false";
 
       Unattended-Upgrade::OnlyOnACPower "false";
