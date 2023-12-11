@@ -12,7 +12,11 @@ const sshCloneFact = "ssh-ready"
 
 func cloneRepos(repos []entity.Repo, clonePath string) error {
 	for _, repo := range repos {
-		err := common.CloneUnderPath(repo, clonePath)
+		path := clonePath
+		if repo.Path != "" {
+			path = repo.Path
+		}
+		err := common.CloneUnderPath(repo, path)
 		if err != nil {
 			return err
 		}
