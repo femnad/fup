@@ -90,6 +90,38 @@ func ensureCorrectDirEntry(entry DirEntry, fupConfig base.Config) error {
 	return nil
 }
 
+func readConfig(config string) (expect, error) {
+	var e expect
+	f, err := os.Open(config)
+	if err != nil {
+		return e, err
+	}
+
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(&e)
+	return e, err
+}
+
+func ensureExecutables(execs []string) []error {
+	var errs []error
+	for _, exec := range execs {
+		_, err := common.Which(exec)
+		errs = append(errs, err)
+	}
+
+	return errs
+}
+
+func ensureEntries(entries []DirEntry, config base.Config) []error {
+	var errs []error
+	for _, entry := range entries {
+		err := ensureCorrectDirEntry(entry, config)
+		errs = append(errs, err)
+	}
+
+	return errs
+}
+
 func ensureFileContent(content FileContent) error {
 	path := internal.ExpandUser(content.Path)
 	bytes, err := os.ReadFile(path)
@@ -104,16 +136,14 @@ func ensureFileContent(content FileContent) error {
 	return nil
 }
 
-func readConfig(config string) (expect, error) {
-	var e expect
-	f, err := os.Open(config)
-	if err != nil {
-		return e, err
+func ensureFiles(files []FileContent) []error {
+	var errs []error
+	for _, content := range files {
+		err := ensureFileContent(content)
+		errs = append(errs, err)
 	}
 
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&e)
-	return e, err
+	return errs
 }
 
 func Verify(config string, fupConfig base.Config) error {
@@ -122,20 +152,13 @@ func Verify(config string, fupConfig base.Config) error {
 		return err
 	}
 
+	execErrs := ensureExecutables(e.Executables)
+	entryErrs := ensureEntries(e.DirEntries, fupConfig)
+	fileErrs := ensureFiles(e.Files)
+
 	var errs []error
-	for _, exec := range e.Executables {
-		_, err := common.Which(exec)
-		errs = append(errs, err)
-	}
-
-	for _, entry := range e.DirEntries {
-		err := ensureCorrectDirEntry(entry, fupConfig)
-		errs = append(errs, err)
-	}
-
-	for _, content := range e.Files {
-		err := ensureFileContent(content)
-		errs = append(errs, err)
+	for _, errCol := range [][]error{execErrs, entryErrs, fileErrs} {
+		errs = append(errs, errCol...)
 	}
 
 	return errors.Join(errs...)
