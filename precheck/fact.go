@@ -14,6 +14,7 @@ import (
 const (
 	batteryDevicePattern = "^BAT[0-9]+$"
 	neovimPluginsDir     = "~/.local/share/plugged"
+	onepasswordSSHSocket = "~/.1password/agent.sock"
 	sysClassPower        = "/sys/class/power_supply"
 	tmuxEnvKey           = "TMUX"
 )
@@ -75,6 +76,11 @@ func neovimReady() (bool, error) {
 }
 
 func sshReady() (bool, error) {
+	_, err := os.Stat(internal.ExpandUser(onepasswordSSHSocket))
+	if err == nil {
+		return true, nil
+	}
+
 	resp, err := marecmd.RunFormatError(marecmd.Input{Command: "ssh-add -l"})
 	if err != nil {
 		internal.Log.Debugf("error checking ssh-add output: %v", err)
