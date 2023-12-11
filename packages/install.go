@@ -106,11 +106,15 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	missing := mapset.NewSet[entity.RemotePackage]()
 
 	var existingVersion string
-	var vErr error
+	var err error
 	desired.Each(func(pkg entity.RemotePackage) bool {
 		if i.Installed.Contains(pkg.Name) {
-			existingVersion, vErr = i.Version(pkg.Name)
-			if vErr != nil {
+			if pkg.InstallOnce {
+				return false
+			}
+
+			existingVersion, err = i.Version(pkg.Name)
+			if err != nil {
 				return true
 			}
 
@@ -125,8 +129,8 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 		return false
 	})
 
-	if vErr != nil {
-		return vErr
+	if err != nil {
+		return err
 	}
 
 	if missing.Equal(mapset.NewSet[entity.RemotePackage]()) {
