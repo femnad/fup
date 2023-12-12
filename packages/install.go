@@ -22,6 +22,7 @@ type PkgManager interface {
 	PreserveEnv() bool
 	RemoveCmd() string
 	RemoteInstall(urls []string) error
+	UpdateCmd() string
 }
 
 type Installer struct {
@@ -197,4 +198,14 @@ func (i Installer) Remove(undesired mapset.Set[string]) error {
 	removeCmd = append(removeCmd, pkgToRemove...)
 
 	return i.maybeRunWithSudo(removeCmd...)
+}
+
+func (i Installer) Update() error {
+	updateCmd := i.Pkg.UpdateCmd()
+	if updateCmd == "" {
+		return nil
+	}
+
+	cmd := []string{i.Pkg.PkgExec(), updateCmd}
+	return i.maybeRunWithSudo(cmd...)
 }

@@ -154,17 +154,21 @@ func (p packager) removePackages(spec base.PackageSpec) error {
 func installPackages(p Provisioner) error {
 	var pkgErrs []error
 
-	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
-	if err != nil {
+	if err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings); err != nil {
 		internal.Log.Errorf("error installing remote packages: %v", err)
+		pkgErrs = append(pkgErrs, err)
 	}
-	pkgErrs = append(pkgErrs, err)
 
-	err = p.Packager.installPackages(p.Config.Packages)
-	if err != nil {
-		internal.Log.Errorf("error installing packages: %v", err)
+	// Remote packages may have initialized repositories which may require updating the package database.
+	if err := p.Packager.installer.Update(); err != nil {
+		internal.Log.Errorf("error updating package database: %v", err)
+		pkgErrs = append(pkgErrs, err)
 	}
-	pkgErrs = append(pkgErrs, err)
+
+	if err := p.Packager.installPackages(p.Config.Packages); err != nil {
+		internal.Log.Errorf("error installing packages: %v", err)
+		pkgErrs = append(pkgErrs, err)
+	}
 
 	return errors.Join(pkgErrs...)
 }

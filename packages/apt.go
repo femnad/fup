@@ -15,7 +15,7 @@ import (
 type Apt struct {
 }
 
-func (a Apt) ListPkgsHeader() string {
+func (Apt) ListPkgsHeader() string {
 	return "Listing..."
 }
 
@@ -40,6 +40,10 @@ func (Apt) PkgNameSeparator() string {
 
 func (Apt) RemoveCmd() string {
 	return "purge"
+}
+
+func (Apt) UpdateCmd() string {
+	return "update"
 }
 
 func (Apt) remoteInstall(url string) error {

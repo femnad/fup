@@ -11,7 +11,7 @@ import (
 type Dnf struct {
 }
 
-func (d Dnf) ListPkgsHeader() string {
+func (Dnf) ListPkgsHeader() string {
 	return "Installed Packages"
 }
 
@@ -44,4 +44,8 @@ func (Dnf) RemoteInstall(urls []string) error {
 	input := marecmd.Input{Command: fmt.Sprintf("dnf install -y %s", strings.Join(urls, " ")), Sudo: !isRoot}
 	_, err = marecmd.RunFormatError(input)
 	return err
+}
+
+func (Dnf) UpdateCmd() string {
+	return ""
 }
