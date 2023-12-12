@@ -8,6 +8,7 @@ type FlatpakRemote struct {
 type FlatpakPkg struct {
 	Launcher string `yaml:"launcher"`
 	Name     string `yaml:"name"`
+	Remote   string `yaml:"remote"`
 }
 
 type Flatpak struct {
