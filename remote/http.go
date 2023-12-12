@@ -6,16 +6,16 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"regexp"
+	"strings"
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
 const (
-	contentDispositionPattern = `attachment; filename="(.*)"`
-	userAgentKey              = "user-agent"
-	userAgent                 = "femnad/fup"
+	userAgentKey = "user-agent"
+	userAgent    = "femnad/fup"
+	utfPrefix    = "UTF-8''"
 )
 
 var (
@@ -30,12 +30,25 @@ type Response struct {
 
 func getAttachmentFilename(header http.Header) string {
 	contentDispositionValue := header.Get("Content-Disposition")
-	matches := regexp.MustCompile(contentDispositionPattern).FindStringSubmatch(contentDispositionValue)
-	if len(matches) != 2 {
-		return ""
+	for _, value := range strings.Split(contentDispositionValue, "; ") {
+		if value == "attachment" {
+			continue
+		}
+
+		fields := strings.SplitN(value, "=", 2)
+		if len(fields) != 2 {
+			continue
+		}
+
+		filename := fields[1]
+		if strings.HasPrefix(filename, utfPrefix) {
+			return strings.TrimPrefix(filename, utfPrefix)
+		}
+
+		return filename
 	}
 
-	return matches[1]
+	return ""
 }
 
 func ReadResponseBody(url string) (Response, error) {
