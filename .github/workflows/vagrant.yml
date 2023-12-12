@@ -1,0 +1,16 @@
+name: Run Vagrant tests
+
+on:
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  test:
+    name: Run Vagrant tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Provision with vagrant
+        run: vagrant
+
