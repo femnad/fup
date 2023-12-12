@@ -63,7 +63,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    archiveInfo
+		want    ArchiveInfo
 		wantErr bool
 	}{
 		{
@@ -74,7 +74,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					name: "dir/foo",
 				}},
 			},
-			want: archiveInfo{
+			want: ArchiveInfo{
 				hasRootDir: true,
 				maybeExec:  "dir/foo",
 				target:     "dir",
@@ -88,7 +88,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					name: "foo",
 				}},
 			},
-			want: archiveInfo{
+			want: ArchiveInfo{
 				hasRootDir: false,
 				maybeExec:  "foo",
 				target:     "foo",
@@ -113,7 +113,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: archiveInfo{
+			want: ArchiveInfo{
 				hasRootDir: false,
 				maybeExec:  "foo",
 				target:     "qux",
@@ -137,7 +137,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: archiveInfo{
+			want: ArchiveInfo{
 				hasRootDir: false,
 				maybeExec:  "foo",
 				target:     "foo",
@@ -161,7 +161,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: archiveInfo{
+			want: ArchiveInfo{
 				hasRootDir: true,
 				maybeExec:  "qux/baz/foo",
 				target:     "qux",
