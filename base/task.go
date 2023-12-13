@@ -28,7 +28,13 @@ func runCmd(step Step, cfg Config) error {
 		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 
-	_, err := run.Cmd(cfg.Settings, marecmd.Input{Command: c, Sudo: step.Sudo, Pwd: pwd})
+	isRoot, err := common.IsUserRoot()
+	if err != nil {
+		return err
+	}
+
+	sudo := !isRoot && step.Sudo
+	_, err = run.Cmd(cfg.Settings, marecmd.Input{Command: c, Sudo: sudo, Pwd: pwd})
 	return err
 }
 
