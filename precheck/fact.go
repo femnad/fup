@@ -67,7 +67,7 @@ func hasEnv(env string) (bool, error) {
 func hasOutput(cmd string) (bool, error) {
 	out, err := marecmd.Run(marecmd.Input{Command: cmd})
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 
 	return len(strings.TrimSpace(out.Stdout)) > 0, nil
