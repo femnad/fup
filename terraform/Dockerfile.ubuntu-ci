@@ -1,0 +1,3 @@
+from ubuntu:mantic
+
+run apt update -y && apt install -y ca-certificates curl gnupg2 golang

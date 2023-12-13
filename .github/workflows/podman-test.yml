@@ -9,8 +9,10 @@ jobs:
     name: Run remote config test with Ubuntu systemd container
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Build image
-        run: podman image build -t fup:ubuntu -f Dockerfile.ubuntu .
+        run: podman image build -t fup:ubuntu -f tests/image/Dockerfile.ubuntu .
 
       - name: Provision in the image
         run: |
