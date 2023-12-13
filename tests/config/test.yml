@@ -47,4 +47,4 @@ tasks:
 template:
   - src: unattended-upgrades.conf
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
-    when: is-ubuntu
+    when: os "ubuntu"
