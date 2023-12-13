@@ -21,10 +21,6 @@ resource "docker_image" "fedora" {
   }
 }
 
-data "docker_image" "fedora" {
-  name = local.fedora_image_name
-}
-
 resource "docker_registry_image" "fedora" {
   name          = docker_image.fedora.name
   keep_remotely = true
@@ -44,10 +40,6 @@ resource "docker_image" "ubuntu" {
   triggers = {
     dir_sha1 = sha1(filesha1(local.ubuntu_dockerfile))
   }
-}
-
-data "docker_image" "ubuntu" {
-  name = local.ubuntu_image_name
 }
 
 resource "docker_registry_image" "ubuntu" {

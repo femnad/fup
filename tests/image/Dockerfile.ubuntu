@@ -1,5 +1,5 @@
 from ubuntu:mantic
 
-run apt update -y && apt install -y curl systemd
+run apt update -y && apt install -y curl gnupg2 systemd
 
 cmd [ "/bin/systemd" ]

@@ -1,5 +1,5 @@
 from fedora:39
 
-run dnf install -y systemd
+run dnf install -y curl gnupg2 systemd
 
 cmd ["/sbin/init"]
