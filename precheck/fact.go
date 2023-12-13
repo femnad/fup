@@ -20,7 +20,11 @@ const (
 
 var (
 	batteryDeviceRegex = regexp.MustCompile(batteryDevicePattern)
-	pkgMgrToOs         = map[string][]string{
+	caps               = map[string]func() (bool, error){
+		"laptop": isLaptop,
+		"ssh":    sshReady,
+	}
+	pkgMgrToOs = map[string][]string{
 		"apt": {"debian", "ubuntu"},
 		"dnf": {"fedora"},
 	}
@@ -46,69 +50,18 @@ func isLaptop() (bool, error) {
 	return false, nil
 }
 
-func hasEnv(env string) (bool, error) {
-	val := os.Getenv(env)
-	return val != "", nil
-}
-
-func isOs(osId string) (bool, error) {
-	foundOsId, err := GetOsId()
-	if err != nil {
-		return false, fmt.Errorf("error getting OS ID %v", err)
-	}
-
-	return foundOsId == osId, nil
-}
-
 func sshReady() (bool, error) {
 	_, err := os.Stat(internal.ExpandUser(onepasswordSSHSocket))
 	if err == nil {
 		return true, nil
 	}
 
-	resp, err := marecmd.RunFormatError(marecmd.Input{Command: "ssh-add -l"})
-	if err != nil {
-		internal.Log.Debugf("error checking ssh-add output: %v", err)
-		return false, nil
-	}
-
-	output := strings.TrimSpace(resp.Stdout)
-	if output == "" {
-		return false, nil
-	}
-
-	for _, line := range strings.Split(output, "\n") {
-		fields := strings.Split(line, " ")
-		if len(fields) != 4 {
-			return false, fmt.Errorf("unexpected SSH agent output: %s", output)
-		}
-
-		hostname, err := os.Hostname()
-		if err != nil {
-			return false, err
-		}
-
-		// Third field could be <user>@<hostname> or <hostname>.
-		if strings.HasSuffix(fields[2], hostname) {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return hasOutput("ssh-add -l")
 }
 
-var caps = map[string]func() (bool, error){
-	"laptop": isLaptop,
-	"ssh":    sshReady,
-}
-
-func isOk(cap string) (bool, error) {
-	capFn, ok := caps[cap]
-	if !ok {
-		return false, fmt.Errorf("no such capability check: %s", cap)
-	}
-
-	return capFn()
+func hasEnv(env string) (bool, error) {
+	val := os.Getenv(env)
+	return val != "", nil
 }
 
 func hasOutput(cmd string) (bool, error) {
@@ -137,6 +90,24 @@ func hasPkgMgr(pkgMgr string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func isOk(cap string) (bool, error) {
+	capFn, ok := caps[cap]
+	if !ok {
+		return false, fmt.Errorf("no such capability check: %s", cap)
+	}
+
+	return capFn()
+}
+
+func isOs(osId string) (bool, error) {
+	foundOsId, err := GetOsId()
+	if err != nil {
+		return false, fmt.Errorf("error getting OS ID %v", err)
+	}
+
+	return foundOsId == osId, nil
 }
 
 var FactFns = template.FuncMap{
