@@ -81,9 +81,9 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"rm-package", p.removePackages},
 		{"known-hosts", p.acceptHostKeys},
 		{"github-key", p.githubUserKey},
-		{"cargo", p.cargoInstall},
 		{"go", p.goInstall},
 		{"python", p.pythonInstall},
+		{"rust", p.rustInstall},
 		{"task", p.runTasks},
 		{"template", p.applyTemplates},
 		{"service", p.initServices},
@@ -150,7 +150,7 @@ func (p Provisioner) removePackages() error {
 	return nil
 }
 
-func (p Provisioner) cargoInstall() error {
+func (p Provisioner) rustInstall() error {
 	internal.Log.Noticef("Installing Rust packages")
 
 	return cargoInstallPkgs(p.Config)
