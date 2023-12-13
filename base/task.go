@@ -41,12 +41,19 @@ func runCmd(step Step, cfg Config) error {
 func runShellCmd(step Step, cfg Config) error {
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
 	cmd := ExpandSettings(cfg.Settings, step.Cmd)
-	_, err := run.Cmd(cfg.Settings, marecmd.Input{
+
+	isRoot, err := common.IsUserRoot()
+	if err != nil {
+		return err
+	}
+
+	sudo := !isRoot && step.Sudo
+	_, err = run.Cmd(cfg.Settings, marecmd.Input{
 		Command:  cmd,
 		Pwd:      pwd,
 		Shell:    true,
 		ShellCmd: step.Shell,
-		Sudo:     step.Sudo,
+		Sudo:     sudo,
 	})
 	return err
 }
