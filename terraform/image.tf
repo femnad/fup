@@ -21,9 +21,16 @@ resource "docker_image" "fedora" {
   }
 }
 
+data "docker_image" "fedora" {
+  name = local.fedora_image_name
+}
+
 resource "docker_registry_image" "fedora" {
   name          = docker_image.fedora.name
   keep_remotely = true
+  triggers = {
+    image_digest = docker_image.fedora.repo_digest
+  }
 }
 
 resource "docker_image" "ubuntu" {
@@ -39,7 +46,14 @@ resource "docker_image" "ubuntu" {
   }
 }
 
+data "docker_image" "ubuntu" {
+  name = local.ubuntu_image_name
+}
+
 resource "docker_registry_image" "ubuntu" {
   name          = docker_image.ubuntu.name
   keep_remotely = true
+  triggers = {
+    image_digest = docker_image.ubuntu.repo_digest
+  }
 }
