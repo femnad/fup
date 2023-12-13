@@ -16,5 +16,5 @@ jobs:
 
       - name: Provision in the image
         run: |
-          container=$(podman container run --name ubuntu --rm fup:ubuntu)
+          container=$(podman container run --name ubuntu --rm -d fup:ubuntu)
           podman container exec -ti $container bash -c 'curl -L fcd.url.lol/u | bash -'
