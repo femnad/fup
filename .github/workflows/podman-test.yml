@@ -1,0 +1,18 @@
+name: Test with systemd containers
+
+on:
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  ubuntu-test:
+    name: Run remote config test with Ubuntu systemd container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build image
+        run: podman image build -t fup:ubuntu -f Dockerfile.ubuntu .
+
+      - name: Provision in the image
+        run: |
+          container=$(podman container run --name ubuntu --rm fup:ubuntu)
+          podman container exec -ti $container bash -c 'curl -L fcd.url.lol/u | bash -'

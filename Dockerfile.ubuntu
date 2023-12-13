@@ -1,0 +1,5 @@
+from ubuntu:mantic
+
+run apt update -y && apt install -y curl systemd
+
+cmd [ "/bin/systemd" ]

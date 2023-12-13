@@ -1,0 +1,5 @@
+from fedora:39
+
+run dnf install -y systemd
+
+cmd ["/sbin/init"]

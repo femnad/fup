@@ -52,14 +52,14 @@ jobs:
     name: Run provisioning in a container via a remote config
     runs-on: ubuntu-latest
     container:
-      image: femnad/fup:ubuntu-ci
+      image: ubuntu:mantic
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup container
         run: |
-          # apt update
-          # apt install -y ca-certificates curl gnupg2 golang
+          apt update
+          apt install -y ca-certificates curl gnupg2 golang
           go install
           cd cmd
           go build -o fup-verify
