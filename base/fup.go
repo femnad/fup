@@ -14,8 +14,8 @@ import (
 	"github.com/femnad/fup/remote"
 )
 
-type PackageSpec map[string][]string
-type RemotePackageSpec map[string][]entity.RemotePackage
+type PackageSpec []entity.PackageGroup
+type RemotePackageSpec []entity.RemotePackageGroup
 type UserInGroupSpec map[string][]entity.Group
 
 type Config struct {

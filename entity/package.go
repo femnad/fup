@@ -7,3 +7,21 @@ type RemotePackage struct {
 	Version     string `yaml:"version"`
 	Url         string `yaml:"url"`
 }
+
+type RemotePackageGroup struct {
+	Pkgs []RemotePackage `yaml:"pkgs"`
+	When string          `yaml:"when"`
+}
+
+func (r RemotePackageGroup) RunWhen() string {
+	return r.When
+}
+
+type PackageGroup struct {
+	Pkgs []string `yaml:"pkgs"`
+	When string   `yaml:"when"`
+}
+
+func (p PackageGroup) RunWhen() string {
+	return p.When
+}

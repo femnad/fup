@@ -3,9 +3,8 @@ package provision
 import (
 	"errors"
 	"fmt"
-	"regexp"
-
 	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/femnad/fup/precheck/when"
 
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
@@ -15,18 +14,12 @@ import (
 	"github.com/femnad/fup/precheck"
 )
 
-func matchingPackages(osId, pattern string, packages []string) []string {
-	match, err := regexp.MatchString(pattern, osId)
-	if err != nil {
-		internal.Log.Errorf("Error matching pattern %s: %v", pattern, err)
+func matchingPackages(group entity.PackageGroup) []string {
+	if !when.ShouldRun(group) {
 		return []string{}
 	}
 
-	if !match {
-		return []string{}
-	}
-
-	return packages
+	return group.Pkgs
 }
 
 func getInstaller(osId string) (packages.Installer, error) {
@@ -79,8 +72,8 @@ func (d determiner) installer() (packages.Installer, error) {
 
 func (d determiner) matchingPkgs(spec base.PackageSpec) mapset.Set[string] {
 	pkgToInstall := mapset.NewSet[string]()
-	for pattern, pkgs := range spec {
-		matches := matchingPackages(d.osId, pattern, pkgs)
+	for _, group := range spec {
+		matches := matchingPackages(group)
 		for _, match := range matches {
 			pkgToInstall.Add(match)
 		}
@@ -92,17 +85,12 @@ func (d determiner) matchingPkgs(spec base.PackageSpec) mapset.Set[string] {
 func (d determiner) matchingRemotePkgs(spec base.RemotePackageSpec) (mapset.Set[entity.RemotePackage], error) {
 	pkgToInstall := mapset.NewSet[entity.RemotePackage]()
 
-	for pattern, pkgs := range spec {
-		match, err := regexp.MatchString(pattern, d.osId)
-		if err != nil {
-			return pkgToInstall, err
-		}
-
-		if !match {
+	for _, group := range spec {
+		if !when.ShouldRun(group) {
 			continue
 		}
 
-		for _, pkg := range pkgs {
+		for _, pkg := range group.Pkgs {
 			pkgToInstall.Add(pkg)
 		}
 	}
