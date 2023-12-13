@@ -8,15 +8,21 @@ import (
 	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/mare"
 )
 
 func addUserToGroup(user, group string) error {
+	isRoot, err := common.IsUserRoot()
+	if err != nil {
+		return err
+	}
+
 	internal.Log.Infof("Adding user %s to group %s", user, group)
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
-	_, err := marecmd.RunFormatError(marecmd.Input{Command: usermod, Sudo: true})
+	_, err = marecmd.RunFormatError(marecmd.Input{Command: usermod, Sudo: isRoot})
 	if err != nil {
 		return err
 	}
@@ -25,14 +31,19 @@ func addUserToGroup(user, group string) error {
 }
 
 func groupAdd(group entity.Group) error {
-	groupadd := "groupadd"
-	if group.System {
-		groupadd += " -r"
+	isRoot, err := common.IsUserRoot()
+	if err != nil {
+		return err
 	}
-	groupadd += " " + group.Name
+
+	cmd := "groupadd"
+	if group.System {
+		cmd += " -r"
+	}
+	cmd += " " + group.Name
 
 	internal.Log.Info("Creating group %s", group.Name)
-	_, err := marecmd.RunFormatError(marecmd.Input{Command: groupadd, Sudo: true})
+	_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !isRoot})
 	return err
 }
 

@@ -168,10 +168,16 @@ func persist(s base.Service) error {
 	}
 
 	if changed && !common.IsHomePath(serviceFilePath) {
+		isRoot, err := common.IsUserRoot()
+		if err != nil {
+			return err
+		}
+
 		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
 		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
 		internal.Log.Debugf("running restorecon command %s", restorecon)
-		_, cmdErr := marecmd.RunFormatError(marecmd.Input{Command: restorecon, Sudo: true})
+
+		_, cmdErr := marecmd.RunFormatError(marecmd.Input{Command: restorecon, Sudo: !isRoot})
 		if cmdErr != nil {
 			return cmdErr
 		}
