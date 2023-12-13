@@ -8,7 +8,7 @@ import (
 	"github.com/femnad/fup/precheck/when"
 )
 
-const sshCloneFact = "ssh-ready"
+const sshReadyStatement = `ok "ssh"`
 
 func cloneRepos(repos []entity.Repo, clonePath string) error {
 	for _, repo := range repos {
@@ -26,7 +26,7 @@ func cloneRepos(repos []entity.Repo, clonePath string) error {
 }
 
 func sshClone(config base.Config) error {
-	ok, err := when.FactOk(sshCloneFact)
+	ok, err := when.EvalStatement(sshReadyStatement)
 	if err != nil {
 		internal.Log.Errorf("error checking if SSH cloning is ok: %v", err)
 		return err

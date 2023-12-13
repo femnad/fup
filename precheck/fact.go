@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"text/template"
 
 	marecmd "github.com/femnad/mare/cmd"
 
@@ -13,14 +14,16 @@ import (
 
 const (
 	batteryDevicePattern = "^BAT[0-9]+$"
-	neovimPluginsDir     = "~/.local/share/plugged"
 	onepasswordSSHSocket = "~/.1password/agent.sock"
 	sysClassPower        = "/sys/class/power_supply"
-	tmuxEnvKey           = "TMUX"
 )
 
 var (
 	batteryDeviceRegex = regexp.MustCompile(batteryDevicePattern)
+	pkgMgrToOs         = map[string][]string{
+		"apt": {"debian", "ubuntu"},
+		"dnf": {"fedora"},
+	}
 )
 
 func isLaptop() (bool, error) {
@@ -43,8 +46,8 @@ func isLaptop() (bool, error) {
 	return false, nil
 }
 
-func inTmux() (bool, error) {
-	val := os.Getenv(tmuxEnvKey)
+func hasEnv(env string) (bool, error) {
+	val := os.Getenv(env)
 	return val != "", nil
 }
 
@@ -55,24 +58,6 @@ func isOs(osId string) (bool, error) {
 	}
 
 	return foundOsId == osId, nil
-}
-
-func isDebian() (bool, error) {
-	return isOs("debian")
-}
-
-func isFedora() (bool, error) {
-	return isOs("fedora")
-}
-
-func isUbuntu() (bool, error) {
-	return isOs("ubuntu")
-}
-
-func neovimReady() (bool, error) {
-	d := internal.ExpandUser(neovimPluginsDir)
-	_, err := os.Stat(d)
-	return err == nil, nil
 }
 
 func sshReady() (bool, error) {
@@ -112,12 +97,52 @@ func sshReady() (bool, error) {
 	return false, nil
 }
 
-var Facts = map[string]func() (bool, error){
-	"is-laptop":    isLaptop,
-	"in-tmux":      inTmux,
-	"is-debian":    isDebian,
-	"is-fedora":    isFedora,
-	"is-ubuntu":    isUbuntu,
-	"neovim-ready": neovimReady,
-	"ssh-ready":    sshReady,
+var caps = map[string]func() (bool, error){
+	"laptop": isLaptop,
+	"ssh":    sshReady,
+}
+
+func isOk(cap string) (bool, error) {
+	capFn, ok := caps[cap]
+	if !ok {
+		return false, fmt.Errorf("no such capability check: %s", cap)
+	}
+
+	return capFn()
+}
+
+func hasOutput(cmd string) (bool, error) {
+	out, err := marecmd.Run(marecmd.Input{Command: cmd})
+	if err != nil {
+		return false, err
+	}
+
+	return len(strings.TrimSpace(out.Stdout)) > 0, nil
+}
+
+func hasPkgMgr(pkgMgr string) (bool, error) {
+	osList, ok := pkgMgrToOs[pkgMgr]
+	if !ok {
+		return false, fmt.Errorf("unknown package manager: %s", pkgMgr)
+	}
+
+	for _, osName := range osList {
+		res, err := isOs(osName)
+		if err != nil {
+			return false, err
+		}
+		if res {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+var FactFns = template.FuncMap{
+	"env":    hasEnv,
+	"pkg":    hasPkgMgr,
+	"ok":     isOk,
+	"os":     isOs,
+	"output": hasOutput,
 }

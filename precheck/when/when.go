@@ -1,8 +1,10 @@
 package when
 
 import (
+	"bytes"
+	"context"
 	"fmt"
-	"strings"
+	"text/template"
 
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck"
@@ -12,57 +14,34 @@ type Whenable interface {
 	RunWhen() string
 }
 
-func FactOk(fact string) (bool, error) {
-	factFn, ok := precheck.Facts[fact]
-	if !ok {
-		return false, fmt.Errorf("no fact evaluator for fact %s exists", fact)
-	}
-
-	factResult, err := factFn()
+func EvalStatement(statement string) (bool, error) {
+	tmpl := template.New("when").Funcs(precheck.FactFns)
+	parsed, err := tmpl.Parse(fmt.Sprintf("{{%s}}", statement))
 	if err != nil {
-		return false, fmt.Errorf("error running evaluator for fact %s: %v", fact, err)
+		return false, err
 	}
 
-	return factResult, nil
-}
-
-func evalFact(fact string, negate bool) (bool, error) {
-	result, err := FactOk(fact)
+	var out bytes.Buffer
+	err = parsed.Execute(&out, context.TODO())
 	if err != nil {
-		return false, fmt.Errorf("error evaluating fact %s: %v", fact, err)
+		return false, err
 	}
 
-	if negate {
-		result = !result
-	}
-	return result, nil
+	return out.String() == "true", nil
 }
 
 func ShouldRun(whenable Whenable) bool {
-	negate := false
-	fact := whenable.RunWhen()
-	if fact == "" {
-		// No fact defined, always should run.
+	statement := whenable.RunWhen()
+	if statement == "" {
+		// No statement defined, always should run.
 		return true
 	}
 
-	if strings.HasPrefix(fact, "!") {
-		fact = fact[1:]
-		negate = true
+	shouldRun, err := EvalStatement(statement)
+	if err != nil {
+		internal.Log.Warningf("error evaluating statement %s: %v", statement, err)
+		return false
 	}
 
-	var anyTrue bool
-	for _, subFact := range strings.Split(fact, " ") {
-		result, err := evalFact(subFact, negate)
-		if err != nil {
-			internal.Log.Warningf("error evaluating fact %s: %v", subFact, err)
-			return false
-		}
-
-		if result {
-			anyTrue = result
-		}
-	}
-
-	return anyTrue
+	return shouldRun
 }
