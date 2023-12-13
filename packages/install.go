@@ -103,9 +103,10 @@ func desiredPkgVersion(pkg entity.RemotePackage, s settings.Settings) string {
 	return version
 }
 
-func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s settings.Settings) error {
+func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s settings.Settings) (bool, error) {
 	missing := mapset.NewSet[entity.RemotePackage]()
 
+	var changed bool
 	var existingVersion string
 	var err error
 	desired.Each(func(pkg entity.RemotePackage) bool {
@@ -131,11 +132,11 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	})
 
 	if err != nil {
-		return err
+		return changed, err
 	}
 
 	if missing.Equal(mapset.NewSet[entity.RemotePackage]()) {
-		return nil
+		return changed, nil
 	}
 
 	var urls []string
@@ -149,7 +150,7 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	sort.Strings(urls)
 	internal.Log.Infof("Remote packages to install: %s", strings.Join(urls, " "))
 
-	return i.Pkg.RemoteInstall(urls)
+	return true, i.Pkg.RemoteInstall(urls)
 }
 
 func (i Installer) InstalledPackages(pkg PkgManager) (mapset.Set[string], error) {
