@@ -1,11 +1,12 @@
 package unless
 
 import (
+	"bytes"
+	"context"
 	"fmt"
-	"math"
 	"os"
-	"strconv"
 	"strings"
+	"text/template"
 
 	marecmd "github.com/femnad/mare/cmd"
 
@@ -13,6 +14,13 @@ import (
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/run"
 )
+
+var funcMap = template.FuncMap{
+	"cut":     cut,
+	"head":    head,
+	"split":   split,
+	"splitBy": splitBy,
+}
 
 type Unless struct {
 	Cmd      string `yaml:"cmd"`
@@ -46,117 +54,63 @@ type Unlessable interface {
 	Name() string
 }
 
-func processString(fnName, separator, s string, i int, procFn func([]string, int) string) (string, error) {
-	tokens := strings.Split(s, separator)
-	lenTokens := len(tokens)
-
-	if i > lenTokens {
-		return "", fmt.Errorf("invalid %s index for input %s and index %d", fnName, s, i)
-	}
-
+func absIndex(s string, i int) (int, error) {
+	sLen := len(s)
 	if i < 0 {
-		iAbs := int(math.Abs(float64(i)))
-		if iAbs > lenTokens-1 {
-			return "", fmt.Errorf("invalid negative %s index for input %s and index %d", fnName, s, i)
-		}
-		i = lenTokens - iAbs
+		i = sLen + i
+	}
+	if i < 0 || i >= sLen {
+		return 0, fmt.Errorf("invalid index %d for string %s", i, s)
 	}
 
-	return procFn(tokens, i), nil
+	return i, nil
 }
 
-func delimitAndReturn(fnName, separator, s string, i int) (string, error) {
-	processed, err := processString(fnName, separator, s, i, func(tokens []string, index int) string {
-		return tokens[i]
-	})
+func cut(i int, s string) (string, error) {
+	i, err := absIndex(s, i)
 	if err != nil {
 		return "", err
 	}
 
-	return processed, nil
+	return s[i:], nil
 }
 
-func cut(s string, i int) (string, error) {
-	processed, err := processString("cut", "", s, i, func(tokens []string, index int) string {
-		lenTokens := len(tokens)
-		if i > 0 {
-			return strings.Join(tokens[i:lenTokens], "")
-		}
-
-		return strings.Join(tokens[:index], "")
-	})
-	if err != nil {
-		return "", err
+func splitBy(delimiter string, i int, s string) (string, error) {
+	fields := strings.Split(s, delimiter)
+	numFields := len(fields)
+	if i == -1 {
+		i = numFields - 1
 	}
-
-	return processed, nil
-}
-
-func head(s string, i int) (string, error) {
-	return delimitAndReturn("head", "\n", s, i)
-}
-
-func split(s string, i int) (string, error) {
-	return delimitAndReturn("split", " ", s, i)
-}
-
-func splitBy(separator string) func(string, int) (string, error) {
-	return func(s string, i int) (string, error) {
-		fnName := fmt.Sprintf("SplitBy%s", separator)
-		return delimitAndReturn(fnName, separator, s, i)
+	if i >= numFields {
+		return "", fmt.Errorf("input %s has not have field with index %d when split by %s", s, i, delimiter)
 	}
+	return fields[i], nil
 }
 
-func splitByDash(s string, i int) (string, error) {
-	return splitBy("-")(s, i)
+func head(i int, s string) (string, error) {
+	return splitBy("\n", i, s)
 }
 
-func splitByComma(s string, i int) (string, error) {
-	return splitBy(",")(s, i)
-}
-
-func getPostProcFn(op string) (func(string, int) (string, error), error) {
-	switch op {
-	case "cut":
-		return cut, nil
-	case "head":
-		return head, nil
-	case "split":
-		return split, nil
-	case "split-":
-		return splitByDash, nil
-	case "split,":
-		return splitByComma, nil
-	default:
-		return nil, fmt.Errorf("error locating post processing function for %s", op)
-	}
+func split(i int, s string) (string, error) {
+	return splitBy(" ", i, s)
 }
 
 func applyProc(proc, output string) (string, error) {
-	proc = strings.TrimSpace(proc)
-	postOutput := output
-	fnInvocation := strings.Split(proc, " ")
-	if len(fnInvocation) != 2 {
-		return postOutput, fmt.Errorf("error parsing postproc functions args for %s", proc)
-	}
-	fnName := fnInvocation[0]
+	tmpl := template.New("post-proc").Funcs(funcMap)
 
-	fnArg, err := strconv.Atoi(fnInvocation[1])
+	tmplTxt := fmt.Sprintf("{{ print `%s` | %s }}", output, proc)
+	parsed, err := tmpl.Parse(tmplTxt)
 	if err != nil {
-		return postOutput, fmt.Errorf("error converting %s to index: %v", fnInvocation[1], err)
+		return "", err
 	}
 
-	fn, err := getPostProcFn(fnName)
+	var out bytes.Buffer
+	err = parsed.Execute(&out, context.TODO())
 	if err != nil {
-		return postOutput, fmt.Errorf("error getting postproc function for %s: %v", fnName, err)
+		return "", err
 	}
 
-	postOutput, err = fn(postOutput, fnArg)
-	if err != nil {
-		return postOutput, fmt.Errorf("error running postproc function %s: %v", fnName, err)
-	}
-
-	return postOutput, nil
+	return out.String(), nil
 }
 
 func doPostProcOutput(unless Unless, output string) (string, error) {
