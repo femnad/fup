@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [fedora ubuntu]
+        image: [fedora, ubuntu]
     container:
       image: femnad/fup:${{ matrix.image }}-ci
 
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: [fedora ubuntu]
+        image: [fedora, ubuntu]
     container:
       image: femnad/fup:${{ matrix.image }}-ci
 
