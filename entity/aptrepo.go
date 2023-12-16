@@ -11,6 +11,7 @@ import (
 	"io"
 	"os/exec"
 	"path"
+	"strings"
 )
 
 const (
@@ -61,7 +62,8 @@ func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 		return err
 	}
 
-	gpgCmd := exec.Command("gpg", "--dearmor", "-o", keyRingFile)
+	gpgCmd := exec.Command("gpg", "--dearmor")
+
 	stdin, err := gpgCmd.StdinPipe()
 	if err != nil {
 		return err
@@ -74,6 +76,12 @@ func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 	}
 	defer stdout.Close()
 
+	stderr, err := gpgCmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	defer stderr.Close()
+
 	if err = gpgCmd.Start(); err != nil {
 		return err
 	}
@@ -82,19 +90,32 @@ func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 	if err != nil {
 		return err
 	}
-	stdin.Close()
+	err = stdin.Close()
+	if err != nil {
+		return err
+	}
 
-	out, err := io.ReadAll(stdout)
+	_, err = io.ReadAll(stdout)
+	if err != nil {
+		return err
+	}
+
+	gpgKey, err := io.ReadAll(stdout)
 	if err != nil {
 		return err
 	}
 
 	if err = gpgCmd.Wait(); err != nil {
-		return err
+		out, err := io.ReadAll(stderr)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("error in gpg process, output %s: %v", out, err)
 	}
 
 	_, err = internal.WriteContent(internal.ManagedFile{
-		Content: string(out),
+		Content: string(gpgKey),
 		Path:    keyRingFile,
 		Mode:    0o644,
 		User:    "root",
@@ -110,7 +131,7 @@ func (a AptRepo) Install() error {
 	}
 	keyRingFile := path.Join(keyRingsDir, fmt.Sprintf("%s.gpg", a.RepoName))
 
-	err = a.ensureKeyFile(a.Repo, keyRingFile)
+	err = a.ensureKeyFile(a.GPGKey, keyRingFile)
 	if err != nil {
 		return err
 	}
@@ -119,7 +140,7 @@ func (a AptRepo) Install() error {
 	if err != nil {
 		return err
 	}
-	architecture := out.Stdout
+	architecture := strings.TrimSpace(out.Stdout)
 
 	versionCodename, err := precheck.GetOSVersionCodename()
 	if err != nil {
