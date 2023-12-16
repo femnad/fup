@@ -65,6 +65,10 @@ func (d DnfRepo) RunWhen() string {
 	return d.When
 }
 
+func (DnfRepo) UpdateCmd() string {
+	return ""
+}
+
 func (i installer) installCorePlugins() error {
 	cmd := fmt.Sprintf("dnf install -y %s", pluginsCore)
 	return i.runMaybeSudo(cmd)
@@ -115,7 +119,7 @@ func (d DnfRepo) Install() error {
 	}
 
 	if len(d.Packages) > 0 {
-		osId, err := precheck.GetOsId()
+		osId, err := precheck.GetOSId()
 		if err != nil {
 			return err
 		}

@@ -52,7 +52,7 @@ type determiner struct {
 
 func newDeterminer() (determiner, error) {
 	var d determiner
-	osId, err := precheck.GetOsId()
+	osId, err := precheck.GetOSId()
 	if err != nil {
 		return d, fmt.Errorf("error determining OS: %v", err)
 	}

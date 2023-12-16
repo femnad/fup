@@ -113,7 +113,7 @@ func isOk(cap string) (bool, error) {
 }
 
 func isOs(osId string) (bool, error) {
-	foundOsId, err := GetOsId()
+	foundOsId, err := GetOSId()
 	if err != nil {
 		return false, fmt.Errorf("error getting OS ID %v", err)
 	}

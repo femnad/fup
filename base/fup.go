@@ -22,6 +22,7 @@ type Config struct {
 	file             string
 	isRemote         bool
 	AcceptHostKeys   []string          `yaml:"accept_host_keys"`
+	AptRepos         []entity.AptRepo  `yaml:"apt_repos"`
 	Archives         []Archive         `yaml:"archives"`
 	Binaries         []entity.Binary   `yaml:"binaries"`
 	Cargo            []CargoPkg        `yaml:"rust"`

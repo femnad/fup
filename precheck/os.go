@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	osReleaseFile = "/etc/os-release"
-	osIdField     = "ID"
+	osReleaseFile        = "/etc/os-release"
+	osIdField            = "ID"
+	versionCodenameField = "VERSION_CODENAME"
 )
 
-func GetOsId() (string, error) {
+func getOSReleaseField(f string) (string, error) {
 	file, err := os.Open(osReleaseFile)
 	if err != nil {
 		return "", err
@@ -37,11 +38,19 @@ func GetOsId() (string, error) {
 		}
 
 		field, value := fields[0], fields[1]
-		if field != osIdField {
+		if field != f {
 			continue
 		}
 		return value, nil
 	}
 
 	return "", fmt.Errorf("unable to locate OS ID line in %s", osReleaseFile)
+}
+
+func GetOSVersionCodename() (string, error) {
+	return getOSReleaseField(versionCodenameField)
+}
+
+func GetOSId() (string, error) {
+	return getOSReleaseField(osIdField)
 }
