@@ -1,7 +1,7 @@
 # Mostly intended for debugging full provisioning runs.
 from fedora:39
 
-run dnf install -y gnupg2 golang systemd
+run dnf update -y && dnf install -y gnupg2 golang systemd
 
 copy . /root/fup/
 workdir /root/fup
