@@ -95,11 +95,6 @@ func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 		return err
 	}
 
-	_, err = io.ReadAll(stdout)
-	if err != nil {
-		return err
-	}
-
 	gpgKey, err := io.ReadAll(stdout)
 	if err != nil {
 		return err
