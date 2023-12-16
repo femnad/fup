@@ -29,7 +29,6 @@ jobs:
     matrix:
       image: [fedora ubuntu]
     container:
-    container:
       image: femnad/fup:${{ matrix.image }}-ci
 
     steps:
