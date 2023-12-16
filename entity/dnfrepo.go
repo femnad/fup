@@ -33,8 +33,11 @@ func (d DnfRepo) DefaultVersionCmd() string {
 
 func (d DnfRepo) GetUnless() unless.Unless {
 	if d.Repo != "" {
+		tokens := strings.Split(d.Repo, "/")
+		filename := tokens[len(tokens)-1]
+		filename = strings.TrimSuffix(filename, ".repo")
 		return unless.Unless{
-			Stat: fmt.Sprintf("/etc/yum.repos.d/%s.repo", d.Repo),
+			Stat: fmt.Sprintf("/etc/yum.repos.d/%s.repo", filename),
 		}
 	}
 
