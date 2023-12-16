@@ -10,7 +10,6 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
 )
@@ -36,7 +35,7 @@ func ensureUserKeys(user string) error {
 
 	keyFile := internal.ExpandUser(authorizedKeysFile)
 	dir, _ := path.Split(keyFile)
-	if err = common.EnsureDir(dir); err != nil {
+	if err = internal.EnsureDir(dir); err != nil {
 		return err
 	}
 

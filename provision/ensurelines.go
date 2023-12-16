@@ -8,7 +8,6 @@ import (
 	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
 )
@@ -72,7 +71,7 @@ func ensureLine(line base.LineInFile) error {
 		return nil
 	}
 
-	mv, err := common.GetMvCmd(tmpPath, line.File)
+	mv, err := internal.GetMvCmd(tmpPath, line.File)
 	if err != nil {
 		return err
 	}

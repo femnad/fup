@@ -9,7 +9,6 @@ import (
 	"text/template"
 
 	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/remote"
@@ -85,7 +84,7 @@ func applyTemplate(tmpl base.Template, config base.Config) error {
 		return err
 	}
 
-	_, err = common.WriteContent(common.ManagedFile{Path: tmpl.Dest, Content: tmplBuffer.String()})
+	_, err = internal.WriteContent(internal.ManagedFile{Path: tmpl.Dest, Content: tmplBuffer.String()})
 	if err != nil {
 		return err
 	}

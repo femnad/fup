@@ -4,14 +4,13 @@ import (
 	"fmt"
 
 	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
 func doEnsureDirs(dirs []string) error {
 	for _, dir := range dirs {
 		dir = internal.ExpandUser(dir)
-		if err := common.EnsureDir(dir); err != nil {
+		if err := internal.EnsureDir(dir); err != nil {
 			return fmt.Errorf("error ensuring directory %s: %v", dir, err)
 		}
 	}

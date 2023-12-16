@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 )
 
@@ -99,7 +98,7 @@ func Download(url, target string) error {
 	}
 
 	dir, _ := path.Split(target)
-	if err = common.EnsureDir(dir); err != nil {
+	if err = internal.EnsureDir(dir); err != nil {
 		return err
 	}
 

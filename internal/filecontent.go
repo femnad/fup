@@ -1,4 +1,4 @@
-package common
+package internal
 
 import (
 	"crypto/sha256"
@@ -9,10 +9,9 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"syscall"
 
 	marecmd "github.com/femnad/mare/cmd"
-
-	"github.com/femnad/fup/internal"
 )
 
 const (
@@ -41,46 +40,7 @@ type ManagedFile struct {
 	ValidateCmd string
 }
 
-func needsSudoForPath(dst string) (bool, error) {
-	isRoot, err := internal.IsUserRoot()
-	if err != nil {
-		return false, err
-	}
-
-	var sudo bool
-	if isRoot {
-		sudo = false
-	} else {
-		sudo = !IsHomePath(dst)
-	}
-
-	return sudo, nil
-}
-
-func GetMvCmd(src, dst string) (marecmd.Input, error) {
-	cmd := fmt.Sprintf("mv %s %s", src, dst)
-
-	sudo, err := needsSudoForPath(dst)
-	if err != nil {
-		return marecmd.Input{}, err
-	}
-
-	return marecmd.Input{Command: cmd, Sudo: sudo}, nil
-}
-
-func getChmodCmd(target string, mode int) (marecmd.Input, error) {
-	octal := strconv.FormatInt(int64(mode), 8)
-	cmd := fmt.Sprintf("chmod %s %s", octal, target)
-
-	sudo, err := needsSudoForPath(target)
-	if err != nil {
-		return marecmd.Input{}, err
-	}
-
-	return marecmd.Input{Command: cmd, Sudo: sudo}, nil
-}
-
-func Checksum(f string) (string, error) {
+func checksum(f string) (string, error) {
 	_, err := os.Stat(f)
 	if err != nil {
 		return "", err
@@ -100,65 +60,6 @@ func Checksum(f string) (string, error) {
 
 	sum := h.Sum(nil)
 	return hex.EncodeToString(sum), nil
-}
-
-func getStatSum(f string) (statSum, error) {
-	var s statSum
-	isRoot, err := internal.IsUserRoot()
-	if err != nil {
-		return s, err
-	}
-
-	cmd := fmt.Sprintf("stat -c %%a %s", f)
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !isRoot})
-	if err != nil {
-		if strings.HasSuffix(strings.TrimSpace(out.Stderr), statNoExistsError) {
-			return s, os.ErrNotExist
-		}
-		return s, err
-	}
-
-	mode, err := strconv.ParseUint(strings.TrimSpace(out.Stdout), 10, 32)
-	if err != nil {
-		return s, err
-	}
-
-	out, err = marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("sha256sum %s", f), Sudo: !isRoot})
-	if err != nil {
-		return s, err
-	}
-
-	sumFields := strings.Split(out.Stdout, "  ")
-	if len(sumFields) != 2 {
-		return s, fmt.Errorf("unexpected sha256sum output: %s", out.Stdout)
-	}
-	sum := sumFields[0]
-
-	return statSum{mode: int(mode), sha256sum: sum}, nil
-}
-
-func getent(key, database string) (int, error) {
-	if key == "" {
-		return defaultId, nil
-	}
-
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("getent %s %s", database, key)})
-	if err != nil {
-		return 0, err
-	}
-
-	getentOutput := out.Stdout
-	getentFields := strings.Split(getentOutput, getentSeparator)
-	if len(getentFields) < 2 {
-		return 0, fmt.Errorf("unexpected getent output: %s", getentOutput)
-	}
-
-	id, err := strconv.ParseInt(getentFields[2], 10, 32)
-	if err != nil {
-		return 0, err
-	}
-
-	return int(id), nil
 }
 
 func chown(file, user, group string) error {
@@ -195,7 +96,7 @@ func chown(file, user, group string) error {
 	}
 	chownCmd += " " + file
 
-	isRoot, err := internal.IsUserRoot()
+	isRoot, err := IsUserRoot()
 	if err != nil {
 		return err
 	}
@@ -204,7 +105,7 @@ func chown(file, user, group string) error {
 }
 
 func ensureDir(dir string) error {
-	hasPerms, err := HasPerms(dir)
+	hasPerms, err := hasPerms(dir)
 	if err != nil {
 		return err
 	}
@@ -213,14 +114,149 @@ func ensureDir(dir string) error {
 		return os.MkdirAll(dir, 0o755)
 	}
 
-	internal.Log.Warningf("escalating privileges to create directory %s", dir)
+	Log.Warningf("escalating privileges to create directory %s", dir)
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
 
-	isRoot, err := internal.IsUserRoot()
+	isRoot, err := IsUserRoot()
 	if err != nil {
 		return err
 	}
 	return marecmd.RunNoOutput(marecmd.Input{Command: mkdirCmd, Sudo: !isRoot})
+}
+
+func getent(key, database string) (int, error) {
+	if key == "" {
+		return defaultId, nil
+	}
+
+	out, err := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("getent %s %s", database, key)})
+	if err != nil {
+		return 0, err
+	}
+
+	getentOutput := out.Stdout
+	getentFields := strings.Split(getentOutput, getentSeparator)
+	if len(getentFields) < 2 {
+		return 0, fmt.Errorf("unexpected getent output: %s", getentOutput)
+	}
+
+	id, err := strconv.ParseInt(getentFields[2], 10, 32)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+func getChmodCmd(target string, mode int) (marecmd.Input, error) {
+	octal := strconv.FormatInt(int64(mode), 8)
+	cmd := fmt.Sprintf("chmod %s %s", octal, target)
+
+	sudo, err := needsSudoForPath(target)
+	if err != nil {
+		return marecmd.Input{}, err
+	}
+
+	return marecmd.Input{Command: cmd, Sudo: sudo}, nil
+}
+
+func getStatSum(f string) (statSum, error) {
+	var s statSum
+	isRoot, err := IsUserRoot()
+	if err != nil {
+		return s, err
+	}
+
+	cmd := fmt.Sprintf("stat -c %%a %s", f)
+	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !isRoot})
+	if err != nil {
+		if strings.HasSuffix(strings.TrimSpace(out.Stderr), statNoExistsError) {
+			return s, os.ErrNotExist
+		}
+		return s, err
+	}
+
+	mode, err := strconv.ParseUint(strings.TrimSpace(out.Stdout), 10, 32)
+	if err != nil {
+		return s, err
+	}
+
+	out, err = marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("sha256sum %s", f), Sudo: !isRoot})
+	if err != nil {
+		return s, err
+	}
+
+	sumFields := strings.Split(out.Stdout, "  ")
+	if len(sumFields) != 2 {
+		return s, fmt.Errorf("unexpected sha256sum output: %s", out.Stdout)
+	}
+	sum := sumFields[0]
+
+	return statSum{mode: int(mode), sha256sum: sum}, nil
+}
+
+func hasPerms(targetPath string) (bool, error) {
+	fi, err := os.Stat(targetPath)
+	if os.IsPermission(err) {
+		return false, err
+	} else if os.IsNotExist(err) {
+		if strings.HasSuffix(targetPath, "/") {
+			targetPath = targetPath[:len(targetPath)-1]
+		}
+		lastSlash := strings.LastIndex(targetPath, "/")
+		if lastSlash < 0 {
+			return false, fmt.Errorf("expected path %s to have at least one /", targetPath)
+		}
+		parent := targetPath[:lastSlash]
+		if parent == "" {
+			return false, nil
+		}
+		return hasPerms(parent)
+	}
+
+	stat, ok := fi.Sys().(*syscall.Stat_t)
+	if !ok {
+		return false, fmt.Errorf("error determining owner of %s", targetPath)
+	}
+
+	userId, err := GetCurrentUserId()
+	if err != nil {
+		return false, err
+	}
+
+	return stat.Uid == uint32(userId), nil
+}
+
+func needsSudoForPath(dst string) (bool, error) {
+	isRoot, err := IsUserRoot()
+	if err != nil {
+		return false, err
+	}
+
+	var sudo bool
+	if isRoot {
+		sudo = false
+	} else {
+		sudo = !IsHomePath(dst)
+	}
+
+	return sudo, nil
+}
+
+func GetMvCmd(src, dst string) (marecmd.Input, error) {
+	cmd := fmt.Sprintf("mv %s %s", src, dst)
+
+	sudo, err := needsSudoForPath(dst)
+	if err != nil {
+		return marecmd.Input{}, err
+	}
+
+	return marecmd.Input{Command: cmd, Sudo: sudo}, nil
+}
+
+func IsHomePath(path string) bool {
+	home := os.Getenv("HOME")
+	return strings.HasPrefix(path, home)
 }
 
 func WriteContent(file ManagedFile) (bool, error) {
@@ -230,7 +266,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	var noPermission bool
 	var ss statSum
 	dstExists := true
-	target := internal.ExpandUser(file.Path)
+	target := ExpandUser(file.Path)
 	mode := file.Mode
 	validateCmd := file.ValidateCmd
 
@@ -260,7 +296,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	if err != nil {
 		return changed, err
 	}
-	srcSum, err = Checksum(srcPath)
+	srcSum, err = checksum(srcPath)
 	if err != nil {
 		return changed, err
 	}
@@ -270,7 +306,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 		if noPermission {
 			dstSum = ss.sha256sum
 		} else {
-			dstSum, err = Checksum(target)
+			dstSum, err = checksum(target)
 			if err != nil {
 				return changed, err
 			}
@@ -332,8 +368,8 @@ func WriteContent(file ManagedFile) (bool, error) {
 		}
 	}
 
-	if noPermission || !IsHomePath(target) {
-		isRoot, err := internal.IsUserRoot()
+	if noPermission || IsHomePath(target) {
+		isRoot, err := IsUserRoot()
 		if err != nil {
 			return false, err
 		}

@@ -92,7 +92,7 @@ func getServiceFilePath(s base.Service) string {
 }
 
 func writeServiceFile(file, content string) (bool, error) {
-	return common.WriteContent(common.ManagedFile{Path: file, Content: content})
+	return internal.WriteContent(internal.ManagedFile{Path: file, Content: content})
 }
 
 func maybeRestart(s base.Service) error {
@@ -144,7 +144,7 @@ func persist(s base.Service) error {
 	serviceFilePath := getServiceFilePath(s)
 	if !s.System {
 		dir, _ := path.Split(serviceFilePath)
-		if err := common.EnsureDir(dir); err != nil {
+		if err := internal.EnsureDir(dir); err != nil {
 			return err
 		}
 	}
@@ -167,7 +167,7 @@ func persist(s base.Service) error {
 		return nil
 	}
 
-	if changed && !common.IsHomePath(serviceFilePath) {
+	if changed && !internal.IsHomePath(serviceFilePath) {
 		isRoot, err := internal.IsUserRoot()
 		if err != nil {
 			return err
