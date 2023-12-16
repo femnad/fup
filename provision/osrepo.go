@@ -2,7 +2,6 @@ package provision
 
 import (
 	"errors"
-	marecmd "github.com/femnad/mare/cmd"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
+	marecmd "github.com/femnad/mare/cmd"
 )
 
 func runUpdateCmds(cmds mapset.Set[string]) []error {

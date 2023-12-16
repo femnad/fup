@@ -8,17 +8,21 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
-	marecmd "github.com/femnad/mare/cmd"
 )
 
 func installSnap(snap entity.Snap) error {
+	err := internal.Run(fmt.Sprintf("snap list %s", snap.Name))
+	if err == nil {
+		return nil
+	}
+
+	internal.Log.Infof("Installing snap %s", snap.Name)
 	cmd := fmt.Sprintf("snap install %s", snap.Name)
 	if snap.Classic {
 		cmd += " --classic"
 	}
-	in := marecmd.Input{Command: cmd}
 
-	_, err := marecmd.RunFormatError(in)
+	err = internal.MaybeRunWithSudo(cmd)
 	if err != nil {
 		internal.Log.Errorf("error installing snap %s: %v", snap.Name, err)
 		return err
