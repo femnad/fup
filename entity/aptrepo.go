@@ -142,7 +142,8 @@ func (a AptRepo) Install() error {
 		return err
 	}
 
-	content := fmt.Sprintf("deb [arch=${architecture} signed-by=%s] %s ${codename} stable", keyRingFile, a.Repo)
+	content := fmt.Sprintf("deb [arch=${architecture} signed-by=%s] %s ${codename} stable\n", keyRingFile,
+		a.Repo)
 	content = settings.Expand(content, map[string]string{
 		"architecture": architecture,
 		"codename":     versionCodename,
