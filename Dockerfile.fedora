@@ -1,0 +1,10 @@
+# Mostly intended for debugging full provisioning runs.
+from fedora:39
+
+run dnf install -y gnupg2 golang systemd
+
+copy . /root/fup/
+workdir /root/fup
+run go install
+
+cmd ["/sbin/init"]

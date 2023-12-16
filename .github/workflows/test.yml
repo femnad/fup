@@ -26,8 +26,12 @@ jobs:
   container-test:
     name: Run provisioning in a container
     runs-on: ubuntu-latest
+    matrix:
+      image: [fedora ubuntu]
     container:
-      image: femnad/fup:ubuntu-ci
+    container:
+      image: femnad/fup:${{ matrix.image }}-ci
+
     steps:
       - uses: actions/checkout@v4
 
@@ -49,15 +53,16 @@ jobs:
   container-remote-config-test:
     name: Run provisioning in a container via a remote config
     runs-on: ubuntu-latest
+    matrix:
+      image: [fedora ubuntu]
     container:
-      image: femnad/fup:ubuntu-ci
+      image: femnad/fup:${{ matrix.image }}-ci
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup container
         run: |
-          apt update
-          apt install -y ca-certificates curl gnupg2 golang
           go install
           cd cmd
           go build -o fup-verify
