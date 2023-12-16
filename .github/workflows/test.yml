@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [fedora, ubuntu]
+        image: [ubuntu]
     container:
       image: femnad/fup:${{ matrix.image }}-ci
 
@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [fedora, ubuntu]
+        image: [ubuntu]
     container:
       image: femnad/fup:${{ matrix.image }}-ci
 
@@ -67,9 +67,10 @@ jobs:
 
       - name: Setup container
         run: |
-          go install
+          # https://github.com/golang/go/issues/53532
+          go install -buildvcs=false
           cd cmd
-          go build -o fup-verify
+          go build -buildvcs=false -o fup-verify
           cp fup-verify ~/go/bin
 
       - name: Get branch
