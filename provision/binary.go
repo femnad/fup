@@ -27,7 +27,7 @@ func downloadBinary(binary entity.Binary, config base.Config) error {
 	url = settings.ExpandStringWithLookup(s, url, map[string]string{"version": version})
 
 	if unless.ShouldSkip(binary, s) {
-		internal.Log.Debug("skipping downloading binary %s", url)
+		internal.Log.Debugf("skipping downloading binary %s", url)
 		return nil
 	}
 
