@@ -22,8 +22,10 @@ func (i installer) runMaybeSudo(cmd string) error {
 }
 
 type DnfRepo struct {
+	RepoName string   `yaml:"name"`
 	Packages []string `yaml:"packages"`
 	Repo     string   `yaml:"repo"`
+	Url      []string `yaml:"url"`
 	When     string   `yaml:"when"`
 }
 
@@ -57,8 +59,8 @@ func (DnfRepo) HasPostProc() bool {
 	return false
 }
 
-func (DnfRepo) Name() string {
-	return ""
+func (d DnfRepo) Name() string {
+	return d.RepoName
 }
 
 func (d DnfRepo) RunWhen() string {
@@ -94,15 +96,15 @@ func (i installer) configManagerInstall(repo string) error {
 	return i.runMaybeSudo(cmd)
 }
 
-func (i installer) releasePackagesInstall(packages []string, osId string) error {
-	packageList := strings.Join(packages, " ")
+func (i installer) releasePackagesInstall(url []string, osId string) error {
+	packageList := strings.Join(url, " ")
 	cmd := fmt.Sprintf("rpm -E %%%s", osId)
 	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
 		return err
 	}
 
-	packageList = settings.Expand(packageList, map[string]string{"version_id": out.Stdout})
+	packageList = settings.Expand(packageList, map[string]string{"version_id": strings.TrimSpace(out.Stdout)})
 	cmd = fmt.Sprintf("dnf install -y %s", packageList)
 	return i.runMaybeSudo(cmd)
 }
@@ -123,7 +125,7 @@ func (d DnfRepo) Install() error {
 		if err != nil {
 			return err
 		}
-		return i.releasePackagesInstall(d.Packages, osId)
+		return i.releasePackagesInstall(d.Url, osId)
 	}
 
 	return fmt.Errorf("unable to determine install method for repo %+v", d)

@@ -52,6 +52,8 @@ func addRepos(config base.Config) error {
 			continue
 		}
 
+		internal.Log.Debugf("Adding repo %s", repo.Name())
+
 		err := repo.Install()
 		if err == nil && repo.UpdateCmd() != "" {
 			updateCmds.Add(repo.UpdateCmd())

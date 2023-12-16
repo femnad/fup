@@ -161,7 +161,8 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
-		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code, unless.ExitCode)
+		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code,
+			unless.ExitCode)
 		return out.Code == unless.ExitCode
 	}
 
