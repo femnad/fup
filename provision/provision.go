@@ -114,7 +114,7 @@ func (p Provisioner) Apply() error {
 func (p Provisioner) AddDnfRepos() error {
 	internal.Log.Notice("Adding DNF repos")
 
-	return addDnfRepos(p.Config.DnfRepos)
+	return addDnfRepos(p.Config, p.Config.DnfRepos)
 }
 
 func (p Provisioner) extractArchives() error {
