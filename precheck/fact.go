@@ -20,13 +20,15 @@ const (
 
 var (
 	batteryDeviceRegex = regexp.MustCompile(batteryDevicePattern)
-	caps               = map[string]func() (bool, error){
+	matchers           = map[string]func() (bool, error){
 		"laptop": isLaptop,
-		"ssh":    sshReady,
 	}
 	pkgMgrToOs = map[string][]string{
 		"apt": {"debian", "ubuntu"},
 		"dnf": {"fedora"},
+	}
+	readiness = map[string]func() (bool, error){
+		"ssh": sshReady,
 	}
 )
 
@@ -92,8 +94,17 @@ func hasPkgMgr(pkgMgr string) (bool, error) {
 	return false, nil
 }
 
+func isA(matcher string) (bool, error) {
+	matchFn, ok := matchers[matcher]
+	if !ok {
+		return false, fmt.Errorf("no such matcher: %s", matcher)
+	}
+
+	return matchFn()
+}
+
 func isOk(cap string) (bool, error) {
-	capFn, ok := caps[cap]
+	capFn, ok := readiness[cap]
 	if !ok {
 		return false, fmt.Errorf("no such capability check: %s", cap)
 	}
@@ -112,8 +123,9 @@ func isOs(osId string) (bool, error) {
 
 var FactFns = template.FuncMap{
 	"env":    hasEnv,
-	"pkg":    hasPkgMgr,
+	"is":     isA,
 	"ok":     isOk,
 	"os":     isOs,
 	"output": hasOutput,
+	"pkg":    hasPkgMgr,
 }

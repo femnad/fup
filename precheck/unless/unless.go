@@ -2,7 +2,6 @@ package unless
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -98,14 +97,18 @@ func split(i int, s string) (string, error) {
 func applyProc(proc, output string) (string, error) {
 	tmpl := template.New("post-proc").Funcs(funcMap)
 
-	tmplTxt := fmt.Sprintf("{{ print `%s` | %s }}", output, proc)
+	ctx := struct {
+		Args string
+	}{Args: output}
+
+	tmplTxt := fmt.Sprintf("{{ print .Args | %s }}", proc)
 	parsed, err := tmpl.Parse(tmplTxt)
 	if err != nil {
 		return "", err
 	}
 
 	var out bytes.Buffer
-	err = parsed.Execute(&out, context.TODO())
+	err = parsed.Execute(&out, ctx)
 	if err != nil {
 		return "", err
 	}
@@ -114,19 +117,13 @@ func applyProc(proc, output string) (string, error) {
 }
 
 func doPostProcOutput(unless Unless, output string) (string, error) {
-	procs := strings.Split(unless.Post, "|")
-	postOutput := output
-	var err error
-
-	for _, proc := range procs {
-		postOutput, err = applyProc(proc, postOutput)
-		if err != nil {
-			return postOutput, err
-		}
+	postProcResult, err := applyProc(unless.Post, output)
+	if err != nil {
+		return "", err
 	}
 
-	internal.Log.Debugf("postproc returned `%s` for `%s`", postOutput, unless)
-	return postOutput, nil
+	internal.Log.Debugf("postproc returned `%s` for `%s`", postProcResult, unless)
+	return postProcResult, nil
 }
 
 func postProcOutput(unless Unless, output string) (string, error) {
