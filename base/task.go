@@ -28,7 +28,7 @@ func runCmd(step Step, cfg Config) error {
 		pwd = ExpandSettings(cfg.Settings, step.Pwd)
 	}
 
-	isRoot, err := common.IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func runShellCmd(step Step, cfg Config) error {
 	pwd := ExpandSettings(cfg.Settings, step.Pwd)
 	cmd := ExpandSettings(cfg.Settings, step.Cmd)
 
-	isRoot, err := common.IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}

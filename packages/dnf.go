@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/internal"
 	marecmd "github.com/femnad/mare/cmd"
 )
 
@@ -36,7 +36,7 @@ func (Dnf) RemoveCmd() string {
 }
 
 func (Dnf) RemoteInstall(urls []string) error {
-	isRoot, err := common.IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}

@@ -168,7 +168,7 @@ func persist(s base.Service) error {
 	}
 
 	if changed && !common.IsHomePath(serviceFilePath) {
-		isRoot, err := common.IsUserRoot()
+		isRoot, err := internal.IsUserRoot()
 		if err != nil {
 			return err
 		}

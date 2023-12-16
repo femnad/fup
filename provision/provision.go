@@ -75,6 +75,7 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 
 	all := []provisionFn{
 		{"preflight", p.runPreflightTasks},
+		{"dnf-repo", p.AddDnfRepos},
 		{"archive", p.extractArchives},
 		{"binary", p.downloadBinaries},
 		{"package", p.installPackages},
@@ -108,6 +109,12 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 
 func (p Provisioner) Apply() error {
 	return p.provisioners.apply()
+}
+
+func (p Provisioner) AddDnfRepos() error {
+	internal.Log.Notice("Adding DNF repos")
+
+	return addDnfRepos(p.Config.DnfRepos)
 }
 
 func (p Provisioner) extractArchives() error {

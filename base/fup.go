@@ -25,6 +25,7 @@ type Config struct {
 	Archives         []Archive         `yaml:"archives"`
 	Binaries         []entity.Binary   `yaml:"binaries"`
 	Cargo            []CargoPkg        `yaml:"rust"`
+	DnfRepos         []entity.DnfRepo  `yaml:"dnf_repos"`
 	EnsureDirs       []string          `yaml:"ensure_dirs"`
 	EnsureLines      []LineInFile      `yaml:"ensure_lines"`
 	Flatpak          entity.Flatpak    `yaml:"flatpak"`

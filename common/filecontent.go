@@ -42,7 +42,7 @@ type ManagedFile struct {
 }
 
 func needsSudoForPath(dst string) (bool, error) {
-	isRoot, err := IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return false, err
 	}
@@ -104,7 +104,7 @@ func Checksum(f string) (string, error) {
 
 func getStatSum(f string) (statSum, error) {
 	var s statSum
-	isRoot, err := IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return s, err
 	}
@@ -195,7 +195,7 @@ func chown(file, user, group string) error {
 	}
 	chownCmd += " " + file
 
-	isRoot, err := IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func ensureDir(dir string) error {
 	internal.Log.Warningf("escalating privileges to create directory %s", dir)
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
 
-	isRoot, err := IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	if noPermission || !IsHomePath(target) {
-		isRoot, err := IsUserRoot()
+		isRoot, err := internal.IsUserRoot()
 		if err != nil {
 			return false, err
 		}

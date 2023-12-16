@@ -8,14 +8,13 @@ import (
 	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/mare"
 )
 
 func addUserToGroup(user, group string) error {
-	isRoot, err := common.IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}
@@ -31,7 +30,7 @@ func addUserToGroup(user, group string) error {
 }
 
 func groupAdd(group entity.Group) error {
-	isRoot, err := common.IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}

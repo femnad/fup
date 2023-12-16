@@ -41,14 +41,14 @@ func setToSlice[T comparable](set mapset.Set[T]) []T {
 }
 
 func (i Installer) maybeRunWithSudo(cmds ...string) error {
-	isRoot, err := common.IsUserRoot()
+	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
 	}
 
-	cmdstr := strings.Join(cmds, " ")
+	cmdStr := strings.Join(cmds, " ")
 	_, err = marecmd.RunFormatError(marecmd.Input{
-		Command:         cmdstr,
+		Command:         cmdStr,
 		Sudo:            !isRoot,
 		SudoPreserveEnv: i.Pkg.PreserveEnv(),
 		Env:             i.Pkg.PkgEnv(),

@@ -109,7 +109,7 @@ func TestExpandString(t *testing.T) {
 					t.Errorf("error setting env in %s: %v", tt.name, err)
 				}
 			}
-			got := expand(tt.args.s, tt.args.lookup)
+			got := Expand(tt.args.s, tt.args.lookup)
 			if got != tt.want {
 				t.Errorf("expand() got = %v, want %v", got, tt.want)
 			}

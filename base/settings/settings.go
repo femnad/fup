@@ -35,7 +35,7 @@ func (s Settings) GetBinPath() string {
 	return defaultBinPath
 }
 
-func expand(s string, lookup map[string]string) string {
+func Expand(s string, lookup map[string]string) string {
 	var cur bytes.Buffer
 	var out bytes.Buffer
 	var backspace bool
@@ -137,7 +137,7 @@ func ExpandStringWithLookup(settings Settings, s string, lookup map[string]strin
 	lookup["extract_dir"] = settings.ExtractDir
 	lookup = addHostFacts(lookup, settings.HostFacts)
 
-	expanded := expand(s, lookup)
+	expanded := Expand(s, lookup)
 	return internal.ExpandUser(expanded)
 }
 
