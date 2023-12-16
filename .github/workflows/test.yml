@@ -27,6 +27,7 @@ jobs:
     name: Run provisioning in a container
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         image: [fedora, ubuntu]
     container:
@@ -54,6 +55,7 @@ jobs:
     name: Run provisioning in a container via a remote config
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         image: [fedora, ubuntu]
     container:
