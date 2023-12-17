@@ -1,7 +1,7 @@
 # Mostly intended for debugging full provisioning runs.
 from ubuntu:mantic
 
-run apt update -y && apt install -y gnupg2 golang systemd
+run apt update -y && apt install -y ca-certificates gnupg2 golang systemd
 
 copy . /root/fup/
 workdir /root/fup

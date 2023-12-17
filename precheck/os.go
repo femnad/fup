@@ -69,16 +69,16 @@ func GetOSId() (string, error) {
 	return getOSReleaseField(osIdField)
 }
 
-func GetOSVersion() (int, error) {
+func GetOSVersion() (float64, error) {
 	versionStr, err := getOSReleaseField(osVersionField)
 	if err != nil {
 		return 0, err
 	}
 
-	version, err := strconv.ParseInt(versionStr, 10, 64)
+	version, err := strconv.ParseFloat(versionStr, 64)
 	if err != nil {
 		return 0, err
 	}
 
-	return int(version), nil
+	return version, nil
 }

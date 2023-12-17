@@ -1,0 +1,12 @@
+# Mostly intended for debugging full provisioning runs.
+from debian:bookworm
+
+run echo 'deb http://deb.debian.org/debian bookworm-backports main' > /etc/apt/sources.list.d/backports.list
+run apt update -y && apt install -y ca-certificates gnupg2 systemd
+run apt install -y -t bookworm-backports golang-1.20-go
+
+copy . /root/fup/
+workdir /root/fup
+run /usr/lib/go-1.20/bin/go install
+
+cmd ["/bin/systemd"]
