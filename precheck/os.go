@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -68,6 +69,16 @@ func GetOSId() (string, error) {
 	return getOSReleaseField(osIdField)
 }
 
-func GetOSVersion() (string, error) {
-	return getOSReleaseField(osVersionField)
+func GetOSVersion() (int, error) {
+	versionStr, err := getOSReleaseField(osVersionField)
+	if err != nil {
+		return 0, err
+	}
+
+	version, err := strconv.ParseInt(versionStr, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(version), nil
 }

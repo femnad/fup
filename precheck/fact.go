@@ -121,7 +121,7 @@ func isOs(osId string) (bool, error) {
 	return foundOsId == osId, nil
 }
 
-func isOsVersion(version string) (bool, error) {
+func isOsVersion(version int) (bool, error) {
 	osVersion, err := GetOSVersion()
 	if err != nil {
 		return false, err
