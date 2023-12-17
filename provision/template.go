@@ -53,7 +53,12 @@ func getTemplateContent(config base.Config, tmplSrc string) ([]byte, error) {
 		return getLocalTemplate(config, tmplSrc)
 	}
 
-	configBase, _ := path.Split(config.File())
+	followedUrl, err := remote.FollowRedirects(config.File())
+	if err != nil {
+		return nil, err
+	}
+
+	configBase, _ := path.Split(followedUrl)
 	_, relTmplDir := path.Split(config.Settings.TemplateDir)
 	tmplUrl, err := url.JoinPath(configBase, relTmplDir, tmplSrc)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	locationKey  = "location"
 	userAgentKey = "user-agent"
 	userAgent    = "femnad/fup"
 	utfPrefix    = "UTF-8''"
@@ -113,4 +114,20 @@ func Download(url, target string) error {
 	}
 
 	return nil
+}
+
+func FollowRedirects(url string) (string, error) {
+	resp, err := http.Head(url)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode == http.StatusFound {
+		location := resp.Header.Get(locationKey)
+		if location != "" {
+			return FollowRedirects(location)
+		}
+	}
+
+	return url, nil
 }
