@@ -9,10 +9,22 @@ import (
 )
 
 const (
+	quote                = `"`
 	osReleaseFile        = "/etc/os-release"
 	osIdField            = "ID"
+	osVersionField       = "VERSION_ID"
 	versionCodenameField = "VERSION_CODENAME"
 )
+
+func removeLeadingTrailingQuotes(s string) string {
+	if strings.HasPrefix(s, quote) {
+		s = strings.TrimPrefix(s, quote)
+	}
+	if strings.HasSuffix(s, quote) {
+		s = strings.TrimSuffix(s, quote)
+	}
+	return s
+}
 
 func getOSReleaseField(f string) (string, error) {
 	file, err := os.Open(osReleaseFile)
@@ -41,7 +53,8 @@ func getOSReleaseField(f string) (string, error) {
 		if field != f {
 			continue
 		}
-		return value, nil
+
+		return removeLeadingTrailingQuotes(value), nil
 	}
 
 	return "", fmt.Errorf("unable to locate OS ID line in %s", osReleaseFile)
@@ -53,4 +66,8 @@ func GetOSVersionCodename() (string, error) {
 
 func GetOSId() (string, error) {
 	return getOSReleaseField(osIdField)
+}
+
+func GetOSVersion() (string, error) {
+	return getOSReleaseField(osVersionField)
 }

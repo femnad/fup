@@ -52,7 +52,7 @@ func addRepos(config base.Config) error {
 			continue
 		}
 
-		internal.Log.Noticef("Adding repo %s", repo.Name())
+		internal.Log.Infof("Adding repo %s", repo.Name())
 
 		err := repo.Install()
 		if err == nil && repo.UpdateCmd() != "" {

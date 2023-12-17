@@ -121,11 +121,21 @@ func isOs(osId string) (bool, error) {
 	return foundOsId == osId, nil
 }
 
+func isOsVersion(version string) (bool, error) {
+	osVersion, err := GetOSVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return osVersion == version, err
+}
+
 var FactFns = template.FuncMap{
-	"env":    hasEnv,
-	"is":     isA,
-	"ok":     isOk,
-	"os":     isOs,
-	"output": hasOutput,
-	"pkg":    hasPkgMgr,
+	"env":     hasEnv,
+	"is":      isA,
+	"ok":      isOk,
+	"os":      isOs,
+	"output":  hasOutput,
+	"pkg":     hasPkgMgr,
+	"version": isOsVersion,
 }
