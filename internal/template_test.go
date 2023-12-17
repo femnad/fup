@@ -100,6 +100,22 @@ baz`,
 			},
 			want: "1.2.3",
 		},
+		{
+			name: "Reverse cut",
+			args: args{
+				proc:  "revCut 1",
+				input: "v123",
+			},
+			want: "v",
+		},
+		{
+			name: "Reverse cut with negative index",
+			args: args{
+				proc:  "revCut -4",
+				input: "v123.345",
+			},
+			want: "v123",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

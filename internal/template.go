@@ -10,6 +10,7 @@ import (
 var funcMap = template.FuncMap{
 	"cut":     cut,
 	"head":    head,
+	"revCut":  reverseCut,
 	"split":   split,
 	"splitBy": splitBy,
 }
@@ -33,6 +34,15 @@ func cut(i int, s string) (string, error) {
 	}
 
 	return s[i:], nil
+}
+
+func reverseCut(i int, s string) (string, error) {
+	i, err := absIndex(s, i)
+	if err != nil {
+		return "", err
+	}
+
+	return s[:i], nil
 }
 
 func splitBy(delimiter string, i int, s string) (string, error) {
