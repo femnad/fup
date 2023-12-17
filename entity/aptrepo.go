@@ -2,16 +2,17 @@ package entity
 
 import (
 	"fmt"
+	"io"
+	"os/exec"
+	"path"
+	"strings"
+
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
 	marecmd "github.com/femnad/mare/cmd"
-	"io"
-	"os/exec"
-	"path"
-	"strings"
 )
 
 const (
@@ -36,7 +37,7 @@ func (a AptRepo) GetUnless() unless.Unless {
 	}
 }
 
-func (AptRepo) GetVersion() (string, error) {
+func (AptRepo) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 

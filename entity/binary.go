@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/precheck/unless"
 )
 
@@ -22,7 +23,7 @@ func (b Binary) GetUnless() unless.Unless {
 	return b.Unless
 }
 
-func (b Binary) GetVersion() (string, error) {
+func (b Binary) GetVersion(_ settings.Settings) (string, error) {
 	return b.Version, nil
 }
 

@@ -2,12 +2,13 @@ package entity
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck"
 	"github.com/femnad/fup/precheck/unless"
 	marecmd "github.com/femnad/mare/cmd"
-	"strings"
 )
 
 const pluginsCore = "dnf-plugins-core"
@@ -51,7 +52,7 @@ func (d DnfRepo) GetUnless() unless.Unless {
 	return unless.Unless{}
 }
 
-func (DnfRepo) GetVersion() (string, error) {
+func (DnfRepo) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 

@@ -51,13 +51,17 @@ type ArchiveInfo struct {
 
 func processDownload(archive base.Archive, s settings.Settings) (ArchiveInfo, error) {
 	var info ArchiveInfo
-	url := archive.ExpandURL(s)
-	if url == "" {
+	archiveURL, err := archive.ExpandURL(s)
+	if err != nil {
+		return info, err
+	}
+
+	if archiveURL == "" {
 		return info, fmt.Errorf("no URL given for archive %v", archive)
 	}
-	internal.Log.Infof("Downloading %s", url)
+	internal.Log.Infof("Downloading %s", archiveURL)
 
-	response, err := remote.ReadResponseBody(url)
+	response, err := remote.ReadResponseBody(archiveURL)
 	if err != nil {
 		return info, err
 	}
@@ -431,7 +435,11 @@ func unzip(archive base.Archive, response remote.Response, dirName string) (Arch
 }
 
 func getExtractionFn(archive base.Archive, s settings.Settings, contentDisposition string) (func(base.Archive, remote.Response, string) (ArchiveInfo, error), error) {
-	fileName := archive.ExpandURL(s)
+	fileName, err := archive.ExpandURL(s)
+	if err != nil {
+		return nil, err
+	}
+
 	if contentDisposition != "" {
 		fileName = contentDisposition
 	}
@@ -504,7 +512,10 @@ func guessArchiveName(releaseUrl string) (string, error) {
 }
 
 func extractArchive(archive base.Archive, s settings.Settings) error {
-	archiveUrl := archive.ExpandURL(s)
+	archiveUrl, err := archive.ExpandURL(s)
+	if err != nil {
+		return err
+	}
 
 	if !when.ShouldRun(archive) {
 		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", archiveUrl, archive.When)
@@ -530,7 +541,7 @@ func extractArchive(archive base.Archive, s settings.Settings) error {
 		return err
 	}
 
-	for _, symlink := range archive.ExpandSymlinks(s, info.maybeExec) {
+	for _, symlink := range archive.ExpandSymlinks(info.maybeExec) {
 		err = createSymlink(symlink, info.target, s.GetBinPath())
 		if err != nil {
 			internal.Log.Errorf("error creating symlink for archive %s: %v", archiveUrl, err)

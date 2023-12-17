@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	marecmd "github.com/femnad/mare/cmd"
-
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
@@ -13,6 +11,7 @@ import (
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
 	"github.com/femnad/fup/run"
+	marecmd "github.com/femnad/mare/cmd"
 )
 
 func createSymlink(step Step, cfg Config) error {
@@ -151,7 +150,7 @@ func (s Step) GetUnless() unless.Unless {
 	return s.Unless
 }
 
-func (Step) GetVersion() (string, error) {
+func (Step) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
@@ -200,7 +199,7 @@ func (t Task) GetUnless() unless.Unless {
 	return t.Unless
 }
 
-func (t Task) GetVersion() (string, error) {
+func (t Task) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 

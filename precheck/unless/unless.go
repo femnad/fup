@@ -38,7 +38,7 @@ func (u Unless) String() string {
 type Unlessable interface {
 	DefaultVersionCmd() string
 	GetUnless() Unless
-	GetVersion() (string, error)
+	GetVersion(settings.Settings) (string, error)
 	HasPostProc() bool
 	Name() string
 }
@@ -60,24 +60,6 @@ func postProcOutput(unless Unless, output string) (string, error) {
 	}
 
 	return doPostProcOutput(unless, postProc)
-}
-
-func getVersion(u Unlessable, s settings.Settings) (string, error) {
-	version, err := u.GetVersion()
-	if err != nil {
-		return "", err
-	}
-
-	if version != "" {
-		return version, nil
-	}
-
-	name := u.Name()
-	if name == "" {
-		return version, nil
-	}
-
-	return s.Versions[name], nil
 }
 
 func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
@@ -103,11 +85,12 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return false
 	}
 
-	version, err := getVersion(unlessable, s)
+	version, err := unlessable.GetVersion(s)
 	if err != nil {
 		internal.Log.Errorf("Error determining desired version: %v", err)
 		return false
 	}
+
 	if version == "" || unlessable.HasPostProc() {
 		// No version specification or no post proc, but command has succeeded so should skip the operation.
 		return true
@@ -130,9 +113,9 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 
 func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string {
 	lookup := map[string]string{}
-	version, err := unlessable.GetVersion()
+	version, err := unlessable.GetVersion(s)
 	if err != nil {
-		internal.Log.Errorf("Error resolving stat %s: %v", err)
+		internal.Log.Errorf("Error resolving stat %s: %v", stat, err)
 		return stat
 	}
 

@@ -19,14 +19,14 @@ const (
 	defaultVersion = "latest"
 )
 
-func qualifyPkg(pkg base.GoPkg) (string, error) {
+func qualifyPkg(pkg base.GoPkg, s settings.Settings) (string, error) {
 	name := pkg.Name()
 	tokens := strings.Split(name, "/")
 	if len(tokens) == 0 {
 		return "", fmt.Errorf("unable to qualify package: %s", name)
 	}
 
-	version, err := pkg.GetVersion()
+	version, err := pkg.GetVersion(s)
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +51,7 @@ func goInstall(pkg base.GoPkg, s settings.Settings) error {
 
 	internal.Log.Infof("Installing Go package %s", pkg.Name())
 
-	name, err := qualifyPkg(pkg)
+	name, err := qualifyPkg(pkg, s)
 	if err != nil {
 		internal.Log.Errorf("error in installing go package %v", err)
 		return err

@@ -3,6 +3,7 @@ package base
 import (
 	"fmt"
 
+	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/precheck/unless"
 )
 
@@ -21,7 +22,7 @@ func (p PythonPkg) GetUnless() unless.Unless {
 	return p.Unless
 }
 
-func (p PythonPkg) GetVersion() (string, error) {
+func (p PythonPkg) GetVersion(s settings.Settings) (string, error) {
 	return "", nil
 }
 
