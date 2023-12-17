@@ -1,13 +1,13 @@
-package unless
+package internal
 
 import (
 	"testing"
 )
 
-func Test_applyProc(t *testing.T) {
+func Test_RunTemplateFn(t *testing.T) {
 	type args struct {
-		proc   string
-		output string
+		proc  string
+		input string
 	}
 	tests := []struct {
 		name    string
@@ -18,56 +18,56 @@ func Test_applyProc(t *testing.T) {
 		{
 			name: "Simple split",
 			args: args{
-				proc:   "split 0",
-				output: "qux bar baz",
+				proc:  "split 0",
+				input: "qux bar baz",
 			},
 			want: "qux",
 		},
 		{
 			name: "Split by comma then space",
 			args: args{
-				proc:   `splitBy "," 0 | split 1`,
-				output: "qux bar baz, fred",
+				proc:  `splitBy "," 0 | split 1`,
+				input: "qux bar baz, fred",
 			},
 			want: "bar",
 		},
 		{
 			name: "Split negative index",
 			args: args{
-				proc:   "split -1",
-				output: "qux bar baz",
+				proc:  "split -1",
+				input: "qux bar baz",
 			},
 			want: "baz",
 		},
 		{
 			name: "Split invalid index",
 			args: args{
-				proc:   "split 3",
-				output: "qux bar baz",
+				proc:  "split 3",
+				input: "qux bar baz",
 			},
 			wantErr: true,
 		},
 		{
 			name: "Split invalid negative index",
 			args: args{
-				proc:   "split -3",
-				output: "qux bar",
+				proc:  "split -3",
+				input: "qux bar",
 			},
 			wantErr: true,
 		},
 		{
 			name: "Cut from index",
 			args: args{
-				proc:   "cut 1",
-				output: "v123",
+				proc:  "cut 1",
+				input: "v123",
 			},
 			want: "123",
 		},
 		{
 			name: "Cut from negative index",
 			args: args{
-				proc:   "cut -2",
-				output: "v123.345",
+				proc:  "cut -2",
+				input: "v123.345",
 			},
 			want: "45",
 		},
@@ -75,7 +75,7 @@ func Test_applyProc(t *testing.T) {
 			name: "Head first",
 			args: args{
 				proc: "head 0",
-				output: `bar
+				input: `bar
 baz
 qux`,
 			},
@@ -85,7 +85,7 @@ qux`,
 			name: "Head last",
 			args: args{
 				proc: "head -1",
-				output: `bar
+				input: `bar
 baz
 qux`,
 			},
@@ -95,7 +95,7 @@ qux`,
 			name: "Head split cut",
 			args: args{
 				proc: "head 0 | split -1 | cut 1",
-				output: `foo v1.2.3
+				input: `foo v1.2.3
 baz`,
 			},
 			want: "1.2.3",
@@ -103,13 +103,13 @@ baz`,
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := applyProc(tt.args.proc, tt.args.output)
+			got, err := RunTemplateFn(tt.args.input, tt.args.proc)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("applyProc() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RunTemplateFn() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("applyProc() got = %v, want %v", got, tt.want)
+				t.Errorf("RunTemplateFn() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
