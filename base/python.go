@@ -21,8 +21,8 @@ func (p PythonPkg) GetUnless() unless.Unless {
 	return p.Unless
 }
 
-func (p PythonPkg) GetVersion() string {
-	return ""
+func (p PythonPkg) GetVersion() (string, error) {
+	return "", nil
 }
 
 func (p PythonPkg) HasPostProc() bool {

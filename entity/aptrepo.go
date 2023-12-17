@@ -36,8 +36,8 @@ func (a AptRepo) GetUnless() unless.Unless {
 	}
 }
 
-func (AptRepo) GetVersion() string {
-	return ""
+func (AptRepo) GetVersion() (string, error) {
+	return "", nil
 }
 
 func (AptRepo) HasPostProc() bool {

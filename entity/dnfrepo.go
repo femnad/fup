@@ -51,8 +51,8 @@ func (d DnfRepo) GetUnless() unless.Unless {
 	return unless.Unless{}
 }
 
-func (DnfRepo) GetVersion() string {
-	return ""
+func (DnfRepo) GetVersion() (string, error) {
+	return "", nil
 }
 
 func (DnfRepo) HasPostProc() bool {

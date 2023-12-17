@@ -48,7 +48,7 @@ func (u Unless) String() string {
 type Unlessable interface {
 	DefaultVersionCmd() string
 	GetUnless() Unless
-	GetVersion() string
+	GetVersion() (string, error)
 	HasPostProc() bool
 	Name() string
 }
@@ -135,18 +135,22 @@ func postProcOutput(unless Unless, output string) (string, error) {
 	return doPostProcOutput(unless, postProc)
 }
 
-func getVersion(u Unlessable, s settings.Settings) string {
-	version := u.GetVersion()
+func getVersion(u Unlessable, s settings.Settings) (string, error) {
+	version, err := u.GetVersion()
+	if err != nil {
+		return "", err
+	}
+
 	if version != "" {
-		return version
+		return version, nil
 	}
 
 	name := u.Name()
 	if name == "" {
-		return version
+		return version, nil
 	}
 
-	return s.Versions[name]
+	return s.Versions[name], nil
 }
 
 func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
@@ -172,7 +176,11 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return false
 	}
 
-	version := getVersion(unlessable, s)
+	version, err := getVersion(unlessable, s)
+	if err != nil {
+		internal.Log.Errorf("Error determining desired version: %v", err)
+		return false
+	}
 	if version == "" || unlessable.HasPostProc() {
 		// No version specification or no post proc, but command has succeeded so should skip the operation.
 		return true
@@ -185,9 +193,8 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return false
 	}
 
-	vers := getVersion(unlessable, s)
-	if postProc != vers {
-		internal.Log.Debugf("Existing version `%s`, required version `%s`", postProc, vers)
+	if postProc != version {
+		internal.Log.Debugf("Existing version `%s`, required version `%s`", postProc, version)
 		return false
 	}
 
@@ -196,7 +203,11 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 
 func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string {
 	lookup := map[string]string{}
-	version := unlessable.GetVersion()
+	version, err := unlessable.GetVersion()
+	if err != nil {
+		internal.Log.Errorf("Error resolving stat %s: %v", err)
+		return stat
+	}
 
 	if version == "" {
 		version = s.Versions[unlessable.Name()]

@@ -151,8 +151,8 @@ func (s Step) GetUnless() unless.Unless {
 	return s.Unless
 }
 
-func (Step) GetVersion() string {
-	return ""
+func (Step) GetVersion() (string, error) {
+	return "", nil
 }
 
 func (Step) HasPostProc() bool {
@@ -200,8 +200,8 @@ func (t Task) GetUnless() unless.Unless {
 	return t.Unless
 }
 
-func (t Task) GetVersion() string {
-	return ""
+func (t Task) GetVersion() (string, error) {
+	return "", nil
 }
 
 func (t Task) HasPostProc() bool {

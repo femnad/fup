@@ -99,8 +99,8 @@ func (a Archive) GetUnless() unless.Unless {
 	return a.Unless
 }
 
-func (a Archive) GetVersion() string {
-	return a.Version
+func (a Archive) GetVersion() (string, error) {
+	return a.Version, nil
 }
 
 func (a Archive) HasPostProc() bool {

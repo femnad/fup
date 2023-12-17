@@ -22,8 +22,8 @@ func (b Binary) GetUnless() unless.Unless {
 	return b.Unless
 }
 
-func (b Binary) GetVersion() string {
-	return b.Version
+func (b Binary) GetVersion() (string, error) {
+	return b.Version, nil
 }
 
 func (b Binary) HasPostProc() bool {

@@ -22,8 +22,8 @@ func (c CargoPkg) GetUnless() unless.Unless {
 	return c.Unless
 }
 
-func (c CargoPkg) GetVersion() string {
-	return c.Version
+func (c CargoPkg) GetVersion() (string, error) {
+	return c.Version, nil
 }
 
 func (c CargoPkg) HasPostProc() bool {
