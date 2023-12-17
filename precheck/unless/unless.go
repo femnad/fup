@@ -91,7 +91,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return false
 	}
 
-	if version == "" || unlessable.HasPostProc() {
+	if version == "" || !unlessable.HasPostProc() {
 		// No version specification or no post proc, but command has succeeded so should skip the operation.
 		return true
 	}
