@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	version = "0.21.2"
+	version = "0.22.0"
 )
 
 type args struct {
@@ -59,7 +59,7 @@ func main() {
 
 	err = p.Apply()
 	if err != nil {
-		fmt.Printf("Some provisioners had errors: %v\n", err)
+		fmt.Printf("Some provisioners had errors:\n%v\n", err)
 		os.Exit(1)
 	}
 }

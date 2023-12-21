@@ -33,7 +33,18 @@ func (p provisioners) apply() error {
 		provErrs = append(provErrs, err)
 	}
 
-	return errors.Join(provErrs...)
+	var uniqErrs []error
+	seenErr := make(map[string]error)
+	for _, err := range provErrs {
+		msg := err.Error()
+		_, ok := seenErr[msg]
+		if !ok {
+			seenErr[msg] = err
+			uniqErrs = append(uniqErrs, err)
+		}
+	}
+
+	return errors.Join(uniqErrs...)
 }
 
 func newProvisioners(allProvisioners []provisionFn, filter []string) (provisioners, error) {
