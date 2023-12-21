@@ -36,6 +36,9 @@ func (p provisioners) apply() error {
 	var uniqErrs []error
 	seenErr := make(map[string]error)
 	for _, err := range provErrs {
+		if err == nil {
+			continue
+		}
 		msg := err.Error()
 		_, ok := seenErr[msg]
 		if !ok {
