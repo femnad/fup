@@ -77,7 +77,7 @@ def release(version: str):
         return
 
     asset_name = build(version)
-    sh(f'gh release create -n "Release {version}" -t "{version}" "version"')
+    sh(f'gh release create -n "Release {version}" -t "{version}" "{version}"')
     sh(f'gh release upload "{version}" "{asset_name}"')
 
 
