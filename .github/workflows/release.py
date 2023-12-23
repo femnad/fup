@@ -59,6 +59,7 @@ def release(version: str):
 def tag_and_release():
     version = get_current_version()
     tags = sh('git tag').split('\n')
+    print(tags)
     versions = set(tags) if tags else set()
     print(versions)
     if version in versions:
