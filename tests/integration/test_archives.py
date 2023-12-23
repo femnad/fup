@@ -26,6 +26,7 @@ RELATIVE_CONFIG = {
 class Archive:
     name: str
     url: str
+    target: str = ''
 
 
 @dataclasses.dataclass
@@ -61,12 +62,30 @@ TESTS_CASES = [
         symlink=Symlink(link_name='bin/foo', target='ext/foo-1.2.3-amd64/foo'),
     ),
     ArchiveTest(
+        name='tar_archive_root_dir_different_than_exec_override_target',
+        archive=Archive(
+            name='foo',
+            target='fred',
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.tar',
+        ),
+        symlink=Symlink(link_name='bin/foo', target='ext/fred/foo'),
+    ),
+    ArchiveTest(
         name='tar_archive_root_dir_same_as_exec',
         archive=Archive(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.tar',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo/foo'),
+    ),
+    ArchiveTest(
+        name='tar_archive_root_dir_same_as_exec_override_target',
+        archive=Archive(
+            name='foo',
+            target='qux',
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.tar',
+        ),
+        symlink=Symlink(link_name='bin/foo', target='ext/qux/foo'),
     ),
     ArchiveTest(
         name='zip_archive_no_root_dir',
@@ -85,12 +104,30 @@ TESTS_CASES = [
         symlink=Symlink(link_name='bin/foo', target='ext/foo-1.2.3-amd64/foo'),
     ),
     ArchiveTest(
+        name='zip_archive_root_dir_different_than_exec_override_target',
+        archive=Archive(
+            name='foo',
+            target='baz',
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.zip',
+        ),
+        symlink=Symlink(link_name='bin/foo', target='ext/baz/foo'),
+    ),
+    ArchiveTest(
         name='zip_archive_root_dir_same_as_exec',
         archive=Archive(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo/foo'),
+    ),
+    ArchiveTest(
+        name='zip_archive_root_dir_same_as_exec_override_target',
+        archive=Archive(
+            name='foo',
+            target='bar',
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip',
+        ),
+        symlink=Symlink(link_name='bin/foo', target='ext/bar/foo'),
     ),
     ArchiveTest(
         name='zip_archive_root_dir_same_as_exec_abs_dirs',

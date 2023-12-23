@@ -44,9 +44,18 @@ type archiveEntry struct {
 
 // ArchiveInfo stores an archive's root dir and species if the root dir is part of the archive files.
 type ArchiveInfo struct {
-	hasRootDir bool
-	maybeExec  string
-	target     string
+	hasRootDir     bool
+	maybeExec      string
+	target         string
+	targetOverride string
+}
+
+func (a ArchiveInfo) GetTarget() string {
+	if a.targetOverride != "" {
+		return a.targetOverride
+	}
+
+	return a.target
 }
 
 func processDownload(archive base.Archive, s settings.Settings) (ArchiveInfo, error) {
@@ -253,6 +262,7 @@ func getArchiveInfo(archive base.Archive, entries []archiveEntry) (ArchiveInfo, 
 	var maybeExec string
 	var hasRootDir bool
 	var target string
+
 	if roots.Cardinality() == 1 {
 		root, ok := roots.Pop()
 		if !ok {
@@ -271,7 +281,7 @@ func getArchiveInfo(archive base.Archive, entries []archiveEntry) (ArchiveInfo, 
 		maybeExec = execs[0].name
 	}
 
-	return ArchiveInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target}, nil
+	return ArchiveInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target, targetOverride: archive.Target}, nil
 }
 
 func getTarInfo(archive base.Archive, response remote.Response, tempfile string) (ArchiveInfo, error) {
@@ -307,10 +317,13 @@ func getTarInfo(archive base.Archive, response remote.Response, tempfile string)
 
 func getOutputPath(info ArchiveInfo, fileName, dirName string) string {
 	if info.hasRootDir {
+		if info.targetOverride != "" && strings.HasPrefix(fileName, info.target) {
+			fileName = strings.Replace(fileName, info.target, info.targetOverride, 1)
+		}
 		return filepath.Join(dirName, fileName)
 	}
 
-	return filepath.Join(dirName, info.target, fileName)
+	return filepath.Join(dirName, info.GetTarget(), fileName)
 }
 
 func getAbsTarget(dirName string, info ArchiveInfo) (string, error) {
@@ -323,7 +336,7 @@ func getAbsTarget(dirName string, info ArchiveInfo) (string, error) {
 		return "", err
 	}
 
-	return path.Join(wd, dirName, info.target), nil
+	return path.Join(wd, dirName, info.GetTarget()), nil
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
@@ -541,8 +554,13 @@ func extractArchive(archive base.Archive, s settings.Settings) error {
 		return err
 	}
 
+	target := info.target
+	if info.targetOverride != "" {
+		target, _ = path.Split(target)
+		target = path.Join(target, info.targetOverride)
+	}
 	for _, symlink := range archive.ExpandSymlinks(info.maybeExec) {
-		err = createSymlink(symlink, info.target, s.GetBinPath())
+		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
 			internal.Log.Errorf("error creating symlink for archive %s: %v", archiveUrl, err)
 			return err

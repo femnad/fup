@@ -28,6 +28,7 @@ type Archive struct {
 	Ref           string            `yaml:"name"`
 	NamedLink     []NamedLink       `yaml:"named_link"`
 	Symlink       []string          `yaml:"link"`
+	Target        string            `yaml:"target"`
 	Unless        unless.Unless     `yaml:"unless"`
 	Url           string            `yaml:"url"`
 	Version       string            `yaml:"version"`
