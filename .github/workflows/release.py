@@ -28,7 +28,7 @@ def sh(cmd: str, env: dict | None = None) -> str:
     return proc.stdout.strip()
 
 
-def do_get_current_version() -> str:
+def get_current_version() -> str:
     with open(MAIN_FILE) as fd:
         for line in fd:
             if m := VERSION_LINE.match(line.strip()):
@@ -38,42 +38,46 @@ def do_get_current_version() -> str:
     raise Exception('Unable to determine version')
 
 
-def get_current_version() -> tuple[str, bool]:
-    version = do_get_current_version()
+def tag(version: str):
     tags = sh('git tag')
     tags_list = tags.split('\n') if tags else []
     versions = set(tags_list)
-    print(version)
-    print(versions)
-    return version, version in versions
+    if version in versions:
+        print(f'A tag for version {version} already exists')
+        return
 
-
-def tag(new_tag: str):
-    sh(f'git tag {new_tag}')
+    sh(f'git tag {version}')
     sh('git push --tags')
 
 
-def create_release(version: str):
-    sh(f'gh release create -n "Release {version}" -t "{version}" "version"')
+def release_exists(version: str):
+    cmd = shlex.split(f'gh release view {version}')
+    proc = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return proc.returncode == 0
+
+
+def build(version: str) -> str:
+    asset_base = os.environ['GITHUB_REPOSITORY'].split('/')[-1]
+    platform = sh('uname')
+    architecture = sh('uname -m')
+    asset_name = f'{asset_base}-{version}-{platform}-{architecture}'.lower()
+    sh(f'go build -o {asset_name}', env={'CGO_ENABLED': '0'})
+    return asset_name
 
 
 def release(version: str):
-    repo_name = os.environ['GITHUB_REPOSITORY'].split('/')[-1]
-    platform = sh('uname')
-    architecture = sh('uname -m')
-    asset_name = f'{repo_name}-{version}-{platform}-{architecture}'.lower()
-    sh(f'go build -o {asset_name}', env={'CGO_ENABLED': '0'})
+    if release_exists(version):
+        print(f'A release already exists for version {version}')
+        return
+
+    asset_name = build(version)
+    sh(f'gh release create -n "Release {version}" -t "{version}" "version"')
     sh(f'gh release upload "{version}" "{asset_name}"')
 
 
 def tag_and_release():
-    version, exists = get_current_version()
-    if exists:
-        print(f'A tag for version {version} already exists')
-        return
-
+    version = get_current_version()
     tag(version)
-    create_release(version)
     release(version)
 
 
