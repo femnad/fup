@@ -62,12 +62,7 @@ def build(version: str) -> str:
     architecture = sh('uname -m')
     asset_name = f'{asset_base}-{version}-{platform}-{architecture}'.lower()
     home = os.environ['HOME']
-    sh(f'go build -o {asset_name}',
-       env={
-           'CGO_ENABLED': '0',
-           'GOPATH': os.path.join(home, 'go'),
-           'GOCACHE': os.path.join(home, 'go', 'pkg', 'mod')
-       })
+    sh(f'go build -o {asset_name}', env={'CGO_ENABLED': '0', 'GOCACHE': os.path.join(home, 'go', 'pkg', 'mod')})
     return asset_name
 
 
@@ -77,7 +72,7 @@ def release(version: str):
         return
 
     asset_name = build(version)
-    sh(f'gh release create -n "Release {version}" -t "{version}" "{version}"')
+    sh(f'gh release create --generate-notes "{version}"')
     sh(f'gh release upload "{version}" "{asset_name}"')
 
 
