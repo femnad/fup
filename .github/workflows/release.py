@@ -61,7 +61,8 @@ def build(version: str) -> str:
     platform = sh('uname')
     architecture = sh('uname -m')
     asset_name = f'{asset_base}-{version}-{platform}-{architecture}'.lower()
-    sh(f'go build -o {asset_name}', env={'CGO_ENABLED': '0'})
+    home = os.environ['HOME']
+    sh(f'go build -o {asset_name}', env={'CGO_ENABLED': '0', 'GOPATH': os.path.join(home, 'go')})
     return asset_name
 
 
