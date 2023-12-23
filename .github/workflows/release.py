@@ -67,6 +67,7 @@ def release(version: str):
 def tag_and_release():
     version, exists = get_current_version()
     if exists:
+        print(f'A tag for version {version} already exists')
         return
 
     tag(version)
