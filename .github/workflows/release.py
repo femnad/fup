@@ -42,7 +42,9 @@ def get_current_version() -> tuple[str, bool]:
     version = do_get_current_version()
     tags = sh('git tag')
     tags_list = tags.split('\n') if tags else []
-    versions = set(tags_list) if tags_list else set()
+    versions = set(tags_list)
+    print(version)
+    print(versions)
     return version, version in versions
 
 
