@@ -156,10 +156,6 @@ func (a Archive) GetVersion(s settings.Settings) (string, error) {
 	return a.version(s)
 }
 
-func (a Archive) HasPostProc() bool {
-	return a.Unless.HasPostProc()
-}
-
 func (a Archive) Name() string {
 	return a.Ref
 }

@@ -26,10 +26,6 @@ func (p PythonPkg) GetVersion(s settings.Settings) (string, error) {
 	return "", nil
 }
 
-func (p PythonPkg) HasPostProc() bool {
-	return false
-}
-
 func (p PythonPkg) Name() string {
 	return p.Pkg
 }

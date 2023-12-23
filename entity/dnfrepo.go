@@ -56,10 +56,6 @@ func (DnfRepo) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
-func (DnfRepo) HasPostProc() bool {
-	return false
-}
-
 func (d DnfRepo) Name() string {
 	return d.RepoName
 }

@@ -27,10 +27,6 @@ func (c CargoPkg) GetVersion(_ settings.Settings) (string, error) {
 	return c.Version, nil
 }
 
-func (c CargoPkg) HasPostProc() bool {
-	return false
-}
-
 func (c CargoPkg) Name() string {
 	return c.Crate
 }

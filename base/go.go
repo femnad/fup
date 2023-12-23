@@ -25,10 +25,6 @@ func (g GoPkg) GetVersion(_ settings.Settings) (string, error) {
 	return g.Version, nil
 }
 
-func (g GoPkg) HasPostProc() bool {
-	return false
-}
-
 func (g GoPkg) Name() string {
 	return g.Pkg
 }

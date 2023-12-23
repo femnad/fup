@@ -154,10 +154,6 @@ func (Step) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
-func (Step) HasPostProc() bool {
-	return false
-}
-
 func (Step) Name() string {
 	return ""
 }
@@ -201,10 +197,6 @@ func (t Task) GetUnless() unless.Unless {
 
 func (t Task) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
-}
-
-func (t Task) HasPostProc() bool {
-	return t.Unless.HasPostProc()
 }
 
 func (t Task) Name() string {

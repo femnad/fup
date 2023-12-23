@@ -41,10 +41,6 @@ func (AptRepo) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
-func (AptRepo) HasPostProc() bool {
-	return false
-}
-
 func (a AptRepo) Name() string {
 	return a.RepoName
 }

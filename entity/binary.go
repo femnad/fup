@@ -27,10 +27,6 @@ func (b Binary) GetVersion(_ settings.Settings) (string, error) {
 	return b.Version, nil
 }
 
-func (b Binary) HasPostProc() bool {
-	return b.Unless.HasPostProc()
-}
-
 func (b Binary) Name() string {
 	return b.BinName
 }

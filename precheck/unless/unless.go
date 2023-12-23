@@ -19,10 +19,6 @@ type Unless struct {
 	Stat     string `yaml:"stat"`
 }
 
-func (u Unless) HasPostProc() bool {
-	return u.Post == "" || u.Cmd == ""
-}
-
 func (u Unless) String() string {
 	if u.Stat != "" {
 		return fmt.Sprintf("ls %s", u.Stat)
@@ -39,7 +35,6 @@ type Unlessable interface {
 	DefaultVersionCmd() string
 	GetUnless() Unless
 	GetVersion(settings.Settings) (string, error)
-	HasPostProc() bool
 	Name() string
 }
 
@@ -91,8 +86,8 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return false
 	}
 
-	if version == "" || !unlessable.HasPostProc() {
-		// No version specification or no post proc, but command has succeeded so should skip the operation.
+	if version == "" {
+		// No version specification, but command has succeeded so should skip the operation.
 		return true
 	}
 
