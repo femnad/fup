@@ -11,7 +11,7 @@ VERSION_LINE = re.compile('version = "([0-9]+.[0-9]+.[0-9]+)"')
 
 def sh(cmd: str, env: dict | None = None) -> str:
     cmd_parsed = shlex.split(cmd)
-    proc = subprocess.run(cmd_parsed, check=True, text=True, capture_output=True, env=env)
+    proc = subprocess.run(cmd_parsed, text=True, capture_output=True, env=env)
     stdout = proc.stdout.strip()
     code = proc.returncode
     if code:
