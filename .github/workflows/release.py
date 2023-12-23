@@ -22,13 +22,13 @@ def sh(cmd: str, env: dict | None = None) -> str:
         if stdout:
             prefix = ', ' if out else ''
             out += f'{prefix}stdout: {stdout}'
-        print(f'Command {cmd} exited with code {code}, output: {out}')
+        print(f'Command `{cmd}` exited with code {code}, output: {out}')
         sys.exit(code)
 
     return proc.stdout.strip()
 
 
-def get_current_version() -> str:
+def do_get_current_version() -> str:
     with open(MAIN_FILE) as fd:
         for line in fd:
             if m := VERSION_LINE.match(line.strip()):
@@ -36,6 +36,14 @@ def get_current_version() -> str:
                 return version if version.startswith('v') else 'v' + version
 
     raise Exception('Unable to determine version')
+
+
+def get_current_version() -> tuple[str, bool]:
+    version = do_get_current_version()
+    tags = sh('git tag')
+    tags_list = tags.split('\n') if tags else []
+    versions = set(tags_list) if tags_list else set()
+    return version, version in versions
 
 
 def tag(new_tag: str):
@@ -57,9 +65,8 @@ def release(version: str):
 
 
 def tag_and_release():
-    version = get_current_version()
-    versions = set(sh('git tag').split('\n'))
-    if version in versions:
+    version, exists = get_current_version()
+    if exists:
         return
 
     tag(version)
