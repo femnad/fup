@@ -1,0 +1,19 @@
+name: Release new version
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+
+jobs:
+  release:
+    name: Release new version if no tag exists for it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create new tag and release
+        run: |
+          python3 .github/workflows/release.py
