@@ -22,7 +22,7 @@ def sh(cmd: str, env: dict | None = None) -> str:
         if stdout:
             prefix = ', ' if out else ''
             out += f'{prefix}stdout: {stdout}'
-        print(f'Command {cmd} exited with code {code}, output: {out}')
+        print(f'Command `{cmd}` exited with code {code}, output: {out}')
         sys.exit(code)
 
     return proc.stdout.strip()
