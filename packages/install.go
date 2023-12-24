@@ -21,7 +21,7 @@ type PkgManager interface {
 	PkgNameSeparator() string
 	PreserveEnv() bool
 	RemoveCmd() string
-	RemoteInstall(urls []string) error
+	RemoteInstall(pkgs []entity.RemotePackage) error
 	UpdateCmd() string
 }
 
@@ -140,17 +140,20 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	}
 
 	var urls []string
+	var pkgs []entity.RemotePackage
 	missing.Each(func(pkg entity.RemotePackage) bool {
 		version := desiredPkgVersion(pkg, s)
 		url := settings.ExpandStringWithLookup(s, pkg.Url, map[string]string{"version": version})
+		pkg.Url = url
 		urls = append(urls, url)
+		pkgs = append(pkgs, pkg)
 		return false
 	})
 
 	sort.Strings(urls)
 	internal.Log.Infof("Remote packages to install: %s", strings.Join(urls, " "))
 
-	return true, i.Pkg.RemoteInstall(urls)
+	return true, i.Pkg.RemoteInstall(pkgs)
 }
 
 func (i Installer) InstalledPackages(pkg PkgManager) (mapset.Set[string], error) {

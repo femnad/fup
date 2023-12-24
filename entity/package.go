@@ -5,6 +5,7 @@ type RemotePackage struct {
 	InstallOnce bool   `yaml:"install_once"`
 	Name        string `yaml:"name"`
 	Version     string `yaml:"version"`
+	SkipScripts bool   `yaml:"skip_scripts"`
 	Url         string `yaml:"url"`
 }
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
-	marecmd "github.com/femnad/mare/cmd"
 )
 
 type Dnf struct {
@@ -35,15 +35,36 @@ func (Dnf) RemoveCmd() string {
 	return "remove"
 }
 
-func (Dnf) RemoteInstall(urls []string) error {
-	isRoot, err := internal.IsUserRoot()
-	if err != nil {
-		return err
+func (Dnf) RemoteInstall(pkgs []entity.RemotePackage) error {
+	var regularUrls []string
+	var skipScriptUrls []string
+
+	for _, pkg := range pkgs {
+		url := pkg.Url
+		if pkg.SkipScripts {
+			skipScriptUrls = append(skipScriptUrls, url)
+		} else {
+			regularUrls = append(regularUrls, url)
+		}
 	}
 
-	input := marecmd.Input{Command: fmt.Sprintf("dnf install -y %s", strings.Join(urls, " ")), Sudo: !isRoot}
-	_, err = marecmd.RunFormatError(input)
-	return err
+	if len(regularUrls) > 0 {
+		cmd := fmt.Sprintf("dnf install -y %s", strings.Join(regularUrls, " "))
+		err := internal.MaybeRunWithSudo(cmd)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(skipScriptUrls) > 0 {
+		cmd := fmt.Sprintf("dnf install -y --setopt=tsflags=noscripts %s", strings.Join(skipScriptUrls, " "))
+		err := internal.MaybeRunWithSudo(cmd)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (Dnf) UpdateCmd() string {
