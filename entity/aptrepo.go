@@ -21,6 +21,7 @@ const (
 )
 
 type AptRepo struct {
+	unless.BasicUnlessable
 	GPGKey   string `yaml:"gpg_key"`
 	RepoName string `yaml:"name"`
 	Repo     string `yaml:"repo"`

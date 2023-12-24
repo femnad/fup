@@ -23,6 +23,7 @@ func (i installer) runMaybeSudo(cmd string) error {
 }
 
 type DnfRepo struct {
+	unless.BasicUnlessable
 	RepoName string   `yaml:"name"`
 	Packages []string `yaml:"packages"`
 	Repo     string   `yaml:"repo"`

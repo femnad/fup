@@ -8,6 +8,7 @@ import (
 )
 
 type CargoPkg struct {
+	unless.BasicUnlessable
 	Bins    bool          `yaml:"bins"`
 	Crate   string        `yaml:"name"`
 	Unless  unless.Unless `yaml:"unless"`

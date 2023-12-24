@@ -8,6 +8,7 @@ import (
 )
 
 type Binary struct {
+	unless.BasicUnlessable
 	BinName string        `yaml:"name"`
 	Dir     string        `yaml:"dir"`
 	Url     string        `yaml:"url"`

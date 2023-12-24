@@ -111,6 +111,7 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 }
 
 type Step struct {
+	unless.BasicUnlessable
 	Cmd     string      `yaml:"cmd"`
 	Content string      `yaml:"content"`
 	Dir     string      `yaml:"dir"`
@@ -163,6 +164,7 @@ func (Step) DefaultVersionCmd() string {
 }
 
 type Task struct {
+	unless.BasicUnlessable
 	Desc   string        `yaml:"task"`
 	Steps  []Step        `yaml:"steps"`
 	When   string        `yaml:"when"`

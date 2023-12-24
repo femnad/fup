@@ -9,6 +9,7 @@ import (
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/remote"
 )
 
 type NamedLink struct {
@@ -17,16 +18,18 @@ type NamedLink struct {
 }
 
 type VersionLookupSpec struct {
-	URL      string `yaml:"url"`
-	Query    string `yaml:"query"`
-	PostProc string `yaml:"post_proc"`
+	FollowURL bool   `yaml:"follow_url"`
+	PostProc  string `yaml:"post_proc"`
+	Query     string `yaml:"query"`
+	URL       string `yaml:"url"`
 }
 
 type Archive struct {
 	DontLink      bool              `yaml:"dont_link"`
+	DontUpdate    bool              `yaml:"dont_update"`
 	ExecuteAfter  []string          `yaml:"execute_after"`
-	Ref           string            `yaml:"name"`
 	NamedLink     []NamedLink       `yaml:"named_link"`
+	Ref           string            `yaml:"name"`
 	Symlink       []string          `yaml:"link"`
 	Target        string            `yaml:"target"`
 	Unless        unless.Unless     `yaml:"unless"`
@@ -126,7 +129,7 @@ func (a Archive) GetUnless() unless.Unless {
 	return a.Unless
 }
 
-func lookupVersion(spec VersionLookupSpec) (string, error) {
+func resolveQuery(spec VersionLookupSpec) (string, error) {
 	doc, err := htmlquery.LoadURL(spec.URL)
 	if err != nil {
 		return "", err
@@ -141,7 +144,25 @@ func lookupVersion(spec VersionLookupSpec) (string, error) {
 		return "", fmt.Errorf("error looking up version from spec %+v", spec)
 	}
 
-	text := htmlquery.InnerText(node)
+	return htmlquery.InnerText(node), nil
+}
+
+func lookupVersion(spec VersionLookupSpec) (text string, err error) {
+	if spec.Query != "" {
+		text, err = resolveQuery(spec)
+		if err != nil {
+			if err != nil {
+				return "", err
+			}
+		}
+	} else if spec.FollowURL {
+		text, err = remote.FollowRedirects(spec.URL)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		return "", fmt.Errorf("version lookup requires either a query or follow_url to be set")
+	}
 
 	if spec.PostProc != "" {
 		text, err = internal.RunTemplateFn(text, spec.PostProc)
@@ -155,6 +176,10 @@ func lookupVersion(spec VersionLookupSpec) (string, error) {
 
 func (a Archive) GetVersion(s settings.Settings) (string, error) {
 	return a.version(s)
+}
+
+func (a Archive) KeepUpToDate() bool {
+	return !a.DontUpdate
 }
 
 func (a Archive) Name() string {

@@ -8,6 +8,7 @@ import (
 )
 
 type GoPkg struct {
+	unless.BasicUnlessable
 	Pkg     string        `yaml:"name"`
 	Unless  unless.Unless `yaml:"unless"`
 	Version string        `yaml:"version"`

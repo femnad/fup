@@ -8,6 +8,7 @@ import (
 )
 
 type PythonPkg struct {
+	unless.BasicUnlessable
 	Pkg      string        `yaml:"name"`
 	Reqs     []string      `yaml:"reqs"`
 	BinLinks []string      `yaml:"link"`

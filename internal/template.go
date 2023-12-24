@@ -46,6 +46,7 @@ func reverseCut(i int, s string) (string, error) {
 }
 
 func splitBy(delimiter string, i int, s string) (string, error) {
+	s = strings.Trim(s, delimiter)
 	fields := strings.Split(s, delimiter)
 	numFields := len(fields)
 	if i < 0 {

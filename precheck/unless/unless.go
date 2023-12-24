@@ -35,7 +35,15 @@ type Unlessable interface {
 	DefaultVersionCmd() string
 	GetUnless() Unless
 	GetVersion(settings.Settings) (string, error)
+	KeepUpToDate() bool
 	Name() string
+}
+
+type BasicUnlessable struct {
+}
+
+func (BasicUnlessable) KeepUpToDate() bool {
+	return true
 }
 
 func doPostProcOutput(unless Unless, output string) (string, error) {
@@ -78,6 +86,10 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		internal.Log.Debugf("Command %s returned error: %v, output: %s", unlessCmd, err, out.Stderr)
 		// Command wasn't successfully run, should not skip.
 		return false
+	}
+
+	if !unlessable.KeepUpToDate() {
+		return true
 	}
 
 	version, err := unlessable.GetVersion(s)
