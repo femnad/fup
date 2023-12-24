@@ -130,12 +130,32 @@ func isOsVersion(version float64) (bool, error) {
 	return osVersion == version, err
 }
 
+func osVersionGe(version float64) (bool, error) {
+	osVersion, err := GetOSVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return osVersion >= version, nil
+}
+
+func osVersionLe(version float64) (bool, error) {
+	osVersion, err := GetOSVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return osVersion <= version, nil
+}
+
 var FactFns = template.FuncMap{
-	"env":     hasEnv,
-	"is":      isA,
-	"ok":      isOk,
-	"os":      isOs,
-	"output":  hasOutput,
-	"pkg":     hasPkgMgr,
-	"version": isOsVersion,
+	"env":       hasEnv,
+	"is":        isA,
+	"ok":        isOk,
+	"os":        isOs,
+	"output":    hasOutput,
+	"pkg":       hasPkgMgr,
+	"version":   isOsVersion,
+	"versionGe": osVersionGe,
+	"versionLe": osVersionLe,
 }
