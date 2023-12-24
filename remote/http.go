@@ -133,7 +133,9 @@ func FollowRedirects(startURL string) (string, error) {
 	defer resp.Body.Close()
 
 	location := resp.Header.Get(locationKey)
-	if location != "" {
+	if location == "" {
+		location = startURL
+	} else if location != "" {
 		location, err = url.JoinPath(parsed.Host, location)
 		if err != nil {
 			return "", err
