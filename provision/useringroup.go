@@ -21,7 +21,7 @@ func addUserToGroup(user, group string) error {
 
 	internal.Log.Infof("Adding user %s to group %s", user, group)
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
-	_, err = marecmd.RunFormatError(marecmd.Input{Command: usermod, Sudo: isRoot})
+	_, err = marecmd.RunFormatError(marecmd.Input{Command: usermod, Sudo: !isRoot})
 	if err != nil {
 		return err
 	}
