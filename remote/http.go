@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -116,18 +117,27 @@ func Download(url, target string) error {
 	return nil
 }
 
-func FollowRedirects(url string) (string, error) {
-	resp, err := http.Head(url)
+func FollowRedirects(startURL string) (string, error) {
+	parsed, err := url.Parse(startURL)
 	if err != nil {
 		return "", err
 	}
 
-	if resp.StatusCode == http.StatusFound {
-		location := resp.Header.Get(locationKey)
-		if location != "" {
-			return FollowRedirects(location)
+	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
+	resp, err := client.Get(startURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	location := resp.Header.Get(locationKey)
+	if location != "" {
+		location, err = url.JoinPath(parsed.Host, location)
+		if err != nil {
+			return "", err
 		}
 	}
-
-	return url, nil
+	return location, nil
 }
