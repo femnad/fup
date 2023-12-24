@@ -40,6 +40,14 @@ func Test_RunTemplateFn(t *testing.T) {
 			want: "baz",
 		},
 		{
+			name: "Split negative index smaller than -1",
+			args: args{
+				proc:  "split -2",
+				input: "qux bar baz",
+			},
+			want: "bar",
+		},
+		{
 			name: "Split invalid index",
 			args: args{
 				proc:  "split 3",

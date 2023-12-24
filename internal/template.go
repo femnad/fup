@@ -48,8 +48,8 @@ func reverseCut(i int, s string) (string, error) {
 func splitBy(delimiter string, i int, s string) (string, error) {
 	fields := strings.Split(s, delimiter)
 	numFields := len(fields)
-	if i == -1 {
-		i = numFields - 1
+	if i < 0 {
+		i = numFields + i
 	}
 	if i >= numFields {
 		return "", fmt.Errorf("input %s has not have field with index %d when split by %s", s, i, delimiter)
@@ -81,6 +81,7 @@ func RunTemplateFn(input, tmplFn string) (string, error) {
 	var out bytes.Buffer
 	err = parsed.Execute(&out, ctx)
 	if err != nil {
+		Log.Errorf("error executing function %s on input %s: %v", tmplFn, input, err)
 		return "", err
 	}
 
