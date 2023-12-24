@@ -29,6 +29,7 @@ var (
 		"disable": "!is-enabled",
 		"enable":  "is-enabled",
 		"start":   "is-active",
+		"stop":    "!is-active",
 	}
 )
 
@@ -322,6 +323,14 @@ func initService(s base.Service, cfg base.Config) error {
 	if !when.ShouldRun(s) {
 		internal.Log.Debugf("Skipping initializing %s as when condition %s evaluated to false", s.Name, s.When)
 		return nil
+	}
+
+	if s.Stop {
+		err := ensure(s, "stop")
+		if err != nil {
+			internal.Log.Errorf("error stopping service %s, %v", s.Name, err)
+		}
+		return err
 	}
 
 	if s.Disable {

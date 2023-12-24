@@ -16,6 +16,7 @@ type Service struct {
 	Disable      bool   `yaml:"disable"`
 	Name         string `yaml:"name"`
 	System       bool   `yaml:"system"`
+	Stop         bool   `yaml:"stop"`
 	Unit         Unit   `yaml:"unit"`
 	When         string `yaml:"when"`
 }
