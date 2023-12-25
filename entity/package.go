@@ -10,7 +10,7 @@ type RemotePackage struct {
 }
 
 type RemotePackageGroup struct {
-	Pkgs []RemotePackage `yaml:"pkgs"`
+	Pkgs []RemotePackage `yaml:"pkg"`
 	When string          `yaml:"when"`
 }
 
@@ -19,7 +19,7 @@ func (r RemotePackageGroup) RunWhen() string {
 }
 
 type PackageGroup struct {
-	Pkgs []string `yaml:"pkgs"`
+	Pkgs []string `yaml:"pkg"`
 	When string   `yaml:"when"`
 }
 
