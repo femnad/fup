@@ -13,23 +13,28 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	marecmd "github.com/femnad/mare/cmd"
-
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
+	marecmd "github.com/femnad/mare/cmd"
 )
+
+type systemdAction struct {
+	actuateCmd string
+	checkCmd   string
+	logVerb    string
+}
 
 var (
 	systemServiceDir = "/usr/lib/systemd/system"
 	userServiceDir   = internal.ExpandUser("~/.config/systemd/user")
-	actions          = map[string]string{
-		"disable": "!is-enabled",
-		"enable":  "is-enabled",
-		"start":   "is-active",
-		"stop":    "!is-active",
+	actions          = map[string]systemdAction{
+		"disable": {actuateCmd: "disable", checkCmd: "!is-enabled", logVerb: "disabling"},
+		"enable":  {actuateCmd: "enable", checkCmd: "is-enabled", logVerb: "enabling"},
+		"start":   {actuateCmd: "start", checkCmd: "is-active", logVerb: "starting"},
+		"stop":    {actuateCmd: "stop", checkCmd: "!is-active", logVerb: "stopping"},
 	}
 )
 
@@ -212,42 +217,28 @@ func systemctlCmd(action, target string, user bool) string {
 	return fmt.Sprintf("systemctl %s%s%s", maybeUser, action, maybeTarget)
 }
 
-func check(s base.Service, action string) (string, bool, error) {
+func check(s base.Service, action systemdAction) (string, bool, error) {
 	var negated bool
 
-	checkVerb, ok := actions[action]
-	if !ok {
-		return "", negated, fmt.Errorf("unknown action: %s", action)
-	}
-
-	negated = strings.HasPrefix(checkVerb, negationPrefix)
+	checkAction := action.checkCmd
+	negated = strings.HasPrefix(checkAction, negationPrefix)
 	if negated {
-		checkVerb = strings.TrimLeft(checkVerb, negationPrefix)
+		checkAction = strings.TrimLeft(checkAction, negationPrefix)
 	}
 
-	return systemctlCmd(checkVerb, s.Name, !s.System), negated, nil
+	return systemctlCmd(checkAction, s.Name, !s.System), negated, nil
 }
 
-func actuate(s base.Service, action string) (string, error) {
-	_, ok := actions[action]
+func actuate(s base.Service, action systemdAction) (string, error) {
+	return systemctlCmd(action.actuateCmd, s.Name, !s.System), nil
+}
+
+func ensure(s base.Service, actionStr string) error {
+	action, ok := actions[actionStr]
 	if !ok {
-		return "", fmt.Errorf("unknown action: %s", action)
+		return fmt.Errorf("no such action: %s", actionStr)
 	}
 
-	return systemctlCmd(action, s.Name, !s.System), nil
-}
-
-func readableVerb(action string) string {
-	caser := cases.Title(language.Und)
-	verb := caser.String(action)
-	// Only disable and enable would be matching arguments here.
-	if strings.HasSuffix(verb, "e") {
-		verb = verb[:len(verb)-1]
-	}
-	return fmt.Sprintf("%sing", verb)
-}
-
-func ensure(s base.Service, action string) error {
 	checkCmd, negated, err := check(s, action)
 	if err != nil {
 		return err
@@ -266,7 +257,8 @@ func ensure(s base.Service, action string) error {
 		return err
 	}
 
-	verb := readableVerb(action)
+	caser := cases.Title(language.Und)
+	verb := caser.String(action.logVerb)
 	internal.Log.Infof("%s service %s", verb, s.Name)
 
 	return runSystemctlCmd(actuateCmd, s)
