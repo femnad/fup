@@ -8,6 +8,10 @@ func MaybeRunWithSudo(cmdStr string) error {
 		return err
 	}
 
+	if !isRoot {
+		Log.Warningf("escalating privileges to run command %s", cmdStr)
+	}
+
 	cmd := marecmd.Input{Command: cmdStr, Sudo: !isRoot}
 	_, err = marecmd.RunFormatError(cmd)
 	return err

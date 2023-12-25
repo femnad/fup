@@ -28,6 +28,7 @@ type systemdAction struct {
 }
 
 var (
+	restoreConExec   = "/sbin/restorecon"
 	systemServiceDir = "/usr/lib/systemd/system"
 	userServiceDir   = internal.ExpandUser("~/.config/systemd/user")
 	actions          = map[string]systemdAction{
@@ -142,6 +143,18 @@ func getServiceExec(serviceFile string) (string, error) {
 	return "", nil
 }
 
+func maybeRunRestoreCon(serviceFilePath string) error {
+	if _, err := os.Stat(restoreConExec); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
+	cmd := fmt.Sprintf("%s %s", restoreConExec, serviceFilePath)
+	return internal.MaybeRunWithSudo(cmd)
+}
+
 func persist(s base.Service) error {
 	if s.DontTemplate {
 		return nil
@@ -174,18 +187,9 @@ func persist(s base.Service) error {
 	}
 
 	if changed && !internal.IsHomePath(serviceFilePath) {
-		isRoot, err := internal.IsUserRoot()
+		err = maybeRunRestoreCon(serviceFilePath)
 		if err != nil {
 			return err
-		}
-
-		// Fix "SELinux is preventing systemd from open access on the file <service-file>" error
-		restorecon := fmt.Sprintf("/sbin/restorecon %s", serviceFilePath)
-		internal.Log.Debugf("running restorecon command %s", restorecon)
-
-		_, cmdErr := marecmd.RunFormatError(marecmd.Input{Command: restorecon, Sudo: !isRoot})
-		if cmdErr != nil {
-			return cmdErr
 		}
 	}
 
