@@ -11,7 +11,7 @@ apt_repos:
     repo: https://download.docker.com/linux/ubuntu
 
 packages:
-  - pkgs:
+  - pkg:
     - docker-ce
     - neovim
     when: pkg "apt"
