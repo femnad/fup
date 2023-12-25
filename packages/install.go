@@ -20,7 +20,7 @@ type PkgManager interface {
 	PkgEnv() map[string]string
 	PkgNameSeparator() string
 	PreserveEnv() bool
-	RemoveCmd() string
+	RemoveCmd() []string
 	RemoteInstall(pkgs []entity.RemotePackage) error
 	UpdateCmd() string
 }
@@ -198,7 +198,9 @@ func (i Installer) Remove(undesired mapset.Set[string]) error {
 	sort.Strings(pkgToRemove)
 	internal.Log.Infof("Packages to remove: %s", strings.Join(pkgToRemove, " "))
 
-	removeCmd := []string{i.Pkg.PkgExec(), i.Pkg.RemoveCmd(), "-y"}
+	removeCmd := []string{i.Pkg.PkgExec()}
+	removeCmd = append(removeCmd, i.Pkg.RemoveCmd()...)
+	removeCmd = append(removeCmd, "-y")
 	removeCmd = append(removeCmd, pkgToRemove...)
 
 	return i.maybeRunWithSudo(removeCmd...)

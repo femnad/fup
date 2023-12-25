@@ -70,9 +70,14 @@ func (d determiner) installer() (packages.Installer, error) {
 	return installer, nil
 }
 
-func (d determiner) matchingPkgs(spec base.PackageSpec) mapset.Set[string] {
+func (d determiner) matchingPkg(spec base.PackageSpec, install bool) mapset.Set[string] {
 	pkgToInstall := mapset.NewSet[string]()
 	for _, group := range spec {
+		if group.Absent && install {
+			continue
+		} else if !group.Absent && !install {
+			continue
+		}
 		matches := matchingPackages(group)
 		for _, match := range matches {
 			pkgToInstall.Add(match)
@@ -82,7 +87,7 @@ func (d determiner) matchingPkgs(spec base.PackageSpec) mapset.Set[string] {
 	return pkgToInstall
 }
 
-func (d determiner) matchingRemotePkgs(spec base.RemotePackageSpec) (mapset.Set[entity.RemotePackage], error) {
+func (d determiner) matchingRemotePkg(spec base.RemotePackageSpec) (mapset.Set[entity.RemotePackage], error) {
 	pkgToInstall := mapset.NewSet[entity.RemotePackage]()
 
 	for _, group := range spec {
@@ -120,23 +125,23 @@ func newPackager() (packager, error) {
 	}, nil
 }
 
-func (p packager) installPackages(spec base.PackageSpec) error {
-	pkgToInstall := p.determiner.matchingPkgs(spec)
-	return p.installer.Install(pkgToInstall)
+func (p packager) ensurePackages(spec base.PackageSpec) error {
+	pkgToInstall := p.determiner.matchingPkg(spec, true)
+	installErr := p.installer.Install(pkgToInstall)
+
+	pkgToRemove := p.determiner.matchingPkg(spec, false)
+	removeErr := p.installer.Remove(pkgToRemove)
+
+	return errors.Join(installErr, removeErr)
 }
 
 func (p packager) installRemotePackages(spec base.RemotePackageSpec, s settings.Settings) (bool, error) {
-	pkgToInstall, err := p.determiner.matchingRemotePkgs(spec)
+	pkgToInstall, err := p.determiner.matchingRemotePkg(spec)
 	if err != nil {
 		return false, err
 	}
 
 	return p.installer.RemoteInstall(pkgToInstall, s)
-}
-
-func (p packager) removePackages(spec base.PackageSpec) error {
-	pkgToInstall := p.determiner.matchingPkgs(spec)
-	return p.installer.Remove(pkgToInstall)
 }
 
 func installPackages(p Provisioner) error {
@@ -157,7 +162,7 @@ func installPackages(p Provisioner) error {
 		}
 	}
 
-	if err = p.Packager.installPackages(p.Config.Packages); err != nil {
+	if err = p.Packager.ensurePackages(p.Config.Packages); err != nil {
 		internal.Log.Errorf("error installing packages: %v", err)
 		pkgErrs = append(pkgErrs, err)
 	}

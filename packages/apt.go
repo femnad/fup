@@ -41,8 +41,8 @@ func (Apt) PkgNameSeparator() string {
 	return "/"
 }
 
-func (Apt) RemoveCmd() string {
-	return "purge"
+func (Apt) RemoveCmd() []string {
+	return []string{"purge", "--auto-remove"}
 }
 
 func (Apt) UpdateCmd() string {

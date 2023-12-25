@@ -31,8 +31,8 @@ func (Dnf) PreserveEnv() bool {
 	return false
 }
 
-func (Dnf) RemoveCmd() string {
-	return "remove"
+func (Dnf) RemoveCmd() []string {
+	return []string{"remove"}
 }
 
 func (Dnf) RemoteInstall(pkgs []entity.RemotePackage) error {

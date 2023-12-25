@@ -93,7 +93,6 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"archive", p.extractArchives},
 		{"binary", p.downloadBinaries},
 		{"package", p.installPackages},
-		{"rm-package", p.removePackages},
 		{"known-hosts", p.acceptHostKeys},
 		{"github-key", p.githubUserKey},
 		{"go", p.goInstall},
@@ -157,18 +156,6 @@ func (p Provisioner) installPackages() error {
 	internal.Log.Notice("Installing packages")
 
 	return installPackages(p)
-}
-
-func (p Provisioner) removePackages() error {
-	internal.Log.Notice("Removing unwanted packages")
-
-	err := p.Packager.removePackages(p.Config.UnwantedPackages)
-	if err != nil {
-		internal.Log.Errorf("error removing packages: %v", err)
-		return err
-	}
-
-	return nil
 }
 
 func (p Provisioner) rustInstall() error {

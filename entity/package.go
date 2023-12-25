@@ -19,8 +19,9 @@ func (r RemotePackageGroup) RunWhen() string {
 }
 
 type PackageGroup struct {
-	Pkgs []string `yaml:"pkg"`
-	When string   `yaml:"when"`
+	Absent bool     `yaml:"absent"`
+	Pkgs   []string `yaml:"pkg"`
+	When   string   `yaml:"when"`
 }
 
 func (p PackageGroup) RunWhen() string {
