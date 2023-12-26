@@ -88,27 +88,27 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 	p := Provisioner{Config: cfg, Packager: pkgr}
 
 	all := []provisionFn{
-		{"preflight", p.runPreflightTasks},
+		{"pre", p.runPreflightTasks},
 		{"repo", p.AddOSRepos},
 		{"archive", p.extractArchives},
 		{"binary", p.downloadBinaries},
 		{"package", p.installPackages},
-		{"known-hosts", p.acceptHostKeys},
-		{"github-key", p.githubUserKey},
+		{"hosts", p.acceptHostKeys},
+		{"github", p.githubUserKey},
 		{"go", p.goInstall},
 		{"python", p.pythonInstall},
 		{"rust", p.rustInstall},
-		{"ssh-clone", p.sshClone},
+		{"clone", p.sshClone},
 		{"task", p.runTasks},
 		{"template", p.applyTemplates},
 		{"service", p.initServices},
-		{"ensure-dir", p.ensureDirs},
-		{"ensure-line", p.ensureLines},
+		{"dir", p.ensureDirs},
+		{"line", p.ensureLines},
 		{"flatpak", p.flatpakInstall},
 		{"snap", p.snapInstall},
-		{"unwanted-dir", p.unwantedDirs},
-		{"user-in-group", p.userInGroup},
-		{"postflight", p.runPostFlightTasks},
+		{"rmdir", p.unwantedDirs},
+		{"group", p.userInGroup},
+		{"post", p.runPostFlightTasks},
 	}
 
 	provs, err := newProvisioners(all, filter)
