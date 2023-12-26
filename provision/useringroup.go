@@ -41,7 +41,7 @@ func groupAdd(group entity.Group) error {
 	}
 	cmd += " " + group.Name
 
-	internal.Log.Info("Creating group %s", group.Name)
+	internal.Log.Infof("Creating group %s", group.Name)
 	_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !isRoot})
 	return err
 }
