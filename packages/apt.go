@@ -11,7 +11,10 @@ import (
 	"github.com/femnad/fup/remote"
 )
 
-const pkgScriptsDir = "/var/lib/dpkg/info"
+const (
+	dpkg          = "dpkg"
+	pkgScriptsDir = "/var/lib/dpkg/info"
+)
 
 var pkgScripts = []string{"postinst", "preinst"}
 
@@ -50,7 +53,7 @@ func (Apt) UpdateCmd() string {
 }
 
 func installPkgSkipScripts(pkgName, filename string) error {
-	err := internal.MaybeRunWithSudo(fmt.Sprintf("dpkg --unpack %s", filename))
+	err := internal.MaybeRunWithSudo(fmt.Sprintf("%s --unpack %s", dpkg, filename))
 	if err != nil {
 		return err
 	}
@@ -63,7 +66,7 @@ func installPkgSkipScripts(pkgName, filename string) error {
 		}
 	}
 
-	return internal.MaybeRunWithSudo(fmt.Sprintf("dkpg --configure %s", pkgName))
+	return internal.MaybeRunWithSudo(fmt.Sprintf("%s --configure %s", dpkg, pkgName))
 }
 
 func (Apt) RemoteInstall(pkgs []entity.RemotePackage) error {
