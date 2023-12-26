@@ -105,23 +105,17 @@ func chown(file, user, group string) error {
 }
 
 func ensureDir(dir string) error {
-	hasPerms, err := hasPerms(dir)
+	hasDirPerms, err := hasPerms(dir)
 	if err != nil {
 		return err
 	}
 
-	if hasPerms {
+	if hasDirPerms {
 		return os.MkdirAll(dir, 0o755)
 	}
 
-	Log.Warningf("escalating privileges to create directory %s", dir)
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
-
-	isRoot, err := IsUserRoot()
-	if err != nil {
-		return err
-	}
-	return marecmd.RunNoOutput(marecmd.Input{Command: mkdirCmd, Sudo: !isRoot})
+	return MaybeRunWithSudo(mkdirCmd)
 }
 
 func getent(key, database string) (int, error) {

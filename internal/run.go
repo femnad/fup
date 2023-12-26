@@ -1,6 +1,10 @@
 package internal
 
-import marecmd "github.com/femnad/mare/cmd"
+import (
+	"strings"
+
+	marecmd "github.com/femnad/mare/cmd"
+)
 
 func maybeWarnPasswordRequired(cmdStr string) {
 	out, _ := marecmd.Run(marecmd.Input{Command: "sudo -Nnv"})
@@ -18,7 +22,8 @@ func MaybeRunWithSudo(cmdStr string) error {
 	}
 
 	if !isRoot {
-		maybeWarnPasswordRequired(cmdStr)
+		cmdHead := strings.Split(cmdStr, "/")[0]
+		maybeWarnPasswordRequired(cmdHead)
 	}
 
 	cmd := marecmd.Input{Command: cmdStr, Sudo: !isRoot}
