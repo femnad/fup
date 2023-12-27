@@ -14,7 +14,11 @@ type Whenable interface {
 	RunWhen() string
 }
 
-func EvalStatement(statement string) (bool, error) {
+func evalStatement(statement string) (bool, error) {
+	if statement == "" {
+		return true, nil
+	}
+
 	tmpl := template.New("when").Funcs(precheck.FactFns)
 	parsed, err := tmpl.Parse(fmt.Sprintf("{{%s}}", statement))
 	if err != nil {
@@ -37,7 +41,7 @@ func ShouldRun(whenable Whenable) bool {
 		return true
 	}
 
-	shouldRun, err := EvalStatement(statement)
+	shouldRun, err := evalStatement(statement)
 	if err != nil {
 		internal.Log.Warningf("error evaluating statement %s: %v", statement, err)
 		return false

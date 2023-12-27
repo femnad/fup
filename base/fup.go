@@ -21,30 +21,30 @@ type UserInGroupSpec map[string][]entity.Group
 type Config struct {
 	file            string
 	isRemote        bool
-	AcceptHostKeys  []string          `yaml:"accept_host_keys"`
-	AptRepos        []entity.AptRepo  `yaml:"apt_repos"`
-	Archives        []Archive         `yaml:"archives"`
-	Binaries        []entity.Binary   `yaml:"binaries"`
-	Cargo           []CargoPkg        `yaml:"rust"`
-	DnfRepos        []entity.DnfRepo  `yaml:"dnf_repos"`
-	EnsureDirs      []string          `yaml:"ensure_dirs"`
-	EnsureLines     []LineInFile      `yaml:"ensure_lines"`
-	Flatpak         entity.Flatpak    `yaml:"flatpak"`
-	GithubUserKey   UserKey           `yaml:"github_user_keys"`
-	Go              []GoPkg           `yaml:"go"`
-	Packages        PackageSpec       `yaml:"packages"`
-	PostflightTasks []Task            `yaml:"postflight"`
-	PreflightTasks  []Task            `yaml:"preflight"`
-	Python          []PythonPkg       `yaml:"python"`
-	RemotePackages  RemotePackageSpec `yaml:"remote_packages"`
-	Repos           []entity.Repo     `yaml:"repos"`
-	Services        []Service         `yaml:"services"`
-	Settings        settings.Settings `yaml:"settings"`
-	SnapPackages    []entity.Snap     `yaml:"snap"`
-	Tasks           []Task            `yaml:"tasks"`
-	Templates       []Template        `yaml:"template"`
-	UserInGroup     UserInGroupSpec   `yaml:"user_in_group"`
-	UnwantedDirs    []string          `yaml:"unwanted_dirs"`
+	AcceptHostKeys  []string           `yaml:"accept_host_keys"`
+	AptRepos        []entity.AptRepo   `yaml:"apt_repos"`
+	Archives        []Archive          `yaml:"archives"`
+	Binaries        []entity.Binary    `yaml:"binaries"`
+	Cargo           []CargoPkg         `yaml:"rust"`
+	DnfRepos        []entity.DnfRepo   `yaml:"dnf_repos"`
+	EnsureDirs      []string           `yaml:"ensure_dirs"`
+	EnsureLines     []LineInFile       `yaml:"ensure_lines"`
+	Flatpak         entity.Flatpak     `yaml:"flatpak"`
+	GithubUserKey   UserKey            `yaml:"github_user_keys"`
+	Go              []GoPkg            `yaml:"go"`
+	Packages        PackageSpec        `yaml:"packages"`
+	PostflightTasks []Task             `yaml:"postflight"`
+	PreflightTasks  []Task             `yaml:"preflight"`
+	Python          []PythonPkg        `yaml:"python"`
+	RemotePackages  RemotePackageSpec  `yaml:"remote_packages"`
+	RepoGroups      []entity.RepoGroup `yaml:"repos"`
+	Services        []Service          `yaml:"services"`
+	Settings        settings.Settings  `yaml:"settings"`
+	SnapPackages    []entity.Snap      `yaml:"snap"`
+	Tasks           []Task             `yaml:"tasks"`
+	Templates       []Template         `yaml:"template"`
+	UserInGroup     UserInGroupSpec    `yaml:"user_in_group"`
+	UnwantedDirs    []string           `yaml:"unwanted_dirs"`
 }
 
 func (c Config) IsRemote() bool {

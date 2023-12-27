@@ -1,6 +1,8 @@
 package provision
 
 import (
+	"errors"
+
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
@@ -8,39 +10,31 @@ import (
 	"github.com/femnad/fup/precheck/when"
 )
 
-const sshReadyStatement = `ok "ssh"`
-
 func cloneRepos(repos []entity.Repo, clonePath string) error {
+	var errs []error
 	for _, repo := range repos {
 		path := clonePath
 		if repo.Path != "" {
 			path = repo.Path
 		}
 		err := common.CloneUnderPath(repo, path)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, err)
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func sshClone(config base.Config) error {
-	ok, err := when.EvalStatement(sshReadyStatement)
-	if err != nil {
-		internal.Log.Errorf("error checking if SSH cloning is ok: %v", err)
-		return err
-	}
+	for _, group := range config.RepoGroups {
+		if !when.ShouldRun(group) {
+			continue
+		}
 
-	if !ok {
-		internal.Log.Debugf("not proceeding with SSH cloning as fact check evaluated to false")
-		return nil
-	}
-
-	err = cloneRepos(config.Repos, config.Settings.SSHCloneDir)
-	if err != nil {
-		internal.Log.Errorf("error SSH cloning repo: %v", err)
-		return err
+		err := cloneRepos(group.Clones, config.Settings.SSHCloneDir)
+		if err != nil {
+			internal.Log.Errorf("error cloning repos: %v", err)
+			return err
+		}
 	}
 
 	return nil

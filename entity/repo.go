@@ -9,3 +9,12 @@ type Repo struct {
 	Tag       string            `yaml:"tag"`
 	Update    bool              `yaml:"update"`
 }
+
+type RepoGroup struct {
+	Clones []Repo `yaml:"clone"`
+	When   string `yaml:"when"`
+}
+
+func (g RepoGroup) RunWhen() string {
+	return g.When
+}
