@@ -44,11 +44,13 @@ archives:
       - gh_${version}_linux_amd64/bin/gh
 
 packages:
-  .*:
+  - pkg:
     - pass
-  ubuntu:
+  - when: os "ubuntu"
+    pkg:
     - apt-listchanges
-  fedora:
+  - when: os "fedora"
+    pkg:
     - dnf-automatic
 
 unwanted_packages:
@@ -141,16 +143,16 @@ unwanted_dirs:
   - ~/snap
 
 repos:
-  - name: cli/cli
-  - name: https://gitlab.com/gitlab-org/cli/
-  - name: qmk/qmk_firmware
-    submodule: true
-    remotes:
-      upstream: https://github.com/zsa/qmk_firmware.git
+  - clone:
+    - name: cli/cli
+    - name: https://gitlab.com/gitlab-org/cli/
+    - name: qmk/qmk_firmware
+      submodule: true
+      remotes:
+        upstream: https://github.com/zsa/qmk_firmware.git
 
 user_in_group:
-  # Made up example
-  root:
+  foo:
     - name: video
 
 ensure_lines:
