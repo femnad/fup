@@ -1,13 +1,14 @@
 package provision
 
 import (
-	"github.com/femnad/fup/base"
 	"testing"
+
+	"github.com/femnad/fup/entity"
 )
 
 func Test_writeTmpl(t *testing.T) {
 	type args struct {
-		s base.Service
+		s entity.Service
 	}
 	tests := []struct {
 		name    string
@@ -17,8 +18,8 @@ func Test_writeTmpl(t *testing.T) {
 	}{
 		{
 			name: "Basic service",
-			args: args{s: base.Service{
-				Unit: base.Unit{
+			args: args{s: entity.Service{
+				Unit: entity.Unit{
 					Desc: "Test",
 					Exec: "test"},
 			},
@@ -35,8 +36,8 @@ WantedBy=default.target
 		},
 		{
 			name: "Service with options",
-			args: args{s: base.Service{
-				Unit: base.Unit{
+			args: args{s: entity.Service{
+				Unit: entity.Unit{
 					Desc: "Test",
 					Exec: "test",
 					Options: map[string]string{
@@ -59,7 +60,7 @@ WantedBy=default.target
 		},
 		{
 			name: "Service with wanted by",
-			args: args{s: base.Service{Unit: base.Unit{
+			args: args{s: entity.Service{Unit: entity.Unit{
 				Desc:     "Test",
 				Exec:     "test",
 				WantedBy: "sleep",
@@ -76,7 +77,7 @@ WantedBy=sleep.target
 		},
 		{
 			name: "Service with before",
-			args: args{s: base.Service{Unit: base.Unit{
+			args: args{s: entity.Service{Unit: entity.Unit{
 				Desc:   "Test",
 				Exec:   "test",
 				Before: "sleep",

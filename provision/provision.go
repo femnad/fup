@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 )
 
 type Provisioner struct {
-	Config       base.Config
+	Config       entity.Config
 	Packager     packager
 	provisioners provisioners
 }
@@ -79,7 +79,7 @@ func newProvisioners(allProvisioners []provisionFn, filter []string) (provisione
 	}, nil
 }
 
-func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
+func NewProvisioner(cfg entity.Config, filter []string) (Provisioner, error) {
 	pkgr, err := newPackager()
 	if err != nil {
 		return Provisioner{}, err

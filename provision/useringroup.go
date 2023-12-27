@@ -7,7 +7,6 @@ import (
 
 	marecmd "github.com/femnad/mare/cmd"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/mare"
@@ -110,7 +109,7 @@ func doEnsureUserInGroups(username string, groups []entity.Group) error {
 	return nil
 }
 
-func ensureUserInGroups(userGroupsMap base.UserInGroupSpec) error {
+func ensureUserInGroups(userGroupsMap entity.UserInGroupSpec) error {
 	for u, groups := range userGroupsMap {
 		err := doEnsureUserInGroups(u, groups)
 		if err != nil {
@@ -121,7 +120,7 @@ func ensureUserInGroups(userGroupsMap base.UserInGroupSpec) error {
 	return nil
 }
 
-func userInGroup(config base.Config) error {
+func userInGroup(config entity.Config) error {
 	err := ensureUserInGroups(config.UserInGroup)
 	if err != nil {
 		internal.Log.Errorf("error ensuring user in groups: %v", err)

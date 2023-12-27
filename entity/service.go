@@ -1,4 +1,4 @@
-package base
+package entity
 
 type Unit struct {
 	Before      string            `yaml:"before"`

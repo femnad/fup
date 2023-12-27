@@ -1,4 +1,4 @@
-package base
+package entity
 
 import (
 	"fmt"
@@ -6,10 +6,10 @@ import (
 
 	"github.com/antchfx/htmlquery"
 
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
+	"github.com/femnad/fup/settings"
 )
 
 type NamedLink struct {

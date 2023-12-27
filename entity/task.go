@@ -1,16 +1,15 @@
-package base
+package entity
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
-	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
 	"github.com/femnad/fup/run"
+	"github.com/femnad/fup/settings"
 	marecmd "github.com/femnad/mare/cmd"
 )
 
@@ -59,7 +58,7 @@ func runShellCmd(step Step, cfg Config) error {
 
 func runGitClone(step Step, cfg Config) error {
 	path := ExpandSettings(cfg.Settings, step.Dir)
-	return common.CloneTo(step.Repo, path)
+	return CloneTo(step.Repo, path)
 }
 
 func fileCmd(step Step, cfg Config) error {
@@ -112,12 +111,12 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 
 type Step struct {
 	unless.BasicUnlessable
-	Cmd     string      `yaml:"cmd"`
-	Content string      `yaml:"content"`
-	Dir     string      `yaml:"dir"`
-	Mode    int         `yaml:"mode"`
-	Pwd     string      `yaml:"pwd"`
-	Repo    entity.Repo `yaml:"repo"`
+	Cmd     string `yaml:"cmd"`
+	Content string `yaml:"content"`
+	Dir     string `yaml:"dir"`
+	Mode    int    `yaml:"mode"`
+	Pwd     string `yaml:"pwd"`
+	Repo    Repo   `yaml:"repo"`
 	// For link and rename
 	Shell    string `yaml:"shell"`
 	Src      string `yaml:"src"`
@@ -215,4 +214,7 @@ func (t Task) Run(cfg Config) error {
 	}
 
 	return nil
+}
+
+type TaskGroup struct {
 }

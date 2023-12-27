@@ -5,7 +5,6 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
@@ -31,7 +30,7 @@ func runUpdateCmds(cmds mapset.Set[string]) []error {
 	return errs
 }
 
-func addRepos(config base.Config) error {
+func addRepos(config entity.Config) error {
 	var errs []error
 
 	var repos []entity.OSRepo

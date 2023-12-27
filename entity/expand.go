@@ -1,8 +1,8 @@
-package base
+package entity
 
 import (
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/settings"
 )
 
 var (

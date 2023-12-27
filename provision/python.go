@@ -8,8 +8,8 @@ import (
 
 	marecmd "github.com/femnad/mare/cmd"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 )
@@ -24,7 +24,7 @@ func pipInstall(pipBin, pkg string) error {
 	return nil
 }
 
-func pythonInstall(pkg base.PythonPkg, cfg base.Config) error {
+func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 	if unless.ShouldSkip(pkg, cfg.Settings) {
 		internal.Log.Debugf("skipping pip install for %s", pkg.Name())
 		return nil
@@ -78,7 +78,7 @@ func pythonInstall(pkg base.PythonPkg, cfg base.Config) error {
 	return nil
 }
 
-func pythonInstallPkgs(cfg base.Config) error {
+func pythonInstallPkgs(cfg entity.Config) error {
 	var pyErr []error
 	for _, pkg := range cfg.Python {
 		err := pythonInstall(pkg, cfg)

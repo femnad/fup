@@ -1,4 +1,4 @@
-package base
+package entity
 
 type Replacement struct {
 	Old string `yaml:"old"`

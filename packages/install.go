@@ -7,10 +7,10 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/settings"
 	marecmd "github.com/femnad/mare/cmd"
 )
 

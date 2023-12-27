@@ -3,16 +3,16 @@ package provision
 import (
 	"bufio"
 	"fmt"
+	"github.com/femnad/fup/entity"
 	"os"
 
 	marecmd "github.com/femnad/mare/cmd"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
 )
 
-func ensureLine(line base.LineInFile) error {
+func ensureLine(line entity.LineInFile) error {
 	if !when.ShouldRun(line) {
 		internal.Log.Debugf("Skipping ensuring %s in %s due to condition %s", line.Replace, line.File, line.When)
 		return nil
@@ -84,7 +84,7 @@ func ensureLine(line base.LineInFile) error {
 	return nil
 }
 
-func ensureLines(config base.Config) error {
+func ensureLines(config entity.Config) error {
 	for _, line := range config.EnsureLines {
 		err := ensureLine(line)
 		if err != nil {

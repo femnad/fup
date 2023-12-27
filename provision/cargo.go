@@ -7,13 +7,13 @@ import (
 
 	marecmd "github.com/femnad/mare/cmd"
 
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/run"
+	"github.com/femnad/fup/settings"
 )
 
 func crateArgs(name string) ([]string, error) {
@@ -29,7 +29,7 @@ func crateArgs(name string) ([]string, error) {
 	return []string{"--git", name, crate}, nil
 }
 
-func cargoInstall(pkg base.CargoPkg, s settings.Settings) error {
+func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 	if unless.ShouldSkip(pkg, s) {
 		internal.Log.Debugf("skipping cargo install for %s", pkg.Crate)
 		return nil
@@ -66,7 +66,7 @@ func cargoInstall(pkg base.CargoPkg, s settings.Settings) error {
 	return nil
 }
 
-func cargoInstallPkgs(cfg base.Config) error {
+func cargoInstallPkgs(cfg entity.Config) error {
 	var cargoErr []error
 	for _, pkg := range cfg.Cargo {
 		err := cargoInstall(pkg, cfg.Settings)

@@ -9,7 +9,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 
-	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
 )
@@ -90,7 +90,7 @@ func ensureUserKeys(user string) error {
 	return err
 }
 
-func addGithubUserKeys(config base.Config) error {
+func addGithubUserKeys(config entity.Config) error {
 	user := config.GithubUserKey.User
 	if user == "" {
 		return nil

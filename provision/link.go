@@ -3,12 +3,12 @@ package provision
 import (
 	"path"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 )
 
-func createSymlink(symlink base.NamedLink, linkDir, binPath string) error {
+func createSymlink(symlink entity.NamedLink, linkDir, binPath string) error {
 	symlinkTarget := path.Join(linkDir, symlink.Target)
 	symlinkTarget = internal.ExpandUser(symlinkTarget)
 

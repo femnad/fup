@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"os/exec"
 )
@@ -47,7 +47,7 @@ func addKnownHosts(hosts []string) error {
 	return nil
 }
 
-func acceptHostKeys(config base.Config) error {
+func acceptHostKeys(config entity.Config) error {
 	err := addKnownHosts(config.AcceptHostKeys)
 	if err != nil {
 		internal.Log.Errorf("error accepting host keys: %v", err)

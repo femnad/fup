@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/femnad/fup/settings"
 	"github.com/femnad/mare"
 	marecmd "github.com/femnad/mare/cmd"
-
-	"github.com/femnad/fup/base/settings"
 )
 
 const (

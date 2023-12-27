@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
@@ -124,7 +123,7 @@ func installFlatpak(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error
 	return ensureLauncher(pkg)
 }
 
-func flatpakInstall(config base.Config) error {
+func flatpakInstall(config entity.Config) error {
 	_, err := common.Which(flatpakExec)
 	if err != nil {
 		internal.Log.Debug("skipping installing flatpak packages as flatpak is not available")

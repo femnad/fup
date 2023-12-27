@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck"
 	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/settings"
 	marecmd "github.com/femnad/mare/cmd"
 )
 

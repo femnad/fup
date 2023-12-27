@@ -1,4 +1,4 @@
-package common
+package entity
 
 import (
 	"errors"
@@ -8,12 +8,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 
-	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
-	"github.com/go-git/go-git/v5"
 )
 
 const (
@@ -67,7 +66,7 @@ func processUrl(repoUrl string) (cloneRef, error) {
 	return ref, nil
 }
 
-func update(repo entity.Repo, cloneDir string) error {
+func update(repo Repo, cloneDir string) error {
 	if !repo.Update {
 		return nil
 	}
@@ -92,7 +91,7 @@ func update(repo entity.Repo, cloneDir string) error {
 	return err
 }
 
-func getRef(repo entity.Repo) string {
+func getRef(repo Repo) string {
 	if repo.Branch != "" {
 		return fmt.Sprintf("refs/head/%s", repo.Branch)
 	} else if repo.Tag != "" {
@@ -102,7 +101,7 @@ func getRef(repo entity.Repo) string {
 	return ""
 }
 
-func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
+func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 	_, err := os.Stat(cloneDir)
 	if err == nil {
 		return update(repo, cloneDir)
@@ -150,7 +149,7 @@ func clone(repo entity.Repo, repoUrl cloneRef, cloneDir string) error {
 	return nil
 }
 
-func CloneTo(repo entity.Repo, path string) error {
+func CloneTo(repo Repo, path string) error {
 	repoUrl, err := processUrl(repo.Name)
 	if err != nil {
 		return err
@@ -159,7 +158,7 @@ func CloneTo(repo entity.Repo, path string) error {
 	return clone(repo, repoUrl, path)
 }
 
-func CloneUnderPath(repo entity.Repo, dir string) error {
+func CloneUnderPath(repo Repo, dir string) error {
 	repoUrl, err := processUrl(repo.Name)
 	if err != nil {
 		return err

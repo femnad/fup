@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/run"
+	"github.com/femnad/fup/settings"
 	marecmd "github.com/femnad/mare/cmd"
 )
 

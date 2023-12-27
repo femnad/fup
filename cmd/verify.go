@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/alexflint/go-arg"
-	"github.com/femnad/fup/base"
 	"log"
 
+	"github.com/alexflint/go-arg"
+
+	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/cmd/verify"
 )
 

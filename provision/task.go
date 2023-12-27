@@ -2,13 +2,13 @@ package provision
 
 import (
 	"errors"
-	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 )
 
-func runTask(task base.Task, cfg base.Config) error {
+func runTask(task entity.Task, cfg entity.Config) error {
 	if !when.ShouldRun(task) {
 		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", task.Desc, task.When)
 		return nil
@@ -23,7 +23,7 @@ func runTask(task base.Task, cfg base.Config) error {
 	return task.Run(cfg)
 }
 
-func runTasks(cfg base.Config, tasks []base.Task) error {
+func runTasks(cfg entity.Config, tasks []entity.Task) error {
 	var taskErrs []error
 	for _, task := range tasks {
 		err := runTask(task, cfg)

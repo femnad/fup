@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
@@ -53,7 +52,7 @@ func uninstallSnap(snap entity.Snap) error {
 	return nil
 }
 
-func snapInstall(config base.Config) error {
+func snapInstall(config entity.Config) error {
 	_, err := common.Which("snap")
 	if err != nil {
 		internal.Log.Debug("skipping installing snap packages as snap is not available")

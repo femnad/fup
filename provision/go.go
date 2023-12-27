@@ -7,13 +7,12 @@ import (
 
 	marecmd "github.com/femnad/mare/cmd"
 
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/run"
+	"github.com/femnad/fup/settings"
 )
 
 const (
@@ -87,7 +86,7 @@ func goInstallGroup(group entity.GoPkgGroup, s settings.Settings) []error {
 	return errs
 }
 
-func goInstallPkgs(cfg base.Config) error {
+func goInstallPkgs(cfg entity.Config) error {
 	var goErrs []error
 	for _, pkgGroup := range cfg.Go {
 		errs := goInstallGroup(pkgGroup, cfg.Settings)

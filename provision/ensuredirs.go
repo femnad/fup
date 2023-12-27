@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 )
@@ -43,7 +42,7 @@ func doEnsureDirs(dirs []entity.Dir) error {
 	return errors.Join(errs...)
 }
 
-func ensureDirs(config base.Config) error {
+func ensureDirs(config entity.Config) error {
 	err := doEnsureDirs(config.EnsureDirs)
 	if err != nil {
 		internal.Log.Errorf("error ensuring dirs: %v", err)

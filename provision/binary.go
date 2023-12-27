@@ -6,17 +6,16 @@ import (
 	"os"
 	"path"
 
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/remote"
+	"github.com/femnad/fup/settings"
 )
 
 const defaultBinaryPerms = 0o755
 
-func downloadBinary(binary entity.Binary, config base.Config) error {
+func downloadBinary(binary entity.Binary, config entity.Config) error {
 	s := config.Settings
 	url := binary.Url
 	version := binary.Version
@@ -55,7 +54,7 @@ func downloadBinary(binary entity.Binary, config base.Config) error {
 		return err
 	}
 
-	return createSymlink(base.NamedLink{Target: name}, binaryDir, s.GetBinPath())
+	return createSymlink(entity.NamedLink{Target: name}, binaryDir, s.GetBinPath())
 }
 
 func (p Provisioner) downloadBinaries() error {

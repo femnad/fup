@@ -1,9 +1,9 @@
-package base
+package entity
 
 import (
 	"testing"
 
-	"github.com/femnad/fup/base/settings"
+	"github.com/femnad/fup/settings"
 )
 
 func TestExpandSettings(t *testing.T) {

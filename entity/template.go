@@ -1,4 +1,4 @@
-package base
+package entity
 
 type Template struct {
 	Src     string            `yaml:"src"`

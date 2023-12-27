@@ -18,13 +18,13 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/xi2/xz"
 
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/remote"
+	"github.com/femnad/fup/settings"
 	"github.com/femnad/mare"
 	marecmd "github.com/femnad/mare/cmd"
 )
@@ -58,7 +58,7 @@ func (a ArchiveInfo) GetTarget() string {
 	return a.target
 }
 
-func processDownload(archive base.Archive, s settings.Settings) (ArchiveInfo, error) {
+func processDownload(archive entity.Archive, s settings.Settings) (ArchiveInfo, error) {
 	var info ArchiveInfo
 	archiveURL, err := archive.ExpandURL(s)
 	if err != nil {
@@ -244,7 +244,7 @@ func commonPrefix(names []string) string {
 	return first[:minLength]
 }
 
-func getArchiveInfo(archive base.Archive, entries []archiveEntry) (ArchiveInfo, error) {
+func getArchiveInfo(archive entity.Archive, entries []archiveEntry) (ArchiveInfo, error) {
 	names := mare.Map(entries, func(entry archiveEntry) string {
 		return entry.name
 	})
@@ -284,7 +284,7 @@ func getArchiveInfo(archive base.Archive, entries []archiveEntry) (ArchiveInfo, 
 	return ArchiveInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target, targetOverride: archive.Target}, nil
 }
 
-func getTarInfo(archive base.Archive, response remote.Response, tempfile string) (ArchiveInfo, error) {
+func getTarInfo(archive entity.Archive, response remote.Response, tempfile string) (ArchiveInfo, error) {
 	f, err := os.Open(tempfile)
 	if err != nil {
 		return ArchiveInfo{}, err
@@ -340,7 +340,7 @@ func getAbsTarget(dirName string, info ArchiveInfo) (string, error) {
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive base.Archive, response remote.Response, dirName string) (ArchiveInfo, error) {
+func untar(archive entity.Archive, response remote.Response, dirName string) (ArchiveInfo, error) {
 	var info ArchiveInfo
 	tempfile, err := downloadTempFile(response)
 	if err != nil {
@@ -389,7 +389,7 @@ func untar(archive base.Archive, response remote.Response, dirName string) (Arch
 	return info, nil
 }
 
-func getZipInfo(archive base.Archive, tempFile string) (ArchiveInfo, error) {
+func getZipInfo(archive entity.Archive, tempFile string) (ArchiveInfo, error) {
 	var info ArchiveInfo
 	zipArchive, err := zip.OpenReader(tempFile)
 	if err != nil {
@@ -412,7 +412,7 @@ func getZipInfo(archive base.Archive, tempFile string) (ArchiveInfo, error) {
 	return getArchiveInfo(archive, entries)
 }
 
-func unzip(archive base.Archive, response remote.Response, dirName string) (ArchiveInfo, error) {
+func unzip(archive entity.Archive, response remote.Response, dirName string) (ArchiveInfo, error) {
 	var info ArchiveInfo
 	tempFile, err := downloadTempFile(response)
 
@@ -447,7 +447,7 @@ func unzip(archive base.Archive, response remote.Response, dirName string) (Arch
 	return info, nil
 }
 
-func getExtractionFn(archive base.Archive, s settings.Settings, contentDisposition string) (func(base.Archive, remote.Response, string) (ArchiveInfo, error), error) {
+func getExtractionFn(archive entity.Archive, s settings.Settings, contentDisposition string) (func(entity.Archive, remote.Response, string) (ArchiveInfo, error), error) {
 	fileName, err := archive.ExpandURL(s)
 	if err != nil {
 		return nil, err
@@ -469,7 +469,7 @@ func getExtractionFn(archive base.Archive, s settings.Settings, contentDispositi
 	return nil, fmt.Errorf("unable to find extraction method for URL %s", fileName)
 }
 
-func Extract(archive base.Archive, s settings.Settings) (ArchiveInfo, error) {
+func Extract(archive entity.Archive, s settings.Settings) (ArchiveInfo, error) {
 	return processDownload(archive, s)
 }
 
@@ -524,7 +524,7 @@ func guessArchiveName(releaseUrl string) (string, error) {
 	return strings.Split(parsed.Path, "/")[2], nil
 }
 
-func extractArchive(archive base.Archive, s settings.Settings) error {
+func extractArchive(archive entity.Archive, s settings.Settings) error {
 	archiveUrl, err := archive.ExpandURL(s)
 	if err != nil {
 		return err
@@ -585,7 +585,7 @@ func extractArchive(archive base.Archive, s settings.Settings) error {
 	return nil
 }
 
-func extractArchives(archives []base.Archive, s settings.Settings) error {
+func extractArchives(archives []entity.Archive, s settings.Settings) error {
 	var archiveErrs []error
 	for _, archive := range archives {
 		err := extractArchive(archive, s)

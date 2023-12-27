@@ -3,15 +3,15 @@ package provision
 import (
 	"errors"
 	"fmt"
-	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/femnad/fup/precheck/when"
 
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/base/settings"
+	mapset "github.com/deckarep/golang-set/v2"
+
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/packages"
 	"github.com/femnad/fup/precheck"
+	"github.com/femnad/fup/precheck/when"
+	"github.com/femnad/fup/settings"
 )
 
 func matchingPackages(group entity.PackageGroup) []string {
@@ -70,7 +70,7 @@ func (d determiner) installer() (packages.Installer, error) {
 	return installer, nil
 }
 
-func (d determiner) matchingPkg(spec base.PackageSpec, install bool) mapset.Set[string] {
+func (d determiner) matchingPkg(spec entity.PackageSpec, install bool) mapset.Set[string] {
 	pkgToInstall := mapset.NewSet[string]()
 	for _, group := range spec {
 		if group.Absent && install {
@@ -87,7 +87,7 @@ func (d determiner) matchingPkg(spec base.PackageSpec, install bool) mapset.Set[
 	return pkgToInstall
 }
 
-func (d determiner) matchingRemotePkg(spec base.RemotePackageSpec) (mapset.Set[entity.RemotePackage], error) {
+func (d determiner) matchingRemotePkg(spec entity.RemotePackageSpec) (mapset.Set[entity.RemotePackage], error) {
 	pkgToInstall := mapset.NewSet[entity.RemotePackage]()
 
 	for _, group := range spec {
@@ -125,7 +125,7 @@ func newPackager() (packager, error) {
 	}, nil
 }
 
-func (p packager) ensurePackages(spec base.PackageSpec) error {
+func (p packager) ensurePackages(spec entity.PackageSpec) error {
 	pkgToInstall := p.determiner.matchingPkg(spec, true)
 	installErr := p.installer.Install(pkgToInstall)
 
@@ -135,7 +135,7 @@ func (p packager) ensurePackages(spec base.PackageSpec) error {
 	return errors.Join(installErr, removeErr)
 }
 
-func (p packager) installRemotePackages(spec base.RemotePackageSpec, s settings.Settings) (bool, error) {
+func (p packager) installRemotePackages(spec entity.RemotePackageSpec, s settings.Settings) (bool, error) {
 	pkgToInstall, err := p.determiner.matchingRemotePkg(spec)
 	if err != nil {
 		return false, err

@@ -2,8 +2,9 @@ package entity
 
 import (
 	"fmt"
-	"github.com/femnad/fup/base/settings"
+
 	"github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/settings"
 )
 
 type GoPkg struct {

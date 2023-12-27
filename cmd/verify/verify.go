@@ -7,10 +7,10 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/femnad/fup/base"
-	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/common"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/settings"
 )
 
 func isDir(info os.FileInfo) bool {
@@ -52,7 +52,7 @@ func determineType(info os.FileInfo) string {
 	return "file"
 }
 
-func ensureCorrectDirEntry(entry DirEntry, fupConfig base.Config) error {
+func ensureCorrectDirEntry(entry DirEntry, fupConfig entity.Config) error {
 	path := internal.ExpandUser(entry.Path)
 	info, err := os.Lstat(path)
 	if err != nil {
@@ -112,7 +112,7 @@ func ensureExecutables(execs []string) []error {
 	return errs
 }
 
-func ensureEntries(entries []DirEntry, config base.Config) []error {
+func ensureEntries(entries []DirEntry, config entity.Config) []error {
 	var errs []error
 	for _, entry := range entries {
 		err := ensureCorrectDirEntry(entry, config)
@@ -146,7 +146,7 @@ func ensureFiles(files []FileContent) []error {
 	return errs
 }
 
-func Verify(config string, fupConfig base.Config) error {
+func Verify(config string, fupConfig entity.Config) error {
 	e, err := readConfig(config)
 	if err != nil {
 		return err
