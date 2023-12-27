@@ -1,8 +1,7 @@
-package base
+package entity
 
 import (
 	"fmt"
-
 	"github.com/femnad/fup/base/settings"
 	"github.com/femnad/fup/precheck/unless"
 )
@@ -28,4 +27,13 @@ func (g GoPkg) GetVersion(_ settings.Settings) (string, error) {
 
 func (g GoPkg) Name() string {
 	return g.Pkg
+}
+
+type GoPkgGroup struct {
+	Pkg  []GoPkg `yaml:"pkg"`
+	When string  `yaml:"when"`
+}
+
+func (g GoPkgGroup) RunWhen() string {
+	return g.When
 }

@@ -21,29 +21,29 @@ type UserInGroupSpec map[string][]entity.Group
 type Config struct {
 	file            string
 	isRemote        bool
-	AcceptHostKeys  []string           `yaml:"host_key"`
-	AptRepos        []entity.AptRepo   `yaml:"apt_repo"`
-	Archives        []Archive          `yaml:"archive"`
-	Binaries        []entity.Binary    `yaml:"binary"`
-	Cargo           []CargoPkg         `yaml:"rust"`
-	DnfRepos        []entity.DnfRepo   `yaml:"dnf_repo"`
-	EnsureDirs      []entity.Dir       `yaml:"dir"`
-	EnsureLines     []LineInFile       `yaml:"line"`
-	Flatpak         entity.Flatpak     `yaml:"flatpak"`
-	GithubUserKey   UserKey            `yaml:"github_key"`
-	Go              []GoPkg            `yaml:"go"`
-	Packages        PackageSpec        `yaml:"package"`
-	PostflightTasks []Task             `yaml:"postflight"`
-	PreflightTasks  []Task             `yaml:"preflight"`
-	Python          []PythonPkg        `yaml:"python"`
-	RemotePackages  RemotePackageSpec  `yaml:"remote_package"`
-	RepoGroups      []entity.RepoGroup `yaml:"repo"`
-	Services        []Service          `yaml:"service"`
-	Settings        settings.Settings  `yaml:"settings"`
-	SnapPackages    []entity.Snap      `yaml:"snap"`
-	Tasks           []Task             `yaml:"task"`
-	Templates       []Template         `yaml:"template"`
-	UserInGroup     UserInGroupSpec    `yaml:"user_group"`
+	AcceptHostKeys  []string            `yaml:"host_key"`
+	AptRepos        []entity.AptRepo    `yaml:"apt_repo"`
+	Archives        []Archive           `yaml:"archive"`
+	Binaries        []entity.Binary     `yaml:"binary"`
+	Cargo           []CargoPkg          `yaml:"rust"`
+	DnfRepos        []entity.DnfRepo    `yaml:"dnf_repo"`
+	EnsureDirs      []entity.Dir        `yaml:"dir"`
+	EnsureLines     []LineInFile        `yaml:"line"`
+	Flatpak         entity.Flatpak      `yaml:"flatpak"`
+	GithubUserKey   UserKey             `yaml:"github_key"`
+	Go              []entity.GoPkgGroup `yaml:"go"`
+	Packages        PackageSpec         `yaml:"package"`
+	PostflightTasks []Task              `yaml:"postflight"`
+	PreflightTasks  []Task              `yaml:"preflight"`
+	Python          []PythonPkg         `yaml:"python"`
+	RemotePackages  RemotePackageSpec   `yaml:"remote_package"`
+	RepoGroups      []entity.RepoGroup  `yaml:"repo"`
+	Services        []Service           `yaml:"service"`
+	Settings        settings.Settings   `yaml:"settings"`
+	SnapPackages    []entity.Snap       `yaml:"snap"`
+	Tasks           []Task              `yaml:"task"`
+	Templates       []Template          `yaml:"template"`
+	UserInGroup     UserInGroupSpec     `yaml:"user_group"`
 }
 
 func (c Config) IsRemote() bool {

@@ -9,8 +9,10 @@ import (
 
 	"github.com/femnad/fup/base"
 	"github.com/femnad/fup/base/settings"
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/precheck/unless"
+	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/run"
 )
 
@@ -19,7 +21,7 @@ const (
 	defaultVersion = "latest"
 )
 
-func qualifyPkg(pkg base.GoPkg, s settings.Settings) (string, error) {
+func qualifyPkg(pkg entity.GoPkg, s settings.Settings) (string, error) {
 	name := pkg.Name()
 	tokens := strings.Split(name, "/")
 	if len(tokens) == 0 {
@@ -43,21 +45,23 @@ func qualifyPkg(pkg base.GoPkg, s settings.Settings) (string, error) {
 	return fmt.Sprintf("%s/%s@%s", defaultHost, name, version), nil
 }
 
-func goInstall(pkg base.GoPkg, s settings.Settings) error {
+func goInstall(pkg entity.GoPkg, s settings.Settings) error {
+	name := pkg.Name()
+
 	if precheck.ShouldSkip(pkg, s) {
-		internal.Log.Debugf("Skipping go install for %s", pkg.Name())
+		internal.Log.Debugf("Skipping go install for %s", name)
 		return nil
 	}
 
-	internal.Log.Infof("Installing Go package %s", pkg.Name())
+	internal.Log.Infof("Installing Go package %s", name)
 
-	name, err := qualifyPkg(pkg, s)
+	qualifiedName, err := qualifyPkg(pkg, s)
 	if err != nil {
-		internal.Log.Errorf("error in installing go package %v", err)
+		internal.Log.Errorf("Error in installing Go package %s: %v", name, err)
 		return err
 	}
 
-	cmd := fmt.Sprintf("go install %s", name)
+	cmd := fmt.Sprintf("go install %s", qualifiedName)
 	resp, err := run.Cmd(s, marecmd.Input{Command: cmd})
 
 	if err != nil {
@@ -68,11 +72,26 @@ func goInstall(pkg base.GoPkg, s settings.Settings) error {
 	return nil
 }
 
+func goInstallGroup(group entity.GoPkgGroup, s settings.Settings) []error {
+	var errs []error
+	if !when.ShouldRun(group) {
+		internal.Log.Debugf("Skipping installing Go package group due to condition %s", group.When)
+		return nil
+	}
+
+	for _, pkg := range group.Pkg {
+		err := goInstall(pkg, s)
+		errs = append(errs, err)
+	}
+
+	return errs
+}
+
 func goInstallPkgs(cfg base.Config) error {
 	var goErrs []error
-	for _, pkg := range cfg.Go {
-		err := goInstall(pkg, cfg.Settings)
-		goErrs = append(goErrs, err)
+	for _, pkgGroup := range cfg.Go {
+		errs := goInstallGroup(pkgGroup, cfg.Settings)
+		goErrs = append(goErrs, errs...)
 	}
 
 	return errors.Join(goErrs...)
