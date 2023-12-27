@@ -172,7 +172,7 @@ func persist(s base.Service) error {
 		return fmt.Errorf("error looking up executable for service %s: %v", service, err)
 	}
 
-	if common.IsExecutableFile(info) {
+	if !common.IsExecutableFile(info) {
 		return fmt.Errorf("executable %s for service %s does not point to an executable file", exec, service)
 	}
 
