@@ -4,26 +4,26 @@ settings:
   versions:
     chezmoi: 2.42.2
 
-apt_repos:
+apt_repo:
   - when: os "ubuntu"
     gpg_key: https://download.docker.com/linux/ubuntu/gpg
     name: docker
     repo: https://download.docker.com/linux/ubuntu
 
-packages:
+package:
   - pkg:
     - docker-ce
     - neovim
     when: pkg "apt"
 
-archives:
+archive:
   - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
     name: chezmoi
     unless:
       cmd: chezmoi --version
       post: split 2 | cut 1 | cut -1
 
-tasks:
+task:
   - task: Clone chezmoi
     unless:
       stat: ~/.local/share/chezmoi

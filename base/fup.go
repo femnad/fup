@@ -21,30 +21,30 @@ type UserInGroupSpec map[string][]entity.Group
 type Config struct {
 	file            string
 	isRemote        bool
-	AcceptHostKeys  []string           `yaml:"accept_host_keys"`
-	AptRepos        []entity.AptRepo   `yaml:"apt_repos"`
-	Archives        []Archive          `yaml:"archives"`
-	Binaries        []entity.Binary    `yaml:"binaries"`
+	AcceptHostKeys  []string           `yaml:"host_key"`
+	AptRepos        []entity.AptRepo   `yaml:"apt_repo"`
+	Archives        []Archive          `yaml:"archive"`
+	Binaries        []entity.Binary    `yaml:"binary"`
 	Cargo           []CargoPkg         `yaml:"rust"`
-	DnfRepos        []entity.DnfRepo   `yaml:"dnf_repos"`
-	EnsureDirs      []string           `yaml:"ensure_dirs"`
-	EnsureLines     []LineInFile       `yaml:"ensure_lines"`
+	DnfRepos        []entity.DnfRepo   `yaml:"dnf_repo"`
+	EnsureDirs      []string           `yaml:"dir"`
+	EnsureLines     []LineInFile       `yaml:"line"`
 	Flatpak         entity.Flatpak     `yaml:"flatpak"`
-	GithubUserKey   UserKey            `yaml:"github_user_keys"`
+	GithubUserKey   UserKey            `yaml:"github_key"`
 	Go              []GoPkg            `yaml:"go"`
-	Packages        PackageSpec        `yaml:"packages"`
+	Packages        PackageSpec        `yaml:"package"`
 	PostflightTasks []Task             `yaml:"postflight"`
 	PreflightTasks  []Task             `yaml:"preflight"`
 	Python          []PythonPkg        `yaml:"python"`
-	RemotePackages  RemotePackageSpec  `yaml:"remote_packages"`
-	RepoGroups      []entity.RepoGroup `yaml:"repos"`
-	Services        []Service          `yaml:"services"`
+	RemotePackages  RemotePackageSpec  `yaml:"remote_package"`
+	RepoGroups      []entity.RepoGroup `yaml:"repo"`
+	Services        []Service          `yaml:"service"`
 	Settings        settings.Settings  `yaml:"settings"`
 	SnapPackages    []entity.Snap      `yaml:"snap"`
-	Tasks           []Task             `yaml:"tasks"`
+	Tasks           []Task             `yaml:"task"`
 	Templates       []Template         `yaml:"template"`
-	UserInGroup     UserInGroupSpec    `yaml:"user_in_group"`
-	UnwantedDirs    []string           `yaml:"unwanted_dirs"`
+	UserInGroup     UserInGroupSpec    `yaml:"user_group"`
+	UnwantedDirs    []string           `yaml:"rmdir"`
 }
 
 func (c Config) IsRemote() bool {

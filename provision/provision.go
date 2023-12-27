@@ -93,7 +93,7 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"archive", p.extractArchives},
 		{"binary", p.downloadBinaries},
 		{"package", p.installPackages},
-		{"hosts", p.acceptHostKeys},
+		{"host", p.acceptHostKeys},
 		{"github", p.githubUserKey},
 		{"go", p.goInstall},
 		{"python", p.pythonInstall},

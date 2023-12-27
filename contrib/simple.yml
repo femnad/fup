@@ -13,28 +13,26 @@ settings:
   versions:
     gh: 2.29.0
 
-preflight:
-  - task: Enable RPM Fusion
-    when: is-fedora
-    steps:
-      - name: shell
-        cmd: dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-        sudo: true
-    unless:
-      cmd: dnf list --installed rpmfusion-free-release
-  - task: Add Spotify repo
-    when: is-ubuntu
-    unless:
-      stat: /etc/apt/sources.list.d/spotify.list
-    steps:
-      - name: shell
-        sudo: true
-        cmd: |
-          curl -sS https://download.spotify.com/debian/pubkey_5E3C45D7B312C643.gpg | sudo apt-key add -
-          echo 'deb http://repository.spotify.com stable non-free' | sudo tee /etc/apt/sources.list.d/spotify.list
-          apt update
+apt_repo:
+  - when: os "ubuntu"
+    gpg_key: https://download.docker.com/linux/ubuntu/gpg
+    name: docker
+    repo: https://download.docker.com/linux/ubuntu
 
-archives:
+dnf_repo:
+  - when: os "fedora"
+    name: rpmfusion
+    packages:
+      - rpmfusion-free-release
+      - rpmfusion-free-release
+    url:
+      - https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${version_id}.noarch.rpm
+      - https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${version_id}.noarch.rpm
+  - when: os "fedora"
+    name: docker-ce
+    repo: https://download.docker.com/linux/fedora/docker-ce.repo
+
+archive:
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
     name: gh
     unless:
@@ -43,7 +41,7 @@ archives:
     link:
       - gh_${version}_linux_amd64/bin/gh
 
-packages:
+package:
   - pkg:
     - pass
   - when: os "ubuntu"
@@ -52,17 +50,17 @@ packages:
   - when: os "fedora"
     pkg:
     - dnf-automatic
-
-unwanted_packages:
-  ubuntu:
+  - when: os "ubuntu"
+    pkg:
     - snapd
+    absent: true
 
-cargo:
+rust:
   - name: alacritty
     unless:
       cmd: alacritty --version
 
-tasks:
+task:
   - task: Install Mullvad app
     when: is-ubuntu
     unless:
@@ -95,7 +93,7 @@ python:
     unless:
       cmd: qmk -V
 
-services:
+service:
   - name: grobi
     unit:
       exec: grobi watch -v
@@ -117,32 +115,20 @@ template:
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
     when: is-ubuntu
 
-postflight:
-  # Useful if Go binaries were installed before GOPATH was set
-  - task: Move go dir
-    when: gopath-set
-    unless:
-      stat: ${GOPATH}
-    steps:
-      - name: rename
-        src: ~/go
-        target: ${GOPATH}
-
-github_user_keys:
-  # Not a user
+github_key:
   user: cli
 
-ensure_dirs:
+dir:
   - ~/taxes
 
-accept_host_keys:
+host_key:
   - github.com
   - gitlab.com
 
-unwanted_dirs:
+rmdir:
   - ~/snap
 
-repos:
+repo:
   - clone:
     - name: cli/cli
     - name: https://gitlab.com/gitlab-org/cli/
@@ -151,11 +137,11 @@ repos:
       remotes:
         upstream: https://github.com/zsa/qmk_firmware.git
 
-user_in_group:
+user_group:
   foo:
     - name: video
 
-ensure_lines:
+line:
   - name: replace
     file: /etc/dnf/automatic.conf
     replace:
