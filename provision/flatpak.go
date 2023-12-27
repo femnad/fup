@@ -7,29 +7,28 @@ import (
 	"path"
 
 	"github.com/femnad/fup/base"
+	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	marecmd "github.com/femnad/mare/cmd"
 )
 
 const (
+	flatpakExec    = "flatpak"
 	launcherScript = `#!/usr/bin/env bash
 flatpak run %s
 `
 )
 
 func ensureRemote(remote entity.FlatpakRemote) error {
-	out, err := marecmd.Run(marecmd.Input{Command: fmt.Sprintf("flatpak remote-ls %s", remote.Name)})
-	if err != nil {
-		return err
-	}
+	out, _ := marecmd.Run(marecmd.Input{Command: fmt.Sprintf("%s remote-ls %s", flatpakExec, remote.Name)})
 	if out.Code == 0 {
 		return nil
 	}
 
 	internal.Log.Debugf("Adding flatpak remote %s", remote.Name)
-	cmd := fmt.Sprintf("flatpak remote-add %s %s", remote.Name, remote.Url)
-	_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd})
+	cmd := fmt.Sprintf("%s remote-add %s %s", flatpakExec, remote.Name, remote.Url)
+	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
 		return fmt.Errorf("error adding flatpak remote %s with URL %s: %v", remote.Name, remote.Url, err)
 	}
@@ -62,25 +61,21 @@ func ensurePkgRemote(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) erro
 }
 
 func isInstalled(pkg entity.FlatpakPkg) (bool, error) {
-	out, err := marecmd.Run(marecmd.Input{Command: fmt.Sprintf("flatpak info %s", pkg.Name)})
-	if err != nil {
-		return false, err
-	}
-
+	out, _ := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("%s info %s", flatpakExec, pkg.Name)})
 	return out.Code == 0, nil
 }
 
-func ensureInstalled(flatpak entity.FlatpakPkg) error {
-	out, _ := marecmd.Run(marecmd.Input{Command: fmt.Sprintf("flatpak info %s", flatpak.Name)})
+func ensureInstalled(pkg entity.FlatpakPkg) error {
+	out, _ := marecmd.Run(marecmd.Input{Command: fmt.Sprintf("%s info %s", pkg, pkg.Name)})
 	if out.Code == 0 {
 		return nil
 	}
 
-	internal.Log.Debug("Installing flatpak package %s", flatpak.Name)
-	cmd := fmt.Sprintf("flatpak install %s %s -y", flatpak.Remote, flatpak.Name)
+	internal.Log.Debug("Installing flatpak package %s", pkg.Name)
+	cmd := fmt.Sprintf("%s install %s %s -y", flatpakExec, pkg.Remote, pkg.Name)
 	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
 	if err != nil {
-		return fmt.Errorf("error install flatpak %s: %v", flatpak.Name, err)
+		return fmt.Errorf("error installing flatpak %s: %v", pkg.Name, err)
 	}
 
 	return nil
@@ -130,9 +125,15 @@ func installFlatpak(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error
 }
 
 func flatpakInstall(config base.Config) error {
+	_, err := common.Which(flatpakExec)
+	if err != nil {
+		internal.Log.Debug("skipping installing flatpak packages as flatpak is not available")
+		return nil
+	}
+
 	var flatpakErr []error
-	for _, flatpak := range config.Flatpak.Packages {
-		err := installFlatpak(flatpak, config.Flatpak.Remotes)
+	for _, pkg := range config.Flatpak.Packages {
+		err = installFlatpak(pkg, config.Flatpak.Remotes)
 		flatpakErr = append(flatpakErr, err)
 	}
 
