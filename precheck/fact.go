@@ -148,6 +148,12 @@ func osVersionLe(version float64) (bool, error) {
 	return osVersion <= version, nil
 }
 
+func statOk(path string) (bool, error) {
+	path = os.ExpandEnv(internal.ExpandUser(path))
+	_, err := os.Stat(path)
+	return err == nil, nil
+}
+
 var FactFns = template.FuncMap{
 	"env":       hasEnv,
 	"is":        isA,
@@ -155,6 +161,7 @@ var FactFns = template.FuncMap{
 	"os":        isOs,
 	"output":    hasOutput,
 	"pkg":       hasPkgMgr,
+	"stat":      statOk,
 	"version":   isOsVersion,
 	"versionGe": osVersionGe,
 	"versionLe": osVersionLe,
