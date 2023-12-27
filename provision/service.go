@@ -160,10 +160,30 @@ func persist(s base.Service) error {
 		return nil
 	}
 
+	service := s.Name
+	execFields := strings.Split(s.Unit.Exec, " ")
+	if len(execFields) == 0 {
+		return fmt.Errorf("unable to determine executable for service %s", service)
+	}
+
+	exec := execFields[0]
+	info, err := os.Stat(exec)
+	if err != nil {
+		return fmt.Errorf("error looking up executable for service %s: %v", service, err)
+	}
+
+	if common.IsExecutableFile(info) {
+		return fmt.Errorf("executable %s for service %s does not point to an executable file", exec, service)
+	}
+
+	if s.Unit.Desc == "" {
+		return fmt.Errorf("description required for templating service %s", service)
+	}
+
 	serviceFilePath := getServiceFilePath(s)
 	if !s.System {
 		dir, _ := path.Split(serviceFilePath)
-		if err := internal.EnsureDirExists(dir); err != nil {
+		if err = internal.EnsureDirExists(dir); err != nil {
 			return err
 		}
 	}
