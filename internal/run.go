@@ -12,7 +12,8 @@ func maybeWarnPasswordRequired(cmdStr string) {
 		return
 	}
 
-	Log.Warningf("Sudo authentication required for escalating privileges to run command %s", cmdStr)
+	cmdHead := strings.Split(cmdStr, " ")[0]
+	Log.Warningf("Sudo authentication required for escalating privileges to run command %s", cmdHead)
 }
 
 func MaybeRunWithSudo(cmdStr string) error {

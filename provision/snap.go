@@ -8,11 +8,16 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
+	marecmd "github.com/femnad/mare/cmd"
 )
 
+func isSnapInstalled(snap entity.Snap) bool {
+	out, _ := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("snap list %s", snap.Name)})
+	return out.Code == 0
+}
+
 func installSnap(snap entity.Snap) error {
-	err := internal.Run(fmt.Sprintf("snap list %s", snap.Name))
-	if err == nil {
+	if isSnapInstalled(snap) {
 		return nil
 	}
 
@@ -22,9 +27,26 @@ func installSnap(snap entity.Snap) error {
 		cmd += " --classic"
 	}
 
-	err = internal.MaybeRunWithSudo(cmd)
+	err := internal.MaybeRunWithSudo(cmd)
 	if err != nil {
 		internal.Log.Errorf("error installing snap %s: %v", snap.Name, err)
+		return err
+	}
+
+	return nil
+}
+
+func uninstallSnap(snap entity.Snap) error {
+	if !isSnapInstalled(snap) {
+		return nil
+	}
+
+	internal.Log.Infof("Uninstalling snap %s", snap.Name)
+	cmd := fmt.Sprintf("snap remove %s", snap.Name)
+
+	err := internal.MaybeRunWithSudo(cmd)
+	if err != nil {
+		internal.Log.Errorf("error uninstalling snap %s: %v", snap.Name, err)
 		return err
 	}
 
@@ -40,7 +62,11 @@ func snapInstall(config base.Config) error {
 
 	var snapErr []error
 	for _, snap := range config.SnapPackages {
-		err = installSnap(snap)
+		if snap.Absent {
+			err = uninstallSnap(snap)
+		} else {
+			err = installSnap(snap)
+		}
 		snapErr = append(snapErr, err)
 	}
 
