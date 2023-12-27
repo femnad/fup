@@ -161,7 +161,7 @@ def gen_test(test_case: ArchiveTest):
 
     def test(self):
         archives = [test_case.archive.__dict__]
-        config = test_case.config | {'archives': archives}
+        config = test_case.config | {'archive': archives}
 
         artifacts_dir = RELATIVE_ARTIFACTS_DIR if test_case.relative else ABSOLUTE_ARTIFACTS_DIR
 
