@@ -100,7 +100,7 @@ func Download(url, target string) error {
 	}
 
 	dir, _ := path.Split(target)
-	if err = internal.EnsureDir(dir); err != nil {
+	if err = internal.EnsureDirExists(dir); err != nil {
 		return err
 	}
 

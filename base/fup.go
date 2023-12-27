@@ -27,7 +27,7 @@ type Config struct {
 	Binaries        []entity.Binary    `yaml:"binary"`
 	Cargo           []CargoPkg         `yaml:"rust"`
 	DnfRepos        []entity.DnfRepo   `yaml:"dnf_repo"`
-	EnsureDirs      []string           `yaml:"dir"`
+	EnsureDirs      []entity.Dir       `yaml:"dir"`
 	EnsureLines     []LineInFile       `yaml:"line"`
 	Flatpak         entity.Flatpak     `yaml:"flatpak"`
 	GithubUserKey   UserKey            `yaml:"github_key"`
@@ -44,7 +44,6 @@ type Config struct {
 	Tasks           []Task             `yaml:"task"`
 	Templates       []Template         `yaml:"template"`
 	UserInGroup     UserInGroupSpec    `yaml:"user_group"`
-	UnwantedDirs    []string           `yaml:"rmdir"`
 }
 
 func (c Config) IsRemote() bool {

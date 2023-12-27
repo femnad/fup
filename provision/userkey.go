@@ -35,7 +35,7 @@ func ensureUserKeys(user string) error {
 
 	keyFile := internal.ExpandUser(authorizedKeysFile)
 	dir, _ := path.Split(keyFile)
-	if err = internal.EnsureDir(dir); err != nil {
+	if err = internal.EnsureDirExists(dir); err != nil {
 		return err
 	}
 

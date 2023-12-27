@@ -163,7 +163,7 @@ func persist(s base.Service) error {
 	serviceFilePath := getServiceFilePath(s)
 	if !s.System {
 		dir, _ := path.Split(serviceFilePath)
-		if err := internal.EnsureDir(dir); err != nil {
+		if err := internal.EnsureDirExists(dir); err != nil {
 			return err
 		}
 	}

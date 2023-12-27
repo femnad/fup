@@ -15,7 +15,7 @@ func EnsureLinesInFile(file string, lines []string) error {
 
 	file = internal.ExpandUser(file)
 	dir, _ := path.Split(file)
-	if err := internal.EnsureDir(dir); err != nil {
+	if err := internal.EnsureDirExists(dir); err != nil {
 		return err
 	}
 

@@ -106,7 +106,6 @@ func NewProvisioner(cfg base.Config, filter []string) (Provisioner, error) {
 		{"line", p.ensureLines},
 		{"flatpak", p.flatpakInstall},
 		{"snap", p.snapInstall},
-		{"rmdir", p.unwantedDirs},
 		{"group", p.userInGroup},
 		{"post", p.runPostFlightTasks},
 	}
@@ -240,12 +239,6 @@ func (p Provisioner) sshClone() error {
 	internal.Log.Noticef("Cloning repos via SSH")
 
 	return sshClone(p.Config)
-}
-
-func (p Provisioner) unwantedDirs() error {
-	internal.Log.Noticef("Removing unwanted dirs")
-
-	return removeUnwantedDirs(p.Config)
 }
 
 func (p Provisioner) userInGroup() error {

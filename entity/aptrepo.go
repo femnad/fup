@@ -118,7 +118,7 @@ func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 }
 
 func (a AptRepo) Install() error {
-	err := internal.EnsureDir(keyRingsDir)
+	err := internal.EnsureDirExists(keyRingsDir)
 	if err != nil {
 		return err
 	}
