@@ -95,6 +95,11 @@ func finalizeConfig(filename string) (configOut, error) {
 		return configOut{}, err
 	}
 
+	data, err = evalConfig(data)
+	if err != nil {
+		return configOut{}, err
+	}
+
 	return configOut{
 		content:  data,
 		filename: filename,
