@@ -23,43 +23,12 @@ func runTask(task entity.Task, cfg entity.Config) error {
 	return task.Run(cfg)
 }
 
-func runTaskGroup(group entity.TaskGroup, cfg entity.Config) []error {
-	if !when.ShouldRun(group) {
-		internal.Log.Debugf("Skipping running task group as when condition %s evaluated to false", group.When)
-		return nil
-	}
-
-	var errs []error
-	for _, task := range group.Tasks {
-		err := runTask(task, cfg)
-		errs = append(errs, err)
-	}
-
-	return errs
-}
-
 func runTasks(cfg entity.Config, tasks []entity.Task) error {
 	var taskErrs []error
 
 	for _, task := range tasks {
 		err := runTask(task, cfg)
 		taskErrs = append(taskErrs, err)
-	}
-
-	return errors.Join(taskErrs...)
-}
-
-func runCombinedTasks(cfg entity.Config) error {
-	var taskErrs []error
-
-	for _, task := range cfg.Tasks {
-		err := runTask(task, cfg)
-		taskErrs = append(taskErrs, err)
-	}
-
-	for _, group := range cfg.TaskGroups {
-		errs := runTaskGroup(group, cfg)
-		taskErrs = append(taskErrs, errs...)
 	}
 
 	return errors.Join(taskErrs...)

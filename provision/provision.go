@@ -196,7 +196,7 @@ func (p Provisioner) pythonInstall() error {
 func (p Provisioner) runTasks() error {
 	internal.Log.Noticef("Running tasks")
 
-	return runCombinedTasks(p.Config)
+	return runTasks(p.Config, p.Config.Tasks)
 }
 
 func (p Provisioner) applyTemplates() error {

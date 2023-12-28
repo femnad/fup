@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
-	"github.com/femnad/fup/precheck/when"
 )
 
 func cloneRepos(repos []entity.Repo, clonePath string) error {
@@ -23,17 +21,5 @@ func cloneRepos(repos []entity.Repo, clonePath string) error {
 }
 
 func sshClone(config entity.Config) error {
-	for _, group := range config.RepoGroups {
-		if !when.ShouldRun(group) {
-			continue
-		}
-
-		err := cloneRepos(group.Clones, config.Settings.SSHCloneDir)
-		if err != nil {
-			internal.Log.Errorf("error cloning repos: %v", err)
-			return err
-		}
-	}
-
-	return nil
+	return cloneRepos(config.Repos, config.Settings.SSHCloneDir)
 }

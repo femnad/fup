@@ -215,12 +215,3 @@ func (t Task) Run(cfg Config) error {
 
 	return nil
 }
-
-type TaskGroup struct {
-	Tasks []Task `yaml:"tasks"`
-	When  string `yaml:"when"`
-}
-
-func (g TaskGroup) RunWhen() string {
-	return g.When
-}

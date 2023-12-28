@@ -23,12 +23,11 @@ type Config struct {
 	PreflightTasks  []Task            `yaml:"preflight"`
 	Python          []PythonPkg       `yaml:"python"`
 	RemotePackages  RemotePackageSpec `yaml:"remote_package"`
-	RepoGroups      []RepoGroup       `yaml:"repo"`
+	Repos           []Repo            `yaml:"repo"`
 	Services        []Service         `yaml:"service"`
 	Settings        settings.Settings `yaml:"settings"`
 	SnapPackages    []Snap            `yaml:"snap"`
 	Tasks           []Task            `yaml:"task"`
-	TaskGroups      []TaskGroup       `yaml:"task_group"`
 	Templates       []Template        `yaml:"template"`
 	UserInGroup     UserInGroupSpec   `yaml:"user_group"`
 }
