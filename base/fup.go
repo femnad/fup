@@ -128,6 +128,8 @@ func unmarshalConfig(filename string) (config entity.Config, err error) {
 		return config, fmt.Errorf("error deserializing config from %s: %v", filename, err)
 	}
 
+	config.Filename = finalConfig.filename
+	config.Remote = finalConfig.isRemote
 	return
 }
 
