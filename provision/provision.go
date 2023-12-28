@@ -3,6 +3,7 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
@@ -50,6 +51,14 @@ func (p provisioners) apply() error {
 	return errors.Join(uniqErrs...)
 }
 
+func getOrderedProvisioners(provFns []provisionFn) []string {
+	var names []string
+	for _, fn := range provFns {
+		names = append(names, fn.name)
+	}
+	return names
+}
+
 func newProvisioners(allProvisioners []provisionFn, filter []string) (provisioners, error) {
 	provMap := make(map[string]func() error)
 	var order []string
@@ -66,7 +75,10 @@ func newProvisioners(allProvisioners []provisionFn, filter []string) (provisione
 		for _, fnName := range filter {
 			_, ok := provMap[fnName]
 			if !ok {
-				return provisioners{}, fmt.Errorf("%s is not a provisioning function", fnName)
+				ordered := getOrderedProvisioners(allProvisioners)
+				msg := fmt.Sprintf("available provisioners (in order of execution): %s", strings.Join(
+					ordered, " "))
+				return provisioners{}, fmt.Errorf("%s is not a provisioning function, %s", fnName, msg)
 			}
 
 			order = append(order, fnName)
