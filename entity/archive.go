@@ -3,6 +3,8 @@ package entity
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 
@@ -18,10 +20,12 @@ type NamedLink struct {
 }
 
 type VersionLookupSpec struct {
-	FollowURL bool   `yaml:"follow_url"`
-	PostProc  string `yaml:"post_proc"`
-	Query     string `yaml:"query"`
-	URL       string `yaml:"url"`
+	ExcludeSuffix []string `yaml:"exclude_suffix"`
+	FollowURL     bool     `yaml:"follow_url"`
+	GetFirst      bool     `yaml:"get_first"`
+	PostProc      string   `yaml:"post_proc"`
+	Query         string   `yaml:"query"`
+	URL           string   `yaml:"url"`
 }
 
 type Archive struct {
@@ -135,16 +139,48 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 		return "", err
 	}
 
-	node, err := htmlquery.Query(doc, spec.Query)
+	query := spec.Query
+	if spec.GetFirst {
+		node, err := htmlquery.Query(doc, query)
+		if err != nil {
+			return "", err
+		}
+
+		if node == nil {
+			return "", fmt.Errorf("error looking up version via query %s", query)
+		}
+
+		return htmlquery.InnerText(node), nil
+	}
+
+	nodes, err := htmlquery.QueryAll(doc, query)
 	if err != nil {
 		return "", err
 	}
 
-	if node == nil {
-		return "", fmt.Errorf("error looking up version from spec %+v", spec)
+	var regex *regexp.Regexp
+	if len(spec.ExcludeSuffix) > 0 {
+		suffixPattern := fmt.Sprintf("(%s)$", strings.Join(spec.ExcludeSuffix, "|"))
+		regex, err = regexp.Compile(suffixPattern)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return htmlquery.InnerText(node), nil
+	for _, node := range nodes {
+		if node == nil {
+			continue
+		}
+
+		nodeText := htmlquery.InnerText(node)
+		if regex != nil && regex.MatchString(nodeText) {
+			continue
+		}
+
+		return nodeText, nil
+	}
+
+	return "", fmt.Errorf("unable to find matches via query %s", query)
 }
 
 func lookupVersion(spec VersionLookupSpec) (text string, err error) {
