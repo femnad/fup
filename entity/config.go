@@ -1,13 +1,16 @@
 package entity
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"text/template"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/femnad/fup/precheck"
 	"github.com/femnad/fup/remote"
 	"github.com/femnad/fup/settings"
 )
@@ -99,6 +102,22 @@ func getConfigReader(config string) (configReader, error) {
 	return configReader{reader: reader, isRemote: isRemote}, nil
 }
 
+func evalConfig(data []byte) ([]byte, error) {
+	tmpl := template.New("config").Funcs(precheck.FactFns)
+	parsed, err := tmpl.Parse(string(data))
+	if err != nil {
+		return data, err
+	}
+
+	var out bytes.Buffer
+	err = parsed.Execute(&out, nil)
+	if err != nil {
+		return data, err
+	}
+
+	return out.Bytes(), nil
+}
+
 func UnmarshalConfig(filename string) (Config, error) {
 	config := Config{}
 	cfgReader, err := getConfigReader(filename)
@@ -111,7 +130,12 @@ func UnmarshalConfig(filename string) (Config, error) {
 		return config, err
 	}
 
-	err = yaml.Unmarshal(data, &config)
+	finalConfig, err := evalConfig(data)
+	if err != nil {
+		return config, err
+	}
+
+	err = yaml.Unmarshal(data, &finalConfig)
 	if err != nil {
 		return config, fmt.Errorf("error deserializing config from %s: %v", filename, err)
 	}
