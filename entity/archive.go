@@ -14,6 +14,23 @@ import (
 	"github.com/femnad/fup/settings"
 )
 
+const (
+	githubStableRelease = "github-stable"
+	githubReleasesURL   = "https://github.com/%s/releases"
+	githubReleaseQuery  = "//a[@class='Link--primary Link']"
+)
+
+var (
+	githubStableExcludeSuffix = []string{
+		"-alpha[0-9]+",
+		"-beta[0-9]+",
+		"-rc[0-9]+",
+	}
+	strategies = map[string]func(VersionLookupSpec, string) (VersionLookupSpec, error){
+		githubStableRelease: githubStableSpec,
+	}
+)
+
 type NamedLink struct {
 	Name   string `yaml:"name"`
 	Target string `yaml:"target"`
@@ -25,6 +42,7 @@ type VersionLookupSpec struct {
 	GetFirst      bool     `yaml:"get_first"`
 	PostProc      string   `yaml:"post_proc"`
 	Query         string   `yaml:"query"`
+	Strategy      string   `yaml:"strategy"`
 	URL           string   `yaml:"url"`
 }
 
@@ -56,7 +74,7 @@ func (a Archive) expand(property string) string {
 }
 
 func (a Archive) hasVersionLookup() bool {
-	return a.VersionLookup.URL != ""
+	return a.VersionLookup.URL != "" || a.VersionLookup.Strategy != ""
 }
 
 func (a Archive) version(s settings.Settings) (string, error) {
@@ -70,7 +88,7 @@ func (a Archive) version(s settings.Settings) (string, error) {
 	}
 
 	if a.hasVersionLookup() {
-		return lookupVersion(a.VersionLookup)
+		return lookupVersion(a.VersionLookup, a.Url)
 	}
 
 	return "", nil
@@ -180,10 +198,48 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 		return nodeText, nil
 	}
 
-	return "", fmt.Errorf("unable to find matches via query %s", query)
+	return "", fmt.Errorf("unable to find matches via query %s on URL %s", query, spec.URL)
 }
 
-func lookupVersion(spec VersionLookupSpec) (text string, err error) {
+func githubStableSpec(spec VersionLookupSpec, archiveURL string) (VersionLookupSpec, error) {
+	fields := strings.Split(archiveURL, "/")
+	// URL should have the format: https://github.com/<principal>/<repo>/...
+	if len(fields) < 5 {
+		return spec, fmt.Errorf("unable to determine GitHub repo from URL %s", archiveURL)
+	}
+
+	repo := fmt.Sprintf("%s/%s", fields[3], fields[4])
+	url := fmt.Sprintf(githubReleasesURL, repo)
+	return VersionLookupSpec{
+		ExcludeSuffix: githubStableExcludeSuffix,
+		URL:           fmt.Sprintf(url),
+		Query:         githubReleaseQuery,
+	}, nil
+}
+
+func queryFromStrategy(spec VersionLookupSpec, archiveURL string) (VersionLookupSpec, error) {
+	fn, ok := strategies[spec.Strategy]
+	if !ok {
+		return VersionLookupSpec{}, fmt.Errorf("no such strategy %s", spec.Strategy)
+	}
+
+	strategySpec, err := fn(spec, archiveURL)
+	if err != nil {
+		return VersionLookupSpec{}, err
+	}
+
+	strategySpec.PostProc = spec.PostProc
+	return strategySpec, nil
+}
+
+func lookupVersion(spec VersionLookupSpec, archiveURL string) (text string, err error) {
+	if spec.Strategy != "" {
+		spec, err = queryFromStrategy(spec, archiveURL)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	if spec.Query != "" {
 		text, err = resolveQuery(spec)
 		if err != nil {
