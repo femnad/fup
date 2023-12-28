@@ -1,6 +1,6 @@
 package entity
 
-type Dir struct {
-	Absent bool   `yaml:"absent"`
-	Name   string `yaml:"name"`
+type DirGroup struct {
+	Absent bool     `yaml:"absent"`
+	Names  []string `yaml:"names"`
 }

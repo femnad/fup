@@ -13,7 +13,7 @@ type Config struct {
 	Binaries        []Binary          `yaml:"binary"`
 	Cargo           []CargoPkg        `yaml:"rust"`
 	DnfRepos        []DnfRepo         `yaml:"dnf_repo"`
-	EnsureDirs      []Dir             `yaml:"dir"`
+	Dirs            []DirGroup        `yaml:"dir"`
 	EnsureLines     []LineInFile      `yaml:"line"`
 	Flatpak         Flatpak           `yaml:"flatpak"`
 	GithubUserKey   UserKey           `yaml:"github_key"`
