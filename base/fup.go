@@ -21,6 +21,12 @@ type configReader struct {
 	isRemote bool
 }
 
+type configOut struct {
+	content  []byte
+	filename string
+	isRemote bool
+}
+
 func readLocalConfigFile(config string) (io.Reader, error) {
 	f, err := os.Open(config)
 	if err != nil {
@@ -78,19 +84,22 @@ func evalConfig(data []byte) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func finalizeConfig(filename string) ([]byte, error) {
-	var out []byte
+func finalizeConfig(filename string) (configOut, error) {
 	cfgReader, err := getConfigReader(filename)
 	if err != nil {
-		return out, err
+		return configOut{}, err
 	}
 
 	data, err := io.ReadAll(cfgReader.reader)
 	if err != nil {
-		return out, err
+		return configOut{}, err
 	}
 
-	return evalConfig(data)
+	return configOut{
+		content:  data,
+		filename: filename,
+		isRemote: cfgReader.isRemote,
+	}, nil
 }
 
 func FinalizeConfig(filename string) (string, error) {
@@ -100,26 +109,20 @@ func FinalizeConfig(filename string) (string, error) {
 		return "", err
 	}
 
-	return string(out), nil
+	return string(out.content), nil
 }
 
 func unmarshalConfig(filename string) (config entity.Config, err error) {
-	cfgReader, err := getConfigReader(filename)
-	if err != nil {
-		return config, err
-	}
-
 	finalConfig, err := finalizeConfig(filename)
 	if err != nil {
 		return config, err
 	}
 
-	err = yaml.Unmarshal(finalConfig, &finalConfig)
+	err = yaml.Unmarshal(finalConfig.content, &config)
 	if err != nil {
 		return config, fmt.Errorf("error deserializing config from %s: %v", filename, err)
 	}
 
-	config = entity.Config{Filename: filename, Remote: cfgReader.isRemote}
 	return
 }
 

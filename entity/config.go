@@ -17,7 +17,7 @@ type Config struct {
 	EnsureLines     []LineInFile      `yaml:"line"`
 	Flatpak         Flatpak           `yaml:"flatpak"`
 	GithubUserKey   UserKey           `yaml:"github_key"`
-	Go              []GoPkgGroup      `yaml:"go"`
+	Go              []GoPkg           `yaml:"go"`
 	Packages        PackageSpec       `yaml:"package"`
 	PostflightTasks []Task            `yaml:"postflight"`
 	PreflightTasks  []Task            `yaml:"preflight"`

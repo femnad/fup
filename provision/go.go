@@ -10,7 +10,6 @@ import (
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/precheck/unless"
-	"github.com/femnad/fup/precheck/when"
 	"github.com/femnad/fup/run"
 	"github.com/femnad/fup/settings"
 )
@@ -71,26 +70,11 @@ func goInstall(pkg entity.GoPkg, s settings.Settings) error {
 	return nil
 }
 
-func goInstallGroup(group entity.GoPkgGroup, s settings.Settings) []error {
-	var errs []error
-	if !when.ShouldRun(group) {
-		internal.Log.Debugf("Skipping installing Go package group due to condition %s", group.When)
-		return nil
-	}
-
-	for _, pkg := range group.Pkg {
-		err := goInstall(pkg, s)
-		errs = append(errs, err)
-	}
-
-	return errs
-}
-
 func goInstallPkgs(cfg entity.Config) error {
 	var goErrs []error
-	for _, pkgGroup := range cfg.Go {
-		errs := goInstallGroup(pkgGroup, cfg.Settings)
-		goErrs = append(goErrs, errs...)
+	for _, pkg := range cfg.Go {
+		err := goInstall(pkg, cfg.Settings)
+		goErrs = append(goErrs, err)
 	}
 
 	return errors.Join(goErrs...)

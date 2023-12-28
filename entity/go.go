@@ -12,6 +12,7 @@ type GoPkg struct {
 	Pkg     string        `yaml:"name"`
 	Unless  unless.Unless `yaml:"unless"`
 	Version string        `yaml:"version"`
+	When    string        `yaml:"when"`
 }
 
 func (g GoPkg) DefaultVersionCmd() string {
@@ -30,11 +31,6 @@ func (g GoPkg) Name() string {
 	return g.Pkg
 }
 
-type GoPkgGroup struct {
-	Pkg  []GoPkg `yaml:"pkg"`
-	When string  `yaml:"when"`
-}
-
-func (g GoPkgGroup) RunWhen() string {
+func (g GoPkg) RunWhen() string {
 	return g.When
 }
