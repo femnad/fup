@@ -2,48 +2,14 @@ package entity
 
 import (
 	"fmt"
-	"os"
-	"regexp"
-	"strings"
-
-	"github.com/antchfx/htmlquery"
-
-	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
-	"github.com/femnad/fup/remote"
 	"github.com/femnad/fup/settings"
-)
-
-const (
-	githubStableRelease = "github-stable"
-	githubReleasesURL   = "https://github.com/%s/releases"
-	githubReleaseQuery  = "//a[@class='Link--primary Link']"
-)
-
-var (
-	githubStableExcludeSuffix = []string{
-		"-alpha[0-9]+",
-		"-beta[0-9]+",
-		"-rc[0-9]+",
-	}
-	strategies = map[string]func(VersionLookupSpec, string) (VersionLookupSpec, error){
-		githubStableRelease: githubStableSpec,
-	}
+	"os"
 )
 
 type NamedLink struct {
 	Name   string `yaml:"name"`
 	Target string `yaml:"target"`
-}
-
-type VersionLookupSpec struct {
-	ExcludeSuffix []string `yaml:"exclude_suffix"`
-	FollowURL     bool     `yaml:"follow_url"`
-	GetFirst      bool     `yaml:"get_first"`
-	PostProc      string   `yaml:"post_proc"`
-	Query         string   `yaml:"query"`
-	Strategy      string   `yaml:"strategy"`
-	URL           string   `yaml:"url"`
 }
 
 type Archive struct {
@@ -149,121 +115,6 @@ func (a Archive) ExpandStat(settings settings.Settings) string {
 
 func (a Archive) GetUnless() unless.Unless {
 	return a.Unless
-}
-
-func resolveQuery(spec VersionLookupSpec) (string, error) {
-	doc, err := htmlquery.LoadURL(spec.URL)
-	if err != nil {
-		return "", err
-	}
-
-	query := spec.Query
-	if spec.GetFirst {
-		node, err := htmlquery.Query(doc, query)
-		if err != nil {
-			return "", err
-		}
-
-		if node == nil {
-			return "", fmt.Errorf("error looking up version via query %s", query)
-		}
-
-		return htmlquery.InnerText(node), nil
-	}
-
-	nodes, err := htmlquery.QueryAll(doc, query)
-	if err != nil {
-		return "", err
-	}
-
-	var regex *regexp.Regexp
-	if len(spec.ExcludeSuffix) > 0 {
-		suffixPattern := fmt.Sprintf("(%s)$", strings.Join(spec.ExcludeSuffix, "|"))
-		regex, err = regexp.Compile(suffixPattern)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	for _, node := range nodes {
-		if node == nil {
-			continue
-		}
-
-		nodeText := htmlquery.InnerText(node)
-		if regex != nil && regex.MatchString(nodeText) {
-			continue
-		}
-
-		return nodeText, nil
-	}
-
-	return "", fmt.Errorf("unable to find matches via query %s on URL %s", query, spec.URL)
-}
-
-func githubStableSpec(spec VersionLookupSpec, archiveURL string) (VersionLookupSpec, error) {
-	fields := strings.Split(archiveURL, "/")
-	// URL should have the format: https://github.com/<principal>/<repo>/...
-	if len(fields) < 5 {
-		return spec, fmt.Errorf("unable to determine GitHub repo from URL %s", archiveURL)
-	}
-
-	repo := fmt.Sprintf("%s/%s", fields[3], fields[4])
-	url := fmt.Sprintf(githubReleasesURL, repo)
-	return VersionLookupSpec{
-		ExcludeSuffix: githubStableExcludeSuffix,
-		URL:           fmt.Sprintf(url),
-		Query:         githubReleaseQuery,
-	}, nil
-}
-
-func queryFromStrategy(spec VersionLookupSpec, archiveURL string) (VersionLookupSpec, error) {
-	fn, ok := strategies[spec.Strategy]
-	if !ok {
-		return VersionLookupSpec{}, fmt.Errorf("no such strategy %s", spec.Strategy)
-	}
-
-	strategySpec, err := fn(spec, archiveURL)
-	if err != nil {
-		return VersionLookupSpec{}, err
-	}
-
-	strategySpec.PostProc = spec.PostProc
-	return strategySpec, nil
-}
-
-func lookupVersion(spec VersionLookupSpec, archiveURL string) (text string, err error) {
-	if spec.Strategy != "" {
-		spec, err = queryFromStrategy(spec, archiveURL)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	if spec.Query != "" {
-		text, err = resolveQuery(spec)
-		if err != nil {
-			if err != nil {
-				return "", err
-			}
-		}
-	} else if spec.FollowURL {
-		text, err = remote.FollowRedirects(spec.URL)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		return "", fmt.Errorf("version lookup requires either a query or follow_url to be set")
-	}
-
-	if spec.PostProc != "" {
-		text, err = internal.RunTemplateFn(text, spec.PostProc)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return text, nil
 }
 
 func (a Archive) GetVersion(s settings.Settings) (string, error) {
