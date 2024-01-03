@@ -12,10 +12,15 @@ type NamedLink struct {
 	Target string `yaml:"target"`
 }
 
+type ExecuteAfterSpec struct {
+	Cmd    []string `yaml:"cmd"`
+	SetPwd bool     `yaml:"set_pwd"`
+}
+
 type Release struct {
 	DontLink      bool              `yaml:"dont_link"`
 	DontUpdate    bool              `yaml:"dont_update"`
-	ExecuteAfter  []string          `yaml:"execute_after"`
+	ExecuteAfter  ExecuteAfterSpec  `yaml:"execute_after"`
 	NamedLink     []NamedLink       `yaml:"named_link"`
 	Ref           string            `yaml:"name"`
 	Symlink       []string          `yaml:"link"`

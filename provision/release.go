@@ -609,12 +609,22 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		version = s.Versions[release.Name()]
 	}
 
-	for _, cmd := range release.ExecuteAfter {
+	executeAfter := release.ExecuteAfter
+	for _, cmd := range executeAfter.Cmd {
 		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
-		internal.Log.Debugf("Running command %s", cmd)
-		_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Shell: true})
+		pwd := ""
+		if executeAfter.SetPwd {
+			pwd = info.GetTarget()
+		}
+		if pwd == "" {
+			internal.Log.Debugf("Running command %s", cmd)
+		} else {
+			internal.Log.Debugf("Running command %s under path %s", cmd, pwd)
+		}
+
+		_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true})
 		if err != nil {
-			internal.Log.Errorf("error running post extract command: %v", err)
+			internal.Log.Errorf("error running post download command: %v", err)
 			return err
 		}
 	}
