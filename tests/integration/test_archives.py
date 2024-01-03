@@ -24,8 +24,8 @@ RELATIVE_CONFIG = {
 
 @dataclasses.dataclass
 class Release:
-    name: str
     url: str
+    name: str = ''
     target: str = ''
 
 
@@ -136,6 +136,36 @@ TESTS_CASES = [
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip',
         ),
         symlink=Symlink(link_name=f'{ABSOLUTE_ARTIFACTS_DIR}/bin/foo', target=f'{ABSOLUTE_ARTIFACTS_DIR}/ext/foo/foo'),
+        config=ABSOLUTE_CONFIG,
+        relative=False,
+    ),
+    ReleaseTest(
+        name='binary_file',
+        release=Release(
+            name='baz',
+            target='foo',
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-binary',
+        ),
+        symlink=Symlink(link_name=f'{ABSOLUTE_ARTIFACTS_DIR}/bin/baz', target=f'{ABSOLUTE_ARTIFACTS_DIR}/ext/foo/baz'),
+        config=ABSOLUTE_CONFIG,
+        relative=False,
+    ),
+    ReleaseTest(
+        name='binary_file_no_name',
+        release=Release(
+            target='foo',
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-binary',
+        ),
+        symlink=Symlink(link_name=f'{ABSOLUTE_ARTIFACTS_DIR}/bin/release-binary', target=f'{ABSOLUTE_ARTIFACTS_DIR}/ext/foo/release-binary'),
+        config=ABSOLUTE_CONFIG,
+        relative=False,
+    ),
+    ReleaseTest(
+        name='binary_file_no_name_and_target',
+        release=Release(
+            url='https://github.com/femnad/fup/releases/download/test-payload/release-binary',
+        ),
+        symlink=Symlink(link_name=f'{ABSOLUTE_ARTIFACTS_DIR}/bin/release-binary', target=f'{ABSOLUTE_ARTIFACTS_DIR}/ext/release-binary/release-binary'),
         config=ABSOLUTE_CONFIG,
         relative=False,
     ),

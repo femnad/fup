@@ -459,6 +459,9 @@ func unzip(archive entity.Release, source extractionHint) (info ReleaseInfo, err
 
 func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
 	name := release.Name()
+	if name == "" {
+		_, name = path.Split(release.Url)
+	}
 	target := release.Target
 	if target == "" {
 		target = name
@@ -470,6 +473,12 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 	}
 
 	copyTarget := path.Join(hint.target, target, name)
+	copyTargetDir, _ := path.Split(copyTarget)
+	err = ensureDirExist(copyTargetDir)
+	if err != nil {
+		return
+	}
+
 	dst, err := os.OpenFile(copyTarget, os.O_CREATE|os.O_WRONLY, os.FileMode(0o755))
 	if err != nil {
 		return
