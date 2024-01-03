@@ -147,7 +147,7 @@ func (p Provisioner) extractArchives() error {
 		return errors.New("empty archive extraction directory")
 	}
 
-	return extractArchives(p.Config.Archives, p.Config.Settings)
+	return ensureReleases(p.Config.Archives, p.Config.Settings)
 }
 
 func (p Provisioner) runPreflightTasks() error {

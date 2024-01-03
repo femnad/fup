@@ -54,32 +54,32 @@ type extractionHint struct {
 	target   string
 }
 
-type extractionFn func(entity.Release, extractionHint) (ArchiveInfo, error)
+type extractionFn func(entity.Release, extractionHint) (ReleaseInfo, error)
 
-// ArchiveInfo stores an archive's root dir and species if the root dir is part of the archive files.
-type ArchiveInfo struct {
+// ReleaseInfo stores an archive's root dir and species if the root dir is part of the archive files.
+type ReleaseInfo struct {
 	hasRootDir     bool
 	maybeExec      string
 	target         string
 	targetOverride string
 }
 
-func (a ArchiveInfo) GetTarget() string {
-	if a.targetOverride != "" {
-		return a.targetOverride
+func (r ReleaseInfo) GetTarget() string {
+	if r.targetOverride != "" {
+		return r.targetOverride
 	}
 
-	return a.target
+	return r.target
 }
 
-func downloadRelease(archive entity.Release, s settings.Settings) (string, error) {
-	archiveURL, err := archive.ExpandURL(s)
+func downloadRelease(release entity.Release, s settings.Settings) (string, error) {
+	archiveURL, err := release.ExpandURL(s)
 	if err != nil {
 		return "", err
 	}
 
 	if archiveURL == "" {
-		return "", fmt.Errorf("no URL given for archive %v", archive)
+		return "", fmt.Errorf("no URL given for release %v", release)
 	}
 	internal.Log.Infof("Downloading %s", archiveURL)
 
@@ -91,8 +91,8 @@ func downloadRelease(archive entity.Release, s settings.Settings) (string, error
 	return downloadTempFile(response)
 }
 
-func processDownload(archive entity.Release, s settings.Settings) (info ArchiveInfo, err error) {
-	tempFile, err := downloadRelease(archive, s)
+func processDownload(release entity.Release, s settings.Settings) (info ReleaseInfo, err error) {
+	tempFile, err := downloadRelease(release, s)
 	if err != nil {
 		return
 	}
@@ -112,7 +112,7 @@ func processDownload(archive entity.Release, s settings.Settings) (info ArchiveI
 	if err != nil {
 		return
 	}
-	info, err = extractFn(archive, extractionHint{
+	info, err = extractFn(release, extractionHint{
 		file:     tempFile,
 		fileType: fileType.String(),
 		target:   dirName,
@@ -267,7 +267,7 @@ func commonPrefix(names []string) string {
 	return first[:minLength]
 }
 
-func getArchiveInfo(archive entity.Release, entries []archiveEntry) (ArchiveInfo, error) {
+func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo, error) {
 	names := mare.Map(entries, func(entry archiveEntry) string {
 		return entry.name
 	})
@@ -289,7 +289,7 @@ func getArchiveInfo(archive entity.Release, entries []archiveEntry) (ArchiveInfo
 	if roots.Cardinality() == 1 {
 		root, ok := roots.Pop()
 		if !ok {
-			return ArchiveInfo{}, fmt.Errorf("error determining root dir for %s", archive.Url)
+			return ReleaseInfo{}, fmt.Errorf("error determining root dir for %s", archive.Url)
 		}
 
 		hasRootDir = strings.Index(prefix, "/") > -1
@@ -304,10 +304,10 @@ func getArchiveInfo(archive entity.Release, entries []archiveEntry) (ArchiveInfo
 		maybeExec = execs[0].name
 	}
 
-	return ArchiveInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target, targetOverride: archive.Target}, nil
+	return ReleaseInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target, targetOverride: archive.Target}, nil
 }
 
-func getOutputPath(info ArchiveInfo, fileName, dirName string) string {
+func getOutputPath(info ReleaseInfo, fileName, dirName string) string {
 	if info.hasRootDir {
 		if info.targetOverride != "" && strings.HasPrefix(fileName, info.target) {
 			fileName = strings.Replace(fileName, info.target, info.targetOverride, 1)
@@ -318,7 +318,7 @@ func getOutputPath(info ArchiveInfo, fileName, dirName string) string {
 	return filepath.Join(dirName, info.GetTarget(), fileName)
 }
 
-func getAbsTarget(dirName string, info ArchiveInfo) (string, error) {
+func getAbsTarget(dirName string, info ReleaseInfo) (string, error) {
 	if path.IsAbs(dirName) {
 		return path.Join(dirName, info.target), nil
 	}
@@ -363,13 +363,13 @@ func getTarEntries(tempFile, fileType string) (entries []archiveEntry, err error
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive entity.Release, source extractionHint) (info ArchiveInfo, err error) {
+func untar(archive entity.Release, source extractionHint) (info ReleaseInfo, err error) {
 	entries, err := getTarEntries(source.file, source.fileType)
 	if err != nil {
 		return
 	}
 
-	info, err = getArchiveInfo(archive, entries)
+	info, err = getReleaseInfo(archive, entries)
 	if err != nil {
 		return
 	}
@@ -426,13 +426,13 @@ func getZipInfo(tempFile string) (entries []archiveEntry, err error) {
 	return entries, nil
 }
 
-func unzip(archive entity.Release, source extractionHint) (info ArchiveInfo, err error) {
+func unzip(archive entity.Release, source extractionHint) (info ReleaseInfo, err error) {
 	entries, err := getZipInfo(source.file)
 	if err != nil {
 		return
 	}
 
-	info, err = getArchiveInfo(archive, entries)
+	info, err = getReleaseInfo(archive, entries)
 	if err != nil {
 		return
 	}
@@ -453,7 +453,7 @@ func unzip(archive entity.Release, source extractionHint) (info ArchiveInfo, err
 	return info, nil
 }
 
-func copyBinary(release entity.Release, hint extractionHint) (info ArchiveInfo, err error) {
+func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
 	_, baseName := path.Split(hint.file)
 	target := release.Target
 	if target == "" {
@@ -476,13 +476,13 @@ func copyBinary(release entity.Release, hint extractionHint) (info ArchiveInfo, 
 		return
 	}
 
-	return ArchiveInfo{hasRootDir: true, maybeExec: baseName, target: target}, nil
+	return ReleaseInfo{hasRootDir: true, maybeExec: baseName, target: target}, nil
 }
 
 func getExtractionFn(fileType string) (extractionFn, error) {
 	switch fileType {
 	case executableMimeType:
-		return unzip, nil
+		return copyBinary, nil
 	case bzipMimeType, gzipMimeType, tarMimeType, xzMimeType:
 		return untar, nil
 	case zipMimeType:
@@ -492,7 +492,7 @@ func getExtractionFn(fileType string) (extractionFn, error) {
 	}
 }
 
-func Extract(archive entity.Release, s settings.Settings) (ArchiveInfo, error) {
+func Extract(archive entity.Release, s settings.Settings) (ReleaseInfo, error) {
 	return processDownload(archive, s)
 }
 
@@ -547,33 +547,33 @@ func guessArchiveName(releaseUrl string) (string, error) {
 	return strings.Split(parsed.Path, "/")[2], nil
 }
 
-func extractArchive(archive entity.Release, s settings.Settings) error {
-	archiveUrl, err := archive.ExpandURL(s)
+func ensureRelease(release entity.Release, s settings.Settings) error {
+	archiveUrl, err := release.ExpandURL(s)
 	if err != nil {
 		return err
 	}
 
-	if !when.ShouldRun(archive) {
-		internal.Log.Debugf("Skipping extracting archive %s due to when condition %s", archiveUrl, archive.When)
+	if !when.ShouldRun(release) {
+		internal.Log.Debugf("Skipping extracting release %s due to when condition %s", archiveUrl, release.When)
 		return nil
 	}
 
-	if archive.Name() == "" {
+	if release.Name() == "" {
 		name, err := guessArchiveName(archiveUrl)
 		if err != nil {
 			return err
 		}
-		archive.Ref = name
+		release.Ref = name
 	}
 
-	if unless.ShouldSkip(archive, s) {
+	if unless.ShouldSkip(release, s) {
 		internal.Log.Debugf("Skipping download: %s", archiveUrl)
 		return nil
 	}
 
-	info, err := Extract(archive, s)
+	info, err := Extract(release, s)
 	if err != nil {
-		internal.Log.Errorf("Error downloading archive %s: %v", archiveUrl, err)
+		internal.Log.Errorf("Error downloading release %s: %v", archiveUrl, err)
 		return err
 	}
 
@@ -582,20 +582,20 @@ func extractArchive(archive entity.Release, s settings.Settings) error {
 		target, _ = path.Split(target)
 		target = path.Join(target, info.targetOverride)
 	}
-	for _, symlink := range archive.ExpandSymlinks(info.maybeExec) {
+	for _, symlink := range release.ExpandSymlinks(info.maybeExec) {
 		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
-			internal.Log.Errorf("error creating symlink for archive %s: %v", archiveUrl, err)
+			internal.Log.Errorf("error creating symlink for release %s: %v", archiveUrl, err)
 			return err
 		}
 	}
 
-	version := archive.Version
+	version := release.Version
 	if version == "" {
-		version = s.Versions[archive.Name()]
+		version = s.Versions[release.Name()]
 	}
 
-	for _, cmd := range archive.ExecuteAfter {
+	for _, cmd := range release.ExecuteAfter {
 		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
 		internal.Log.Debugf("Running command %s", cmd)
 		_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Shell: true})
@@ -608,12 +608,12 @@ func extractArchive(archive entity.Release, s settings.Settings) error {
 	return nil
 }
 
-func extractArchives(archives []entity.Release, s settings.Settings) error {
-	var archiveErrs []error
-	for _, archive := range archives {
-		err := extractArchive(archive, s)
-		archiveErrs = append(archiveErrs, err)
+func ensureReleases(releases []entity.Release, s settings.Settings) error {
+	var releaseErrs []error
+	for _, archive := range releases {
+		err := ensureRelease(archive, s)
+		releaseErrs = append(releaseErrs, err)
 	}
 
-	return errors.Join(archiveErrs...)
+	return errors.Join(releaseErrs...)
 }
