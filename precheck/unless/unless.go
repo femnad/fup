@@ -70,6 +70,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	var out marecmd.Output
 	unless := unlessable.GetUnless()
 	unlessCmd := unless.Cmd
+
 	if unlessCmd == "" {
 		unlessCmd = unlessable.DefaultVersionCmd()
 	}
@@ -88,31 +89,33 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return false
 	}
 
+	name := unlessable.Name()
 	if !unlessable.KeepUpToDate() {
-		internal.Log.Debugf("Not checking version for %s as it doesn't need to be kept up-to-date", unlessable.Name())
+		internal.Log.Debugf("Not checking version for %s as it doesn't need to be kept up-to-date", name)
 		return true
 	}
 
 	version, err := unlessable.GetVersion(s)
 	if err != nil {
-		internal.Log.Errorf("Error determining desired version: %v", err)
+		internal.Log.Errorf("Error determining desired version for %s: %v", name, err)
 		return false
 	}
 
 	if version == "" {
 		// No version specification, but command has succeeded so should skip the operation.
+		internal.Log.Debugf("%s has no version specification, assumming operation should be skipped", name)
 		return true
 	}
 
 	postProc, err := postProcOutput(unless, out.Stdout)
 	if err != nil {
-		internal.Log.Errorf("Error running postproc function: %v", err)
+		internal.Log.Errorf("Error running postproc function for %s: %v", name, err)
 		// Post processor function failed, best not to skip the operation.
 		return false
 	}
 
 	if postProc != version {
-		internal.Log.Debugf("Existing version `%s`, required version `%s`", postProc, version)
+		internal.Log.Debugf("%s: existing version `%s`, required version `%s`", name, postProc, version)
 		return false
 	}
 
