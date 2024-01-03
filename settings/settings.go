@@ -13,7 +13,7 @@ import (
 const (
 	cloneDirKey    = "clone_dir"
 	defaultBinPath = "~/bin"
-	releaseDirKey  = "release-dir"
+	releaseDirKey  = "release_dir"
 )
 
 type FactMap map[string]map[string]string
