@@ -34,6 +34,7 @@ const (
 	bufferSize         = 8192
 	bzipMimeType       = "application/x-bzip2"
 	dirMode            = 0755
+	executableMimeType = "application/x-executable"
 	githubReleaseRegex = "https://github.com/[a-zA-Z_-]+/[a-zA-Z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
 	gzipMimeType       = "application/gzip"
 	tarMimeType        = "application/x-tar"
@@ -101,17 +102,16 @@ func processDownload(archive entity.Release, s settings.Settings) (info ArchiveI
 		return
 	}
 
-	extractFn, err := getExtractionFn(fileType.String())
-	if err != nil {
-		return
-	}
-
 	dirName := internal.ExpandUser(s.ExtractDir)
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
 		return
 	}
 
+	extractFn, err := getExtractionFn(fileType.String())
+	if err != nil {
+		return
+	}
 	info, err = extractFn(archive, extractionHint{
 		file:     tempFile,
 		fileType: fileType.String(),
@@ -453,8 +453,36 @@ func unzip(archive entity.Release, source extractionHint) (info ArchiveInfo, err
 	return info, nil
 }
 
+func copyBinary(release entity.Release, hint extractionHint) (info ArchiveInfo, err error) {
+	_, baseName := path.Split(hint.file)
+	target := release.Target
+	if target == "" {
+		target = baseName
+	}
+
+	src, err := os.Open(hint.file)
+	if err != nil {
+		return
+	}
+
+	target = path.Join(hint.target, target, baseName)
+	dst, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY, os.FileMode(0o755))
+	if err != nil {
+		return
+	}
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return
+	}
+
+	return ArchiveInfo{hasRootDir: true, maybeExec: baseName, target: target}, nil
+}
+
 func getExtractionFn(fileType string) (extractionFn, error) {
 	switch fileType {
+	case executableMimeType:
+		return unzip, nil
 	case bzipMimeType, gzipMimeType, tarMimeType, xzMimeType:
 		return untar, nil
 	case zipMimeType:
