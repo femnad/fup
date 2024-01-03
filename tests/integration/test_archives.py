@@ -23,7 +23,7 @@ RELATIVE_CONFIG = {
 
 
 @dataclasses.dataclass
-class Archive:
+class Release:
     name: str
     url: str
     target: str = ''
@@ -36,8 +36,8 @@ class Symlink:
 
 
 @dataclasses.dataclass
-class ArchiveTest:
-    archive: Archive
+class ReleaseTest:
+    release: Release
     name: str
     symlink: Symlink
     config: dict = dataclasses.field(default_factory=lambda: RELATIVE_CONFIG)
@@ -45,93 +45,93 @@ class ArchiveTest:
 
 
 TESTS_CASES = [
-    ArchiveTest(
+    ReleaseTest(
         name='tar_archive_no_root_dir',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-no-root-dir.tar',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='tar_archive_root_dir_different_than_exec',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.tar',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo-1.2.3-amd64/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='tar_archive_root_dir_different_than_exec_override_target',
-        archive=Archive(
+        release=Release(
             name='foo',
             target='fred',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.tar',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/fred/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='tar_archive_root_dir_same_as_exec',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.tar',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='tar_archive_root_dir_same_as_exec_override_target',
-        archive=Archive(
+        release=Release(
             name='foo',
             target='qux',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.tar',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/qux/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='zip_archive_no_root_dir',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-no-root-dir.zip',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='zip_archive_root_dir_different_than_exec',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.zip',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo-1.2.3-amd64/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='zip_archive_root_dir_different_than_exec_override_target',
-        archive=Archive(
+        release=Release(
             name='foo',
             target='baz',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.zip',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/baz/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='zip_archive_root_dir_same_as_exec',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/foo/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='zip_archive_root_dir_same_as_exec_override_target',
-        archive=Archive(
+        release=Release(
             name='foo',
             target='bar',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip',
         ),
         symlink=Symlink(link_name='bin/foo', target='ext/bar/foo'),
     ),
-    ArchiveTest(
+    ReleaseTest(
         name='zip_archive_root_dir_same_as_exec_abs_dirs',
-        archive=Archive(
+        release=Release(
             name='foo',
             url='https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip',
         ),
@@ -157,15 +157,15 @@ def ensure_abs(path: str, root: str) -> str:
     return os.path.join(os.path.realpath(root), path)
 
 
-def gen_test(test_case: ArchiveTest):
+def gen_test(test_case: ReleaseTest):
 
     def test(self):
-        archives = [test_case.archive.__dict__]
-        config = test_case.config | {'archive': archives}
+        releases = [test_case.release.__dict__]
+        config = test_case.config | {'release': releases}
 
         artifacts_dir = RELATIVE_ARTIFACTS_DIR if test_case.relative else ABSOLUTE_ARTIFACTS_DIR
 
-        return_code = fup_test.run_fup(config, f'{artifacts_dir}/fup.yml', 'archive')
+        return_code = fup_test.run_fup(config, f'{artifacts_dir}/fup.yml', 'release')
         self.assertTrue(return_code == 0)
 
         link_name = ensure_abs(test_case.symlink.link_name, artifacts_dir)
