@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/xi2/xz"
 
 	"github.com/femnad/fup/common"
@@ -31,16 +32,28 @@ import (
 
 const (
 	bufferSize         = 8192
+	bzipMimeType       = "application/x-bzip2"
 	dirMode            = 0755
 	githubReleaseRegex = "https://github.com/[a-zA-Z_-]+/[a-zA-Z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
+	gzipMimeType       = "application/gzip"
+	tarMimeType        = "application/x-tar"
 	xzDictMax          = 1 << 27
-	tarFileRegex       = `\.tar(\.(gz|bz2|xz))?$`
+	xzMimeType         = "application/x-xz"
+	zipMimeType        = "application/zip"
 )
 
 type archiveEntry struct {
 	info os.FileInfo
 	name string
 }
+
+type extractionHint struct {
+	file     string
+	fileType string
+	target   string
+}
+
+type extractionFn func(entity.Archive, extractionHint) (ArchiveInfo, error)
 
 // ArchiveInfo stores an archive's root dir and species if the root dir is part of the archive files.
 type ArchiveInfo struct {
@@ -58,64 +71,82 @@ func (a ArchiveInfo) GetTarget() string {
 	return a.target
 }
 
-func processDownload(archive entity.Archive, s settings.Settings) (ArchiveInfo, error) {
-	var info ArchiveInfo
+func downloadRelease(archive entity.Archive, s settings.Settings) (string, error) {
 	archiveURL, err := archive.ExpandURL(s)
 	if err != nil {
-		return info, err
+		return "", err
 	}
 
 	if archiveURL == "" {
-		return info, fmt.Errorf("no URL given for archive %v", archive)
+		return "", fmt.Errorf("no URL given for archive %v", archive)
 	}
 	internal.Log.Infof("Downloading %s", archiveURL)
 
 	response, err := remote.ReadResponseBody(archiveURL)
 	if err != nil {
-		return info, err
+		return "", err
 	}
 
-	extractFn, err := getExtractionFn(archive, s, response.ContentDisposition)
+	return downloadTempFile(response)
+}
+
+func processDownload(archive entity.Archive, s settings.Settings) (info ArchiveInfo, err error) {
+	tempFile, err := downloadRelease(archive, s)
 	if err != nil {
-		return info, err
+		return
+	}
+
+	fileType, err := mimetype.DetectFile(tempFile)
+	if err != nil {
+		return
+	}
+
+	extractFn, err := getExtractionFn(fileType.String())
+	if err != nil {
+		return
 	}
 
 	dirName := internal.ExpandUser(s.ExtractDir)
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
+		return
+	}
+
+	info, err = extractFn(archive, extractionHint{
+		file:     tempFile,
+		fileType: fileType.String(),
+		target:   dirName,
+	})
+	if err != nil {
+		return
+	}
+
+	info.target, err = getAbsTarget(dirName, info)
+	if err != nil {
+		return
+	}
+
+	err = os.Remove(tempFile)
+	if err != nil {
 		return info, err
 	}
 
-	return extractFn(archive, response, dirName)
+	return
 }
 
-func getReader(response remote.Response, tempFile *os.File) (io.Reader, error) {
-	filename := getFilename(response)
-	if strings.HasSuffix(filename, ".tar") {
-		return tempFile, nil
+func getTarReader(reader io.ReadCloser, fileType string) (io.Reader, error) {
+	switch fileType {
+	case gzipMimeType:
+		return gzip.NewReader(reader)
+	case bzipMimeType:
+		return bzip2.NewReader(reader), nil
+	case tarMimeType:
+		return reader, nil
+	case xzMimeType:
+		return xz.NewReader(reader, xzDictMax)
+	default:
+		return nil, fmt.Errorf("unable to determine tar reader for file type %s", fileType)
 	}
-
-	if strings.HasSuffix(filename, ".tar.gz") {
-		gzipReader, err := gzip.NewReader(tempFile)
-		if err != nil {
-			return nil, err
-		}
-		return gzipReader, nil
-	}
-
-	if strings.HasSuffix(filename, ".tar.bz2") {
-		return bzip2.NewReader(tempFile), nil
-	}
-
-	if strings.HasSuffix(filename, ".tar.xz") {
-		xzReader, err := xz.NewReader(tempFile, xzDictMax)
-		if err != nil {
-			return nil, err
-		}
-		return xzReader, nil
-	}
-
-	return nil, fmt.Errorf("unable to determine tar reader for URL %s", response.URL)
 }
 
 func extractCompressedFile(info os.FileInfo, outputPath string, reader io.Reader) error {
@@ -211,14 +242,6 @@ func downloadTempFile(response remote.Response) (string, error) {
 	return tempFilePath, nil
 }
 
-func getFilename(response remote.Response) string {
-	filename := response.URL
-	if response.ContentDisposition != "" {
-		filename = response.ContentDisposition
-	}
-	return filename
-}
-
 func commonPrefix(names []string) string {
 	if len(names) == 0 {
 		return ""
@@ -308,25 +331,18 @@ func getAbsTarget(dirName string, info ArchiveInfo) (string, error) {
 	return path.Join(wd, dirName, info.GetTarget()), nil
 }
 
-// Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive entity.Archive, response remote.Response, dirName string) (info ArchiveInfo, err error) {
-	tempfile, err := downloadTempFile(response)
-	if err != nil {
-		return
-	}
-
-	f, err := os.Open(tempfile)
+func getTarEntries(tempFile, fileType string) (entries []archiveEntry, err error) {
+	f, err := os.Open(tempFile)
 	if err != nil {
 		return
 	}
 	defer f.Close()
 
-	reader, err := getReader(response, f)
+	reader, err := getTarReader(f, fileType)
 	if err != nil {
 		return
 	}
 
-	var entries []archiveEntry
 	var header *tar.Header
 	tarReader := tar.NewReader(reader)
 	for {
@@ -337,16 +353,20 @@ func untar(archive entity.Archive, response remote.Response, dirName string) (in
 			return
 		}
 
-		outputPath := getOutputPath(info, header.Name, dirName)
-		err = extractCompressedFile(header.FileInfo(), outputPath, tarReader)
-		if err != nil {
-			return
-		}
-
 		entries = append(entries, archiveEntry{
 			info: header.FileInfo(),
 			name: header.Name,
 		})
+	}
+
+	return entries, nil
+}
+
+// Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
+func untar(archive entity.Archive, source extractionHint) (info ArchiveInfo, err error) {
+	entries, err := getTarEntries(source.file, source.fileType)
+	if err != nil {
+		return
 	}
 
 	info, err = getArchiveInfo(archive, entries)
@@ -354,27 +374,43 @@ func untar(archive entity.Archive, response remote.Response, dirName string) (in
 		return
 	}
 
-	err = os.Remove(tempfile)
+	f, err := os.Open(source.file)
 	if err != nil {
-		return info, err
+		return
+	}
+	defer f.Close()
+
+	reader, err := getTarReader(f, source.fileType)
+	if err != nil {
+		return
 	}
 
-	info.target, err = getAbsTarget(dirName, info)
-	if err != nil {
-		return info, err
+	var header *tar.Header
+	tarReader := tar.NewReader(reader)
+	for {
+		header, err = tarReader.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		} else if err != nil {
+			return
+		}
+
+		outputPath := getOutputPath(info, header.Name, source.target)
+		err = extractCompressedFile(header.FileInfo(), outputPath, tarReader)
+		if err != nil {
+			return
+		}
 	}
 
 	return info, nil
 }
 
-func getZipInfo(archive entity.Archive, tempFile string) (ArchiveInfo, error) {
-	var info ArchiveInfo
+func getZipInfo(tempFile string) (entries []archiveEntry, err error) {
 	zipArchive, err := zip.OpenReader(tempFile)
 	if err != nil {
-		return info, err
+		return
 	}
 
-	var entries []archiveEntry
 	for _, f := range zipArchive.File {
 		entries = append(entries, archiveEntry{
 			info: f.FileInfo(),
@@ -384,67 +420,48 @@ func getZipInfo(archive entity.Archive, tempFile string) (ArchiveInfo, error) {
 
 	err = zipArchive.Close()
 	if err != nil {
-		return info, err
+		return
 	}
 
-	return getArchiveInfo(archive, entries)
+	return entries, nil
 }
 
-func unzip(archive entity.Archive, response remote.Response, dirName string) (ArchiveInfo, error) {
-	var info ArchiveInfo
-	tempFile, err := downloadTempFile(response)
-
-	root, err := getZipInfo(archive, tempFile)
+func unzip(archive entity.Archive, source extractionHint) (info ArchiveInfo, err error) {
+	entries, err := getZipInfo(source.file)
 	if err != nil {
-		return info, err
+		return
 	}
 
-	zipArchive, err := zip.OpenReader(tempFile)
+	info, err = getArchiveInfo(archive, entries)
 	if err != nil {
-		return info, err
+		return
+	}
+
+	zipArchive, err := zip.OpenReader(source.file)
+	if err != nil {
+		return
 	}
 
 	for _, f := range zipArchive.File {
-		output := getOutputPath(root, f.Name, dirName)
+		output := getOutputPath(info, f.Name, source.target)
 		err = unzipFile(f, output)
 		if err != nil {
-			return info, err
+			return
 		}
-	}
-
-	err = os.Remove(tempFile)
-	if err != nil {
-		return info, err
-	}
-
-	info.target, err = getAbsTarget(dirName, root)
-	if err != nil {
-		return info, err
 	}
 
 	return info, nil
 }
 
-func getExtractionFn(archive entity.Archive, s settings.Settings, contentDisposition string) (func(entity.Archive, remote.Response, string) (ArchiveInfo, error), error) {
-	fileName, err := archive.ExpandURL(s)
-	if err != nil {
-		return nil, err
-	}
-
-	if contentDisposition != "" {
-		fileName = contentDisposition
-	}
-
-	tarRegex := regexp.MustCompile(tarFileRegex)
-	if tarRegex.MatchString(fileName) {
+func getExtractionFn(fileType string) (extractionFn, error) {
+	switch fileType {
+	case bzipMimeType, gzipMimeType, tarMimeType, xzMimeType:
 		return untar, nil
-	}
-
-	if strings.HasSuffix(fileName, ".zip") {
+	case zipMimeType:
 		return unzip, nil
+	default:
+		return nil, fmt.Errorf("unable to determine extractor for file type %s", fileType)
 	}
-
-	return nil, fmt.Errorf("unable to find extraction method for URL %s", fileName)
 }
 
 func Extract(archive entity.Archive, s settings.Settings) (ArchiveInfo, error) {
