@@ -37,6 +37,7 @@ const (
 	executableMimeType = "application/x-executable"
 	githubReleaseRegex = "https://github.com/[a-zA-Z_-]+/[a-zA-Z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
 	gzipMimeType       = "application/gzip"
+	sharedLibMimeType  = "application/x-sharedlib"
 	tarMimeType        = "application/x-tar"
 	xzDictMax          = 1 << 27
 	xzMimeType         = "application/x-xz"
@@ -494,7 +495,7 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 
 func getExtractionFn(fileType string) (extractionFn, error) {
 	switch fileType {
-	case executableMimeType:
+	case executableMimeType, sharedLibMimeType:
 		return copyBinary, nil
 	case bzipMimeType, gzipMimeType, tarMimeType, xzMimeType:
 		return untar, nil
