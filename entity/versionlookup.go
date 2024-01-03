@@ -14,11 +14,13 @@ import (
 
 const (
 	githubLatestRelease = "github-latest"
+	githubMatchingTag   = "github-tag"
 )
 
 var (
 	strategies = map[string]func(VersionLookupSpec, string) (string, error){
 		githubLatestRelease: githubStableSpec,
+		githubMatchingTag:   gitHubFirstMatchingTagSpec,
 	}
 )
 
@@ -26,11 +28,16 @@ type githubReleaseResp struct {
 	TagName string `json:"tag_name"`
 }
 
+type githubTagResp struct {
+	Name string `json:"name"`
+}
+
 type VersionLookupSpec struct {
 	ExcludeSuffix []string `yaml:"exclude_suffix"`
 	FollowURL     bool     `yaml:"follow_url"`
 	GetFirst      bool     `yaml:"get_first"`
 	GithubRepo    string   `yaml:"github_repo"`
+	MatchRegex    string   `yaml:"match_regex"`
 	PostProc      string   `yaml:"post_proc"`
 	Query         string   `yaml:"query"`
 	Strategy      string   `yaml:"strategy"`
@@ -87,35 +94,74 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 	return "", fmt.Errorf("unable to find matches via query %s on URL %s", query, spec.URL)
 }
 
-func githubStableSpec(spec VersionLookupSpec, archiveURL string) (string, error) {
+func getRepo(spec VersionLookupSpec, releaseURL string) (string, error) {
 	repo := spec.GithubRepo
 	if repo == "" {
-		fields := strings.Split(archiveURL, "/")
+		fields := strings.Split(releaseURL, "/")
 		// URL should have the format: https://github.com/<principal>/<repo>/...
 		if len(fields) < 5 {
-			return "", fmt.Errorf("unable to determine GitHub repo from URL %s", archiveURL)
+			return "", fmt.Errorf("unable to determine GitHub repo from URL %s", releaseURL)
 		}
 		repo = fmt.Sprintf("%s/%s", fields[3], fields[4])
 	}
 
-	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
-	resp, err := remote.ReadResponseBytes(apiURL)
+	return repo, nil
+}
+
+func fetchGithubResp(spec VersionLookupSpec, releaseURL, urlSpec string) (resp []byte, err error) {
+	repo, err := getRepo(spec, releaseURL)
+	if err != nil {
+		return
+	}
+
+	apiURL := fmt.Sprintf(urlSpec, repo)
+	return remote.ReadResponseBytes(apiURL)
+}
+
+func githubStableSpec(spec VersionLookupSpec, releaseURL string) (string, error) {
+	resp, err := fetchGithubResp(spec, releaseURL, "https://api.github.com/repos/%s/releases/latest")
 	if err != nil {
 		return "", err
 	}
 
-	var releaseResp githubReleaseResp
-	err = json.Unmarshal(resp, &releaseResp)
+	var release githubReleaseResp
+	err = json.Unmarshal(resp, &release)
 	if err != nil {
 		return "", err
 	}
 
-	latestTag := releaseResp.TagName
-	if latestTag == "" {
-		return "", fmt.Errorf("querying latest %s release returned an empty tag", repo)
+	return release.TagName, nil
+}
+
+func gitHubFirstMatchingTagSpec(spec VersionLookupSpec, releaseURL string) (string, error) {
+	resp, err := fetchGithubResp(spec, releaseURL, "https://api.github.com/repos/%s/tags")
+	if err != nil {
+		return "", err
 	}
 
-	return latestTag, nil
+	var tags []githubTagResp
+	err = json.Unmarshal(resp, &tags)
+	if err != nil {
+		return "", err
+	}
+
+	var regex *regexp.Regexp
+	if spec.MatchRegex != "" {
+		regex, err = regexp.Compile(spec.MatchRegex)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	for _, tag := range tags {
+		if regex != nil && !regex.MatchString(tag.Name) {
+			continue
+		}
+
+		return tag.Name, nil
+	}
+
+	return "", fmt.Errorf("error finding matching tag for spec %+v", spec)
 }
 
 func queryFromStrategy(spec VersionLookupSpec, archiveURL string) (string, error) {
