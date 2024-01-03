@@ -319,6 +319,10 @@ func getOutputPath(info ReleaseInfo, fileName, dirName string) string {
 }
 
 func getAbsTarget(dirName string, info ReleaseInfo) (string, error) {
+	if path.IsAbs(info.target) {
+		return info.target, nil
+	}
+
 	if path.IsAbs(dirName) {
 		return path.Join(dirName, info.target), nil
 	}
@@ -465,8 +469,8 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 		return
 	}
 
-	target = path.Join(hint.target, target, name)
-	dst, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY, os.FileMode(0o755))
+	copyTarget := path.Join(hint.target, target, name)
+	dst, err := os.OpenFile(copyTarget, os.O_CREATE|os.O_WRONLY, os.FileMode(0o755))
 	if err != nil {
 		return
 	}
