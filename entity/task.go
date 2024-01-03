@@ -164,7 +164,7 @@ func (Step) DefaultVersionCmd() string {
 
 type Task struct {
 	unless.BasicUnlessable
-	Desc   string        `yaml:"task"`
+	Desc   string        `yaml:"name"`
 	Steps  []Step        `yaml:"steps"`
 	When   string        `yaml:"when"`
 	Unless unless.Unless `yaml:"unless"`

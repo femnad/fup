@@ -61,7 +61,7 @@ rust:
       cmd: alacritty --version
 
 task:
-  - task: Install Mullvad app
+  - name: Install Mullvad app
     when: is-ubuntu
     unless:
       cmd: dpkg-query --list mullvad-vpn
@@ -72,7 +72,7 @@ task:
           apt install -y /tmp/MullvadVPN-2023.3_amd64.deb
           rm /tmp/MullvadVPN-2023.3_amd64.deb
         sudo: true
-  - task: Install Mullvad app
+  - name: Install Mullvad app
     when: is-fedora
     steps:
       - name: cmd

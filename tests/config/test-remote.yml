@@ -24,7 +24,7 @@ release:
       post: split 2 | cut 1 | cut -1
 
 task:
-  - task: Clone chezmoi
+  - name: Clone chezmoi
     unless:
       stat: ~/.local/share/chezmoi
     steps:
