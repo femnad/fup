@@ -46,13 +46,18 @@ func Symlink(symlinkName, symlinkTarget string) error {
 	internal.Log.Debugf("Creating symlink target=%s, name=%s", symlinkTarget, symlinkName)
 	if exists {
 		if err = os.Remove(symlinkName); err != nil {
-			return fmt.Errorf("Error removing existing symlink %s: %v", symlinkName, err)
+			return fmt.Errorf("error removing existing symlink %s: %v", symlinkName, err)
 		}
+	}
+
+	_, err = os.Stat(symlinkTarget)
+	if err != nil {
+		return fmt.Errorf("error stat-ing symlink target %s: %v", symlinkTarget, err)
 	}
 
 	err = os.Symlink(symlinkTarget, symlinkName)
 	if err != nil {
-		return fmt.Errorf("Error creating symlink target=%s, name=%s: %v", symlinkTarget, symlinkName, err)
+		return fmt.Errorf("error creating symlink target=%s, name=%s: %v", symlinkTarget, symlinkName, err)
 	}
 
 	return nil

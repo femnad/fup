@@ -57,13 +57,13 @@ func mockDir(name string) mockFileInfo {
 
 func Test_determineArchiveRoot(t *testing.T) {
 	type args struct {
-		archive entity.Archive
+		release entity.Release
 		entries []archiveEntry
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    ArchiveInfo
+		want    ReleaseInfo
 		wantErr bool
 	}{
 		{
@@ -74,7 +74,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					name: "dir/foo",
 				}},
 			},
-			want: ArchiveInfo{
+			want: ReleaseInfo{
 				hasRootDir: true,
 				maybeExec:  "dir/foo",
 				target:     "dir",
@@ -88,7 +88,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					name: "foo",
 				}},
 			},
-			want: ArchiveInfo{
+			want: ReleaseInfo{
 				hasRootDir: false,
 				maybeExec:  "foo",
 				target:     "foo",
@@ -97,7 +97,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 		{
 			name: "Multiple files without root dir with archive name",
 			args: args{
-				archive: entity.Archive{Ref: "qux"},
+				release: entity.Release{Ref: "qux"},
 				entries: []archiveEntry{
 					{
 						info: mockExec("foo"),
@@ -113,7 +113,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: ArchiveInfo{
+			want: ReleaseInfo{
 				hasRootDir: false,
 				maybeExec:  "foo",
 				target:     "qux",
@@ -137,7 +137,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: ArchiveInfo{
+			want: ReleaseInfo{
 				hasRootDir: false,
 				maybeExec:  "foo",
 				target:     "foo",
@@ -161,7 +161,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 					},
 				},
 			},
-			want: ArchiveInfo{
+			want: ReleaseInfo{
 				hasRootDir: true,
 				maybeExec:  "qux/baz/foo",
 				target:     "qux",
@@ -170,7 +170,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getArchiveInfo(tt.args.archive, tt.args.entries)
+			got, err := getReleaseInfo(tt.args.release, tt.args.entries)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("determineArchiveRoot() error = %v, wantErr %v", err, tt.wantErr)
 				return

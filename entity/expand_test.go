@@ -15,20 +15,20 @@ func TestExpandSettings(t *testing.T) {
 	}{
 		{
 			name:     "Test simple expansion",
-			settings: settings.Settings{ExtractDir: "foo"},
-			input:    "${extract_dir}/bar",
+			settings: settings.Settings{ReleaseDir: "foo"},
+			input:    "${release_dir}/bar",
 			expanded: "foo/bar",
 		},
 		{
 			name:     "Test multi expansion",
-			settings: settings.Settings{ExtractDir: "foo", CloneDir: "baz"},
-			input:    "${extract_dir}/bar/${clone_dir}",
+			settings: settings.Settings{ReleaseDir: "foo", CloneDir: "baz"},
+			input:    "${release_dir}/bar/${clone_dir}",
 			expanded: "foo/bar/baz",
 		},
 		{
 			name:     "Test non expandable left intact",
-			settings: settings.Settings{ExtractDir: "foo", CloneDir: "baz"},
-			input:    "${extract_dir}/bar/${clone_dir}/qux/${some_var}",
+			settings: settings.Settings{ReleaseDir: "foo", CloneDir: "baz"},
+			input:    "${release_dir}/bar/${clone_dir}/qux/${some_var}",
 			expanded: "foo/bar/baz/qux/${some_var}",
 		},
 		{

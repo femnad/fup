@@ -1,6 +1,6 @@
 settings:
   clone_dir: ~/foo # only referenced in this file
-  extract_dir: ~/bar # only referenced in this file
+  release_dir: ~/bar # only referenced in this file
   ssh_clone_dir: ~/baz # ssh-clone provisioner references this
   template_dir: ~/fup/templates # template provisioner references this
   virtualenv_dir: ~/venv # python provisioner references this
@@ -32,7 +32,7 @@ dnf_repo:
     name: docker-ce
     repo: https://download.docker.com/linux/fedora/docker-ce.repo
 
-archive:
+release:
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
     name: gh
     unless:

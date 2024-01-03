@@ -1,5 +1,5 @@
 settings:
-  extract_dir: ~/ext
+  release_dir: ~/ext
   template_dir: tmpl
   versions:
     chezmoi: 2.42.2
@@ -16,7 +16,7 @@ package:
     - neovim
     when: pkg "apt"
 
-archive:
+release:
   - url: https://github.com/twpayne/chezmoi/releases/download/v${version}/chezmoi_${version}_linux_amd64.tar.gz
     name: chezmoi
     unless:

@@ -12,7 +12,7 @@ type NamedLink struct {
 	Target string `yaml:"target"`
 }
 
-type Archive struct {
+type Release struct {
 	DontLink      bool              `yaml:"dont_link"`
 	DontUpdate    bool              `yaml:"dont_update"`
 	ExecuteAfter  []string          `yaml:"execute_after"`
@@ -27,66 +27,66 @@ type Archive struct {
 	When          string            `yaml:"when"`
 }
 
-func (a Archive) String() string {
-	return a.Url
+func (r Release) String() string {
+	return r.Url
 }
 
-func (a Archive) expand(property string) string {
+func (r Release) expand(property string) string {
 	if property == "version" {
-		return a.Version
+		return r.Version
 	}
 
 	return ""
 }
 
-func (a Archive) hasVersionLookup() bool {
-	return a.VersionLookup.URL != "" || a.VersionLookup.Strategy != ""
+func (r Release) hasVersionLookup() bool {
+	return r.VersionLookup.URL != "" || r.VersionLookup.Strategy != ""
 }
 
-func (a Archive) version(s settings.Settings) (string, error) {
-	if a.Version != "" {
-		return a.Version, nil
+func (r Release) version(s settings.Settings) (string, error) {
+	if r.Version != "" {
+		return r.Version, nil
 	}
 
-	storedVersion := s.Versions[a.Name()]
+	storedVersion := s.Versions[r.Name()]
 	if storedVersion != "" {
 		return storedVersion, nil
 	}
 
-	if a.hasVersionLookup() {
-		return lookupVersion(a.VersionLookup, a.Url)
+	if r.hasVersionLookup() {
+		return lookupVersion(r.VersionLookup, r.Url)
 	}
 
 	return "", nil
 }
 
-func (a Archive) DefaultVersionCmd() string {
-	return fmt.Sprintf("%s --version", a.Name())
+func (r Release) DefaultVersionCmd() string {
+	return fmt.Sprintf("%s --version", r.Name())
 }
 
-func (a Archive) ExpandURL(s settings.Settings) (string, error) {
-	version, err := a.version(s)
+func (r Release) ExpandURL(s settings.Settings) (string, error) {
+	version, err := r.version(s)
 	if err != nil {
 		return "", err
 	}
 
-	return settings.ExpandStringWithLookup(s, a.Url, map[string]string{"version": version}), nil
+	return settings.ExpandStringWithLookup(s, r.Url, map[string]string{"version": version}), nil
 }
 
-func (a Archive) ExpandSymlinks(maybeExec string) []NamedLink {
+func (r Release) ExpandSymlinks(maybeExec string) []NamedLink {
 	var links []NamedLink
 	var expanded []NamedLink
 
-	name := a.Name()
+	name := r.Name()
 	if name == "" && maybeExec != "" {
 		name = maybeExec
 	}
-	symlinks := a.Symlink
-	if len(a.NamedLink) == 0 && len(symlinks) == 0 && !a.DontLink && name != "" {
+	symlinks := r.Symlink
+	if len(r.NamedLink) == 0 && len(symlinks) == 0 && !r.DontLink && name != "" {
 		symlinks = []string{name}
 	}
 
-	links = append(links, a.NamedLink...)
+	links = append(links, r.NamedLink...)
 	for _, symlink := range symlinks {
 		links = append(links, NamedLink{
 			Target: symlink,
@@ -94,41 +94,29 @@ func (a Archive) ExpandSymlinks(maybeExec string) []NamedLink {
 	}
 
 	for _, symlink := range links {
-		symlink.Target = os.Expand(symlink.Target, a.expand)
+		symlink.Target = os.Expand(symlink.Target, r.expand)
 		expanded = append(expanded, symlink)
 	}
 
 	return expanded
 }
 
-func (a Archive) ExpandStat(settings settings.Settings) string {
-	return os.Expand(a.Unless.Stat, func(s string) string {
-		if IsExpandable(s) {
-			return ExpandSettings(settings, a.Unless.Stat)
-		}
-		if s == "version" {
-			return a.Version
-		}
-		return fmt.Sprintf("${%s}", s)
-	})
+func (r Release) GetUnless() unless.Unless {
+	return r.Unless
 }
 
-func (a Archive) GetUnless() unless.Unless {
-	return a.Unless
+func (r Release) GetVersion(s settings.Settings) (string, error) {
+	return r.version(s)
 }
 
-func (a Archive) GetVersion(s settings.Settings) (string, error) {
-	return a.version(s)
+func (r Release) KeepUpToDate() bool {
+	return !r.DontUpdate
 }
 
-func (a Archive) KeepUpToDate() bool {
-	return !a.DontUpdate
+func (r Release) Name() string {
+	return r.Ref
 }
 
-func (a Archive) Name() string {
-	return a.Ref
-}
-
-func (a Archive) RunWhen() string {
-	return a.When
+func (r Release) RunWhen() string {
+	return r.When
 }

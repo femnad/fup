@@ -10,7 +10,11 @@ import (
 	"github.com/femnad/fup/internal"
 )
 
-const defaultBinPath = "~/bin"
+const (
+	cloneDirKey    = "clone_dir"
+	defaultBinPath = "~/bin"
+	releaseDirKey  = "release_dir"
+)
 
 type FactMap map[string]map[string]string
 
@@ -19,8 +23,8 @@ type Settings struct {
 	CloneDir      string            `yaml:"clone_dir"`
 	EnsureEnv     map[string]string `yaml:"ensure_env"`
 	EnsurePaths   []string          `yaml:"ensure_paths"`
-	ExtractDir    string            `yaml:"extract_dir"`
 	HostFacts     FactMap           `yaml:"host_facts"`
+	ReleaseDir    string            `yaml:"release_dir"`
 	SSHCloneDir   string            `yaml:"ssh_clone_dir"`
 	TemplateDir   string            `yaml:"template_dir"`
 	Versions      map[string]string `yaml:"versions"`
@@ -133,8 +137,8 @@ func addHostFacts(lookup map[string]string, factMap FactMap) map[string]string {
 }
 
 func ExpandStringWithLookup(settings Settings, s string, lookup map[string]string) string {
-	lookup["clone_dir"] = settings.CloneDir
-	lookup["extract_dir"] = settings.ExtractDir
+	lookup[cloneDirKey] = settings.CloneDir
+	lookup[releaseDirKey] = settings.ReleaseDir
 	lookup = addHostFacts(lookup, settings.HostFacts)
 
 	expanded := Expand(s, lookup)
