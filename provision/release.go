@@ -74,17 +74,17 @@ func (r ReleaseInfo) GetTarget() string {
 }
 
 func downloadRelease(release entity.Release, s settings.Settings) (string, error) {
-	archiveURL, err := release.ExpandURL(s)
+	releaseURL, err := release.ExpandURL(s)
 	if err != nil {
 		return "", err
 	}
 
-	if archiveURL == "" {
+	if releaseURL == "" {
 		return "", fmt.Errorf("no URL given for release %v", release)
 	}
-	internal.Log.Infof("Downloading %s", archiveURL)
+	internal.Log.Infof("Downloading %s", releaseURL)
 
-	response, err := remote.ReadResponseBody(archiveURL)
+	response, err := remote.ReadResponseBody(releaseURL)
 	if err != nil {
 		return "", err
 	}
@@ -562,18 +562,18 @@ func guessArchiveName(releaseUrl string) (string, error) {
 }
 
 func ensureRelease(release entity.Release, s settings.Settings) error {
-	archiveUrl, err := release.ExpandURL(s)
+	releaseURL, err := release.ExpandURL(s)
 	if err != nil {
 		return err
 	}
 
 	if !when.ShouldRun(release) {
-		internal.Log.Debugf("Skipping extracting release %s due to when condition %s", archiveUrl, release.When)
+		internal.Log.Debugf("Skipping extracting release %s due to when condition %s", releaseURL, release.When)
 		return nil
 	}
 
 	if release.Name() == "" {
-		name, err := guessArchiveName(archiveUrl)
+		name, err := guessArchiveName(releaseURL)
 		if err != nil {
 			return err
 		}
@@ -581,13 +581,13 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	}
 
 	if unless.ShouldSkip(release, s) {
-		internal.Log.Debugf("Skipping download: %s", archiveUrl)
+		internal.Log.Debugf("Skipping download: %s", releaseURL)
 		return nil
 	}
 
 	info, err := Extract(release, s)
 	if err != nil {
-		internal.Log.Errorf("Error downloading release %s: %v", archiveUrl, err)
+		internal.Log.Errorf("Error downloading release %s: %v", releaseURL, err)
 		return err
 	}
 
@@ -599,7 +599,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	for _, symlink := range release.ExpandSymlinks(info.maybeExec) {
 		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
-			internal.Log.Errorf("error creating symlink for release %s: %v", archiveUrl, err)
+			internal.Log.Errorf("error creating symlink for release %s: %v", releaseURL, err)
 			return err
 		}
 	}
