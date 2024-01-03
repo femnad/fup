@@ -9,8 +9,7 @@ type Config struct {
 	Remote          bool
 	AcceptHostKeys  []string          `yaml:"host_key"`
 	AptRepos        []AptRepo         `yaml:"apt_repo"`
-	Archives        []Archive         `yaml:"archive"`
-	Binaries        []Binary          `yaml:"binary"`
+	Archives        []Release         `yaml:"archive"`
 	Cargo           []CargoPkg        `yaml:"rust"`
 	DnfRepos        []DnfRepo         `yaml:"dnf_repo"`
 	Dirs            []DirGroup        `yaml:"dir"`

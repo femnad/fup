@@ -57,7 +57,7 @@ func mockDir(name string) mockFileInfo {
 
 func Test_determineArchiveRoot(t *testing.T) {
 	type args struct {
-		archive entity.Archive
+		archive entity.Release
 		entries []archiveEntry
 	}
 	tests := []struct {
@@ -97,7 +97,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 		{
 			name: "Multiple files without root dir with archive name",
 			args: args{
-				archive: entity.Archive{Ref: "qux"},
+				archive: entity.Release{Ref: "qux"},
 				entries: []archiveEntry{
 					{
 						info: mockExec("foo"),

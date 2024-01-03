@@ -103,7 +103,6 @@ func NewProvisioner(cfg entity.Config, filter []string) (Provisioner, error) {
 		{"pre", p.runPreflightTasks},
 		{"repo", p.AddOSRepos},
 		{"archive", p.extractArchives},
-		{"binary", p.downloadBinaries},
 		{"package", p.installPackages},
 		{"host", p.acceptHostKeys},
 		{"github", p.githubUserKey},

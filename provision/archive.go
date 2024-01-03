@@ -53,7 +53,7 @@ type extractionHint struct {
 	target   string
 }
 
-type extractionFn func(entity.Archive, extractionHint) (ArchiveInfo, error)
+type extractionFn func(entity.Release, extractionHint) (ArchiveInfo, error)
 
 // ArchiveInfo stores an archive's root dir and species if the root dir is part of the archive files.
 type ArchiveInfo struct {
@@ -71,7 +71,7 @@ func (a ArchiveInfo) GetTarget() string {
 	return a.target
 }
 
-func downloadRelease(archive entity.Archive, s settings.Settings) (string, error) {
+func downloadRelease(archive entity.Release, s settings.Settings) (string, error) {
 	archiveURL, err := archive.ExpandURL(s)
 	if err != nil {
 		return "", err
@@ -90,7 +90,7 @@ func downloadRelease(archive entity.Archive, s settings.Settings) (string, error
 	return downloadTempFile(response)
 }
 
-func processDownload(archive entity.Archive, s settings.Settings) (info ArchiveInfo, err error) {
+func processDownload(archive entity.Release, s settings.Settings) (info ArchiveInfo, err error) {
 	tempFile, err := downloadRelease(archive, s)
 	if err != nil {
 		return
@@ -267,7 +267,7 @@ func commonPrefix(names []string) string {
 	return first[:minLength]
 }
 
-func getArchiveInfo(archive entity.Archive, entries []archiveEntry) (ArchiveInfo, error) {
+func getArchiveInfo(archive entity.Release, entries []archiveEntry) (ArchiveInfo, error) {
 	names := mare.Map(entries, func(entry archiveEntry) string {
 		return entry.name
 	})
@@ -363,7 +363,7 @@ func getTarEntries(tempFile, fileType string) (entries []archiveEntry, err error
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive entity.Archive, source extractionHint) (info ArchiveInfo, err error) {
+func untar(archive entity.Release, source extractionHint) (info ArchiveInfo, err error) {
 	entries, err := getTarEntries(source.file, source.fileType)
 	if err != nil {
 		return
@@ -426,7 +426,7 @@ func getZipInfo(tempFile string) (entries []archiveEntry, err error) {
 	return entries, nil
 }
 
-func unzip(archive entity.Archive, source extractionHint) (info ArchiveInfo, err error) {
+func unzip(archive entity.Release, source extractionHint) (info ArchiveInfo, err error) {
 	entries, err := getZipInfo(source.file)
 	if err != nil {
 		return
@@ -464,7 +464,7 @@ func getExtractionFn(fileType string) (extractionFn, error) {
 	}
 }
 
-func Extract(archive entity.Archive, s settings.Settings) (ArchiveInfo, error) {
+func Extract(archive entity.Release, s settings.Settings) (ArchiveInfo, error) {
 	return processDownload(archive, s)
 }
 
@@ -519,7 +519,7 @@ func guessArchiveName(releaseUrl string) (string, error) {
 	return strings.Split(parsed.Path, "/")[2], nil
 }
 
-func extractArchive(archive entity.Archive, s settings.Settings) error {
+func extractArchive(archive entity.Release, s settings.Settings) error {
 	archiveUrl, err := archive.ExpandURL(s)
 	if err != nil {
 		return err
@@ -580,7 +580,7 @@ func extractArchive(archive entity.Archive, s settings.Settings) error {
 	return nil
 }
 
-func extractArchives(archives []entity.Archive, s settings.Settings) error {
+func extractArchives(archives []entity.Release, s settings.Settings) error {
 	var archiveErrs []error
 	for _, archive := range archives {
 		err := extractArchive(archive, s)
