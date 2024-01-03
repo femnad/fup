@@ -32,7 +32,7 @@ dnf_repo:
     name: docker-ce
     repo: https://download.docker.com/linux/fedora/docker-ce.repo
 
-archive:
+release:
   - url: https://github.com/cli/cli/releases/download/v${version}/gh_${version}_linux_amd64.tar.gz
     name: gh
     unless:

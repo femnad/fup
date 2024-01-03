@@ -102,7 +102,7 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 		return
 	}
 
-	dirName := internal.ExpandUser(s.ExtractDir)
+	dirName := internal.ExpandUser(s.ReleaseDir)
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
 		return

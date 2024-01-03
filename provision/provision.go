@@ -102,7 +102,7 @@ func NewProvisioner(cfg entity.Config, filter []string) (Provisioner, error) {
 	all := []provisionFn{
 		{"pre", p.runPreflightTasks},
 		{"repo", p.AddOSRepos},
-		{"archive", p.extractArchives},
+		{"release", p.ensureReleases},
 		{"package", p.installPackages},
 		{"host", p.acceptHostKeys},
 		{"github", p.githubUserKey},
@@ -140,11 +140,11 @@ func (p Provisioner) AddOSRepos() error {
 	return addRepos(p.Config)
 }
 
-func (p Provisioner) extractArchives() error {
-	internal.Log.Notice("Extracting archives")
+func (p Provisioner) ensureReleases() error {
+	internal.Log.Notice("Downloading releases")
 
-	if p.Config.Settings.ExtractDir == "" {
-		return errors.New("empty archive extraction directory")
+	if p.Config.Settings.ReleaseDir == "" {
+		return errors.New("empty release directory")
 	}
 
 	return ensureReleases(p.Config.Archives, p.Config.Settings)
