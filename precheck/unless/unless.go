@@ -89,6 +89,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	}
 
 	if !unlessable.KeepUpToDate() {
+		internal.Log.Debugf("Not checking version for %s as it doesn't need to be kept up-to-date", unlessable.Name())
 		return true
 	}
 
