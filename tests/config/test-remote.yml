@@ -1,5 +1,5 @@
 settings:
-  extract_dir: ~/ext
+  release_dir: ~/ext
   template_dir: tmpl
   versions:
     chezmoi: 2.42.2

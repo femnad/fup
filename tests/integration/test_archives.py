@@ -11,13 +11,13 @@ RELATIVE_ARTIFACTS_DIR = 'out'
 ABSOLUTE_CONFIG = {
     'settings': {
         'bin_dir': f'{ABSOLUTE_ARTIFACTS_DIR}/bin',
-        'extract_dir': f'{ABSOLUTE_ARTIFACTS_DIR}/ext',
+        'release_dir': f'{ABSOLUTE_ARTIFACTS_DIR}/ext',
     }
 }
 RELATIVE_CONFIG = {
     'settings': {
         'bin_dir': f'{RELATIVE_ARTIFACTS_DIR}/bin',
-        'extract_dir': f'{RELATIVE_ARTIFACTS_DIR}/ext',
+        'release_dir': f'{RELATIVE_ARTIFACTS_DIR}/ext',
     }
 }
 

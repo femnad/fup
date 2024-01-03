@@ -11,7 +11,7 @@ paths:
     type: file
   - path: ~/bin/chezmoi
     type: symlink
-    target: ${extract_dir}/chezmoi/chezmoi
+    target: ${release_dir}/chezmoi/chezmoi
 
 file_content:
   - path: /etc/apt/apt.conf.d/50unattended-upgrades

@@ -101,18 +101,6 @@ func (r Release) ExpandSymlinks(maybeExec string) []NamedLink {
 	return expanded
 }
 
-func (r Release) ExpandStat(settings settings.Settings) string {
-	return os.Expand(r.Unless.Stat, func(s string) string {
-		if IsExpandable(s) {
-			return ExpandSettings(settings, r.Unless.Stat)
-		}
-		if s == "version" {
-			return r.Version
-		}
-		return fmt.Sprintf("${%s}", s)
-	})
-}
-
 func (r Release) GetUnless() unless.Unless {
 	return r.Unless
 }
