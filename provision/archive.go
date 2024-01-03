@@ -284,37 +284,6 @@ func getArchiveInfo(archive entity.Archive, entries []archiveEntry) (ArchiveInfo
 	return ArchiveInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target, targetOverride: archive.Target}, nil
 }
 
-func getTarInfo(archive entity.Archive, response remote.Response, tempfile string) (ArchiveInfo, error) {
-	f, err := os.Open(tempfile)
-	if err != nil {
-		return ArchiveInfo{}, err
-	}
-	defer f.Close()
-
-	reader, err := getReader(response, f)
-	if err != nil {
-		return ArchiveInfo{}, err
-	}
-
-	var entries []archiveEntry
-	tarReader := tar.NewReader(reader)
-	for {
-		header, err := tarReader.Next()
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			panic(err)
-		}
-
-		entries = append(entries, archiveEntry{
-			info: header.FileInfo(),
-			name: header.Name,
-		})
-	}
-
-	return getArchiveInfo(archive, entries)
-}
-
 func getOutputPath(info ArchiveInfo, fileName, dirName string) string {
 	if info.hasRootDir {
 		if info.targetOverride != "" && strings.HasPrefix(fileName, info.target) {
@@ -340,40 +309,49 @@ func getAbsTarget(dirName string, info ArchiveInfo) (string, error) {
 }
 
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive entity.Archive, response remote.Response, dirName string) (ArchiveInfo, error) {
-	var info ArchiveInfo
+func untar(archive entity.Archive, response remote.Response, dirName string) (info ArchiveInfo, err error) {
 	tempfile, err := downloadTempFile(response)
 	if err != nil {
-		return info, err
+		return
 	}
-
-	info, err = getTarInfo(archive, response, tempfile)
 
 	f, err := os.Open(tempfile)
 	if err != nil {
-		return info, err
+		return
 	}
 	defer f.Close()
 
 	reader, err := getReader(response, f)
 	if err != nil {
-		return info, err
+		return
 	}
 
+	var entries []archiveEntry
+	var header *tar.Header
 	tarReader := tar.NewReader(reader)
 	for {
-		header, err := tarReader.Next()
+		header, err = tarReader.Next()
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			panic(err)
+			return
 		}
 
 		outputPath := getOutputPath(info, header.Name, dirName)
 		err = extractCompressedFile(header.FileInfo(), outputPath, tarReader)
 		if err != nil {
-			return info, err
+			return
 		}
+
+		entries = append(entries, archiveEntry{
+			info: header.FileInfo(),
+			name: header.Name,
+		})
+	}
+
+	info, err = getArchiveInfo(archive, entries)
+	if err != nil {
+		return
 	}
 
 	err = os.Remove(tempfile)
