@@ -9,10 +9,9 @@ type Config struct {
 	Remote          bool
 	AcceptHostKeys  []string          `yaml:"host_key"`
 	AptRepos        []AptRepo         `yaml:"apt_repo"`
-	Archives        []Release         `yaml:"archive"`
 	Cargo           []CargoPkg        `yaml:"rust"`
-	DnfRepos        []DnfRepo         `yaml:"dnf_repo"`
 	Dirs            []DirGroup        `yaml:"dir"`
+	DnfRepos        []DnfRepo         `yaml:"dnf_repo"`
 	EnsureLines     []LineInFile      `yaml:"line"`
 	Flatpak         Flatpak           `yaml:"flatpak"`
 	GithubUserKey   UserKey           `yaml:"github_key"`
@@ -21,6 +20,7 @@ type Config struct {
 	PostflightTasks []Task            `yaml:"postflight"`
 	PreflightTasks  []Task            `yaml:"preflight"`
 	Python          []PythonPkg       `yaml:"python"`
+	Releases        []Release         `yaml:"release"`
 	RemotePackages  RemotePackageSpec `yaml:"remote_package"`
 	Repos           []Repo            `yaml:"repo"`
 	Services        []Service         `yaml:"service"`
