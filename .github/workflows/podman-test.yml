@@ -3,8 +3,8 @@ name: Test with systemd containers
 on:
   pull_request:
   push:
-    branches:
-      - main
+    tags:
+      - v*
   workflow_dispatch:
     inputs:
 
@@ -24,7 +24,7 @@ jobs:
           podman container exec -ti $container bash -c 'curl -L fcd.url.lol/u | bash -'
 
   fedora-test:
-    name: Run remote config test with Ubuntu systemd container
+    name: Run remote config test with Fedora systemd container
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
