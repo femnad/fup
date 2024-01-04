@@ -268,12 +268,33 @@ func commonPrefix(names []string) string {
 	return first[:minLength]
 }
 
-func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo, error) {
+func getExecCandidate(prefix, execCandidate string) (string, error) {
+	if prefix == "" {
+		return execCandidate, nil
+	}
+
+	if !strings.Contains(prefix, "/") {
+		return execCandidate, nil
+	}
+
+	if execCandidate == prefix {
+		tokens := strings.SplitN(execCandidate, "/", 2)
+		if len(tokens) != 2 {
+			return "", fmt.Errorf("error determining executable candidate with prefix %s", prefix)
+		}
+		return tokens[1], nil
+	}
+
+	return strings.TrimPrefix(execCandidate, prefix), nil
+}
+
+func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info ReleaseInfo, err error) {
 	names := mare.Map(entries, func(entry archiveEntry) string {
 		return entry.name
 	})
 	prefix := commonPrefix(names)
 	roots := mapset.NewSet[string]()
+
 	var execs []archiveEntry
 	for _, entry := range entries {
 		rootDir := strings.Split(entry.name, "/")
@@ -290,7 +311,7 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo
 	if roots.Cardinality() == 1 {
 		root, ok := roots.Pop()
 		if !ok {
-			return ReleaseInfo{}, fmt.Errorf("error determining root dir for %s", archive.Url)
+			return info, fmt.Errorf("error determining root dir for %s", archive.Url)
 		}
 
 		hasRootDir = strings.Index(prefix, "/") > -1
@@ -305,8 +326,13 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo
 		execCandidate = execs[0].name
 	}
 
+	execCandidate, err = getExecCandidate(prefix, execCandidate)
+	if err != nil {
+		return
+	}
+
 	return ReleaseInfo{
-		execCandidate:  strings.TrimPrefix(execCandidate, prefix),
+		execCandidate:  execCandidate,
 		hasRootDir:     hasRootDir,
 		target:         target,
 		targetOverride: archive.Target}, nil

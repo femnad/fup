@@ -55,7 +55,7 @@ func mockDir(name string) mockFileInfo {
 	return mockFileInfo{mode: 493, name: name, isDir: true}
 }
 
-func Test_determineArchiveRoot(t *testing.T) {
+func Test_getReleaseInfo(t *testing.T) {
 	type args struct {
 		release entity.Release
 		entries []archiveEntry
@@ -75,7 +75,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 				}},
 			},
 			want: ReleaseInfo{
-				execCandidate: "dir/foo",
+				execCandidate: "foo",
 				hasRootDir:    true,
 				target:        "dir",
 			},
@@ -162,7 +162,7 @@ func Test_determineArchiveRoot(t *testing.T) {
 				},
 			},
 			want: ReleaseInfo{
-				execCandidate: "qux/baz/foo",
+				execCandidate: "baz/foo",
 				hasRootDir:    true,
 				target:        "qux",
 			},
@@ -172,11 +172,11 @@ func Test_determineArchiveRoot(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := getReleaseInfo(tt.args.release, tt.args.entries)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("determineArchiveRoot() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getReleaseInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("determineArchiveRoot() got = %v, want %v", got, tt.want)
+				t.Errorf("getReleaseInfo() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
