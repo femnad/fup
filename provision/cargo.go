@@ -16,9 +16,17 @@ import (
 	"github.com/femnad/fup/settings"
 )
 
-func crateArgs(name string) ([]string, error) {
-	if !strings.HasPrefix(name, "https://") {
+const (
+	defaultProtocol = "https://"
+)
+
+func crateArgs(pkg entity.CargoPkg) ([]string, error) {
+	name := pkg.Name()
+	if !strings.Contains(name, "/") {
 		return []string{name}, nil
+	}
+	if !strings.HasPrefix(name, defaultProtocol) {
+		name = fmt.Sprintf("%s%s/%s", defaultProtocol, defaultHost, name)
 	}
 
 	crate, err := common.NameFromRepo(name)
@@ -26,7 +34,16 @@ func crateArgs(name string) ([]string, error) {
 		return nil, fmt.Errorf("error getting repo name for %s: %v", name, err)
 	}
 
-	return []string{"--git", name, crate}, nil
+	args := []string{"--git", name, crate}
+	ref := pkg.Ref
+	tag := pkg.Tag
+	if ref != "" {
+		args = append(args, []string{"--ref", ref}...)
+	} else if tag != "" {
+		args = append(args, []string{"--tag", tag}...)
+	}
+
+	return args, nil
 }
 
 func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
@@ -45,7 +62,7 @@ func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 
 	installCmd := []string{"cargo", "install"}
 
-	crate, err := crateArgs(name)
+	crate, err := crateArgs(pkg)
 	if err != nil {
 		internal.Log.Errorf("error getting crate name for %s: %v", name, err)
 		return err
