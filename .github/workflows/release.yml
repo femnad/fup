@@ -1,7 +1,7 @@
 name: Release new version
 
 on:
-  on: workflow_run:
+  workflow_run:
     workflows: ["Run tests", "Test with systemd containers"]
     types:
       - completed
