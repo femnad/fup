@@ -57,10 +57,10 @@ type extractionHint struct {
 
 type extractionFn func(entity.Release, extractionHint) (ReleaseInfo, error)
 
-// ReleaseInfo stores an archive's root dir and species if the root dir is part of the archive files.
+// ReleaseInfo stores an archive's root dir and specifies if the root dir is part of the archive files.
 type ReleaseInfo struct {
+	execCandidate  string
 	hasRootDir     bool
-	maybeExec      string
 	target         string
 	targetOverride string
 }
@@ -283,7 +283,7 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo
 		}
 	}
 
-	var maybeExec string
+	var execCandidate string
 	var hasRootDir bool
 	var target string
 
@@ -302,10 +302,14 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo
 	}
 
 	if len(execs) == 1 {
-		maybeExec = execs[0].name
+		execCandidate = execs[0].name
 	}
 
-	return ReleaseInfo{hasRootDir: hasRootDir, maybeExec: maybeExec, target: target, targetOverride: archive.Target}, nil
+	return ReleaseInfo{
+		execCandidate:  execCandidate,
+		hasRootDir:     hasRootDir,
+		target:         target,
+		targetOverride: archive.Target}, nil
 }
 
 func getOutputPath(info ReleaseInfo, fileName, dirName string) string {
@@ -490,7 +494,7 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 		return
 	}
 
-	return ReleaseInfo{hasRootDir: true, maybeExec: name, target: target}, nil
+	return ReleaseInfo{execCandidate: name, hasRootDir: true, target: target}, nil
 }
 
 func getExtractionFn(fileType string) (extractionFn, error) {
@@ -596,7 +600,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		target, _ = path.Split(target)
 		target = path.Join(target, info.targetOverride)
 	}
-	for _, symlink := range release.ExpandSymlinks(info.maybeExec) {
+	for _, symlink := range release.ExpandSymlinks(info.execCandidate) {
 		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
 			internal.Log.Errorf("error creating symlink for release %s: %v", releaseURL, err)

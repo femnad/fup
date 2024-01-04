@@ -78,14 +78,15 @@ func (r Release) ExpandURL(s settings.Settings) (string, error) {
 	return settings.ExpandStringWithLookup(s, r.Url, map[string]string{"version": version}), nil
 }
 
-func (r Release) ExpandSymlinks(maybeExec string) []NamedLink {
+func (r Release) ExpandSymlinks(execCandidate string) []NamedLink {
 	var links []NamedLink
 	var expanded []NamedLink
 
-	name := r.Name()
-	if name == "" && maybeExec != "" {
-		name = maybeExec
+	name := execCandidate
+	if name == "" {
+		name = r.Name()
 	}
+
 	symlinks := r.Symlink
 	if len(r.NamedLink) == 0 && len(symlinks) == 0 && !r.DontLink && name != "" {
 		symlinks = []string{name}

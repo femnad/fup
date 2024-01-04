@@ -103,7 +103,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 
 	if version == "" {
 		// No version specification, but command has succeeded so should skip the operation.
-		internal.Log.Debugf("%s has no version specification, assumming operation should be skipped", name)
+		internal.Log.Debugf("%s has no version specification, assuming operation should be skipped", name)
 		return true
 	}
 

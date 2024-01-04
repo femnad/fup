@@ -75,9 +75,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 				}},
 			},
 			want: ReleaseInfo{
-				hasRootDir: true,
-				maybeExec:  "dir/foo",
-				target:     "dir",
+				execCandidate: "dir/foo",
+				hasRootDir:    true,
+				target:        "dir",
 			},
 		},
 		{
@@ -89,9 +89,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 				}},
 			},
 			want: ReleaseInfo{
-				hasRootDir: false,
-				maybeExec:  "foo",
-				target:     "foo",
+				execCandidate: "foo",
+				hasRootDir:    false,
+				target:        "foo",
 			},
 		},
 		{
@@ -114,9 +114,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 				},
 			},
 			want: ReleaseInfo{
-				hasRootDir: false,
-				maybeExec:  "foo",
-				target:     "qux",
+				execCandidate: "foo",
+				hasRootDir:    false,
+				target:        "qux",
 			},
 		},
 		{
@@ -138,9 +138,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 				},
 			},
 			want: ReleaseInfo{
-				hasRootDir: false,
-				maybeExec:  "foo",
-				target:     "foo",
+				execCandidate: "foo",
+				hasRootDir:    false,
+				target:        "foo",
 			},
 		},
 		{
@@ -162,9 +162,9 @@ func Test_determineArchiveRoot(t *testing.T) {
 				},
 			},
 			want: ReleaseInfo{
-				hasRootDir: true,
-				maybeExec:  "qux/baz/foo",
-				target:     "qux",
+				execCandidate: "qux/baz/foo",
+				hasRootDir:    true,
+				target:        "qux",
 			},
 		},
 	}
