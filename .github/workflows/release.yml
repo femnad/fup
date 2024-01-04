@@ -1,14 +1,16 @@
 name: Release new version
 
 on:
-  push:
-    branches:
-      - main
+  on: workflow_run:
+    workflows: ["Run tests", "Test with systemd containers"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
 
 jobs:
   release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Release new version if no tag exists for it
     runs-on: ubuntu-latest
     steps:
