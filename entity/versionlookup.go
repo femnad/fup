@@ -36,6 +36,7 @@ type VersionLookupSpec struct {
 	ExcludeSuffix []string `yaml:"exclude_suffix"`
 	FollowURL     bool     `yaml:"follow_url"`
 	GetFirst      bool     `yaml:"get_first"`
+	GetLast       bool     `yaml:"get_last"`
 	GithubRepo    string   `yaml:"github_repo"`
 	MatchRegex    string   `yaml:"match_regex"`
 	PostProc      string   `yaml:"post_proc"`
@@ -78,8 +79,13 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 		}
 	}
 
-	for _, node := range nodes {
+	numNodes := len(nodes)
+	for i, node := range nodes {
 		if node == nil {
+			continue
+		}
+
+		if spec.GetLast && i < numNodes-1 {
 			continue
 		}
 
