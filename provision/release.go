@@ -306,7 +306,7 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (ReleaseInfo
 	}
 
 	return ReleaseInfo{
-		execCandidate:  execCandidate,
+		execCandidate:  strings.TrimPrefix(execCandidate, prefix),
 		hasRootDir:     hasRootDir,
 		target:         target,
 		targetOverride: archive.Target}, nil
