@@ -520,6 +520,11 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 		return
 	}
 
+	err = dst.Close()
+	if err != nil {
+		return
+	}
+
 	return ReleaseInfo{execCandidate: name, hasRootDir: true, target: target}, nil
 }
 
