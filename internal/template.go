@@ -7,9 +7,10 @@ import (
 	"text/template"
 )
 
-var funcMap = template.FuncMap{
+var UtilFns = template.FuncMap{
 	"cut":     cut,
 	"head":    head,
+	"iter":    iterItems,
 	"revCut":  reverseCut,
 	"split":   split,
 	"splitBy": splitBy,
@@ -36,6 +37,14 @@ func cut(i int, s string) (string, error) {
 	return s[i:], nil
 }
 
+func head(i int, s string) (string, error) {
+	return splitBy("\n", i, s)
+}
+
+func iterItems(item ...string) []string {
+	return item
+}
+
 func reverseCut(i int, s string) (string, error) {
 	i, err := absIndex(s, i)
 	if err != nil {
@@ -43,6 +52,10 @@ func reverseCut(i int, s string) (string, error) {
 	}
 
 	return s[:i], nil
+}
+
+func split(i int, s string) (string, error) {
+	return splitBy(" ", i, s)
 }
 
 func splitBy(delimiter string, i int, s string) (string, error) {
@@ -58,16 +71,8 @@ func splitBy(delimiter string, i int, s string) (string, error) {
 	return fields[i], nil
 }
 
-func head(i int, s string) (string, error) {
-	return splitBy("\n", i, s)
-}
-
-func split(i int, s string) (string, error) {
-	return splitBy(" ", i, s)
-}
-
 func RunTemplateFn(input, tmplFn string) (string, error) {
-	tmpl := template.New("post-proc").Funcs(funcMap)
+	tmpl := template.New("post-proc").Funcs(UtilFns)
 
 	ctx := struct {
 		Args string

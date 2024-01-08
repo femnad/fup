@@ -69,7 +69,7 @@ func getConfigReader(config string) (configReader, error) {
 }
 
 func evalConfig(data []byte) ([]byte, error) {
-	tmpl := template.New("config").Funcs(precheck.FactFns)
+	tmpl := template.New("config").Funcs(precheck.FactFns).Funcs(internal.UtilFns)
 	parsed, err := tmpl.Parse(string(data))
 	if err != nil {
 		return data, err
