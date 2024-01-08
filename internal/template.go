@@ -11,9 +11,15 @@ var UtilFns = template.FuncMap{
 	"cut":     cut,
 	"head":    head,
 	"iter":    iterItems,
+	"iterMap": iterMap,
 	"revCut":  reverseCut,
 	"split":   split,
 	"splitBy": splitBy,
+}
+
+type keyValue struct {
+	key   string
+	value string
 }
 
 func absIndex(s string, i int) (int, error) {
@@ -41,8 +47,33 @@ func head(i int, s string) (string, error) {
 	return splitBy("\n", i, s)
 }
 
-func iterItems(item ...string) []string {
-	return item
+func iterItems(items ...string) []string {
+	return items
+}
+
+func iterMap(items ...string) (map[string]string, error) {
+	numItems := len(items)
+	if numItems%2 != 0 {
+		return nil, fmt.Errorf("need an even number of items for building a map")
+	}
+
+	mapping := make(map[string]string)
+	var pair *keyValue
+	for index, item := range items {
+		if index%2 == 0 {
+			if pair != nil {
+				mapping[pair.key] = pair.value
+			}
+			pair = &keyValue{key: item}
+		} else {
+			pair.value = item
+		}
+		if index == numItems-1 {
+			mapping[pair.key] = pair.value
+		}
+	}
+
+	return mapping, nil
 }
 
 func reverseCut(i int, s string) (string, error) {
