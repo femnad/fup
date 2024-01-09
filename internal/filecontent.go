@@ -313,9 +313,9 @@ func WriteContent(file ManagedFile) (bool, error) {
 
 	if validateCmd != "" {
 		validateCmd = fmt.Sprintf("%s %s", validateCmd, srcPath)
-		validateErr := marecmd.RunNoOutput(marecmd.Input{Command: validateCmd, Sudo: noPermission})
-		if validateErr != nil {
-			return false, validateErr
+		err = MaybeRunWithSudo(validateCmd)
+		if err != nil {
+			return false, err
 		}
 	}
 
