@@ -21,6 +21,7 @@ type FactMap map[string]map[string]string
 type Settings struct {
 	BinDir        string            `yaml:"bin_dir"`
 	CloneDir      string            `yaml:"clone_dir"`
+	CloneEnv      map[string]string `yaml:"clone_env"`
 	EnsureEnv     map[string]string `yaml:"ensure_env"`
 	EnsurePaths   []string          `yaml:"ensure_paths"`
 	HostFacts     FactMap           `yaml:"host_facts"`

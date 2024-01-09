@@ -158,7 +158,7 @@ func CloneTo(repo Repo, path string) error {
 	return clone(repo, repoUrl, path)
 }
 
-func CloneUnderPath(repo Repo, dir string) error {
+func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 	repoUrl, err := processUrl(repo.Name)
 	if err != nil {
 		return err
@@ -170,5 +170,33 @@ func CloneUnderPath(repo Repo, dir string) error {
 		return nil
 	}
 
-	return clone(repo, repoUrl, cloneDir)
+	modifiedEnv := make(map[string]string)
+	newEnv := make(map[string]bool)
+	for k, v := range cloneEnv {
+		envVal, ok := os.LookupEnv(k)
+		if ok {
+			modifiedEnv[k] = envVal
+		} else {
+			newEnv[k] = true
+		}
+		err = os.Setenv(k, v)
+	}
+
+	cloneErr := clone(repo, repoUrl, cloneDir)
+
+	for k, _ := range newEnv {
+		err = os.Unsetenv(k)
+		if err != nil {
+			return errors.Join(cloneErr, err)
+		}
+	}
+
+	for k, v := range modifiedEnv {
+		err = os.Setenv(k, v)
+		if err != nil {
+			return errors.Join(cloneErr, err)
+		}
+	}
+
+	return cloneErr
 }

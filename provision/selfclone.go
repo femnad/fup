@@ -2,18 +2,19 @@ package provision
 
 import (
 	"errors"
+	"github.com/femnad/fup/settings"
 
 	"github.com/femnad/fup/entity"
 )
 
-func cloneRepos(repos []entity.Repo, clonePath string) error {
+func cloneRepos(repos []entity.Repo, s settings.Settings) error {
 	var errs []error
 	for _, repo := range repos {
-		path := clonePath
+		path := s.SSHCloneDir
 		if repo.Path != "" {
 			path = repo.Path
 		}
-		err := entity.CloneUnderPath(repo, path)
+		err := entity.CloneUnderPath(repo, path, s.CloneEnv)
 		errs = append(errs, err)
 	}
 
@@ -21,5 +22,5 @@ func cloneRepos(repos []entity.Repo, clonePath string) error {
 }
 
 func sshClone(config entity.Config) error {
-	return cloneRepos(config.Repos, config.Settings.SSHCloneDir)
+	return cloneRepos(config.Repos, config.Settings)
 }
