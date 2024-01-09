@@ -15,6 +15,7 @@ type Unless struct {
 	Cmd      string `yaml:"cmd"`
 	ExitCode int    `yaml:"exit_code"`
 	Post     string `yaml:"post"`
+	Pwd      string `yaml:"pwd"`
 	Shell    bool   `yaml:"shell"`
 	Stat     string `yaml:"stat"`
 }
@@ -75,7 +76,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		unlessCmd = unlessable.DefaultVersionCmd()
 	}
 
-	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Shell: unless.Shell})
+	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Pwd: unless.Pwd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
 		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code,
