@@ -76,7 +76,8 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		unlessCmd = unlessable.DefaultVersionCmd()
 	}
 
-	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Pwd: unless.Pwd, Shell: unless.Shell})
+	pwd := internal.ExpandUser(unless.Pwd)
+	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Pwd: pwd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
 		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code,
