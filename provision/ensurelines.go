@@ -88,8 +88,6 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, file, err)
 	}
 
-	fmt.Printf("%+v\n", line.RunAfter)
-
 	executeAfter := line.RunAfter
 	if executeAfter.Name() == "" {
 		return nil
