@@ -16,6 +16,22 @@ func maybeWarnPasswordRequired(cmdStr string) {
 	Log.Warningf("Sudo authentication required for escalating privileges to run command %s", cmdHead)
 }
 
+func needsSudoForPath(dst string) (bool, error) {
+	isRoot, err := IsUserRoot()
+	if err != nil {
+		return false, err
+	}
+
+	var sudo bool
+	if isRoot {
+		sudo = false
+	} else {
+		sudo = !IsHomePath(dst)
+	}
+
+	return sudo, nil
+}
+
 func MaybeRunWithSudo(cmdStr string) error {
 	isRoot, err := IsUserRoot()
 	if err != nil {
@@ -32,8 +48,18 @@ func MaybeRunWithSudo(cmdStr string) error {
 	return err
 }
 
-func Run(cmdStr string) error {
-	cmd := marecmd.Input{Command: cmdStr}
-	_, err := marecmd.RunFormatError(cmd)
+func MaybeRunWithSudoForPath(cmdStr, path string) error {
+	needsSudo, err := needsSudoForPath(path)
+	if err != nil {
+		return err
+	}
+
+	if needsSudo {
+		cmdHead := strings.Split(cmdStr, "/")[0]
+		maybeWarnPasswordRequired(cmdHead)
+	}
+
+	cmd := marecmd.Input{Command: cmdStr, Sudo: needsSudo}
+	_, err = marecmd.RunFormatError(cmd)
 	return err
 }

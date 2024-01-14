@@ -221,33 +221,6 @@ func hasPerms(targetPath string) (bool, error) {
 	return stat.Uid == uint32(userId), nil
 }
 
-func needsSudoForPath(dst string) (bool, error) {
-	isRoot, err := IsUserRoot()
-	if err != nil {
-		return false, err
-	}
-
-	var sudo bool
-	if isRoot {
-		sudo = false
-	} else {
-		sudo = !IsHomePath(dst)
-	}
-
-	return sudo, nil
-}
-
-func GetMvCmd(src, dst string) (marecmd.Input, error) {
-	cmd := fmt.Sprintf("mv %s %s", src, dst)
-
-	sudo, err := needsSudoForPath(dst)
-	if err != nil {
-		return marecmd.Input{}, err
-	}
-
-	return marecmd.Input{Command: cmd, Sudo: sudo}, nil
-}
-
 func IsHomePath(path string) bool {
 	home := os.Getenv("HOME")
 	return strings.HasPrefix(path, home)
@@ -325,12 +298,9 @@ func WriteContent(file ManagedFile) (bool, error) {
 		return changed, err
 	}
 
-	mv, err := GetMvCmd(srcPath, target)
-	if err != nil {
-		return changed, err
-	}
+	mv := fmt.Sprintf("mv %s %s", srcPath, target)
 
-	err = marecmd.RunNoOutput(mv)
+	err = MaybeRunWithSudoForPath(mv, target)
 	if err != nil {
 		return changed, err
 	}

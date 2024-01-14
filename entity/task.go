@@ -117,11 +117,12 @@ type Step struct {
 	Mode    int    `yaml:"mode"`
 	Pwd     string `yaml:"pwd"`
 	Repo    Repo   `yaml:"repo"`
+	// For cmd
+	Sudo bool `yaml:"sudo"`
 	// For link and rename
 	Shell    string `yaml:"shell"`
 	Src      string `yaml:"src"`
 	StepName string `yaml:"name"`
-	Sudo     bool   `yaml:"sudo"`
 	// For download, file, link and rename
 	Target string        `yaml:"target"`
 	Unless unless.Unless `yaml:"unless"`
@@ -154,8 +155,8 @@ func (Step) GetVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
-func (Step) Name() string {
-	return ""
+func (s Step) Name() string {
+	return s.StepName
 }
 
 func (Step) DefaultVersionCmd() string {
