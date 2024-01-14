@@ -142,18 +142,6 @@ func getent(key, database string) (int, error) {
 	return int(id), nil
 }
 
-func getChmodCmd(target string, mode int) (marecmd.Input, error) {
-	octal := strconv.FormatInt(int64(mode), 8)
-	cmd := fmt.Sprintf("chmod %s %s", octal, target)
-
-	sudo, err := needsSudoForPath(target)
-	if err != nil {
-		return marecmd.Input{}, err
-	}
-
-	return marecmd.Input{Command: cmd, Sudo: sudo}, nil
-}
-
 func getStatSum(f string) (statSum, error) {
 	var s statSum
 	isRoot, err := IsUserRoot()
@@ -321,30 +309,18 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	if currentMode != mode || !dstExists {
-		chmodCmd, err := getChmodCmd(target, mode)
+		octal := strconv.FormatInt(int64(mode), 8)
+		chmod := fmt.Sprintf("chmod %s %s", octal, target)
+		err = MaybeRunWithSudoForPath(chmod, target)
 		if err != nil {
 			return changed, err
-		}
-
-		chmodErr := marecmd.RunNoOutput(chmodCmd)
-		if chmodErr != nil {
-			return changed, chmodErr
 		}
 	}
 
-	if noPermission || IsHomePath(target) {
-		isRoot, err := IsUserRoot()
-		if err != nil {
-			return false, err
-		}
-
-		_, err = marecmd.RunFormatError(marecmd.Input{
-			Command: fmt.Sprintf("chown %s:%s %s", rootUser, rootUser, target),
-			Sudo:    !isRoot,
-		})
-		if err != nil {
-			return changed, err
-		}
+	if noPermission || !IsHomePath(target) {
+		chownCmd := fmt.Sprintf("chown %s:%s %s", rootUser, rootUser, target)
+		err = MaybeRunWithSudoForPath(chownCmd, target)
+		return changed, err
 	}
 
 	err = chown(target, file.User, file.Group)
