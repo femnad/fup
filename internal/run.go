@@ -39,8 +39,7 @@ func MaybeRunWithSudo(cmdStr string) error {
 	}
 
 	if !isRoot {
-		cmdHead := strings.Split(cmdStr, "/")[0]
-		maybeWarnPasswordRequired(cmdHead)
+		maybeWarnPasswordRequired(cmdStr)
 	}
 
 	cmd := marecmd.Input{Command: cmdStr, Sudo: !isRoot}
@@ -55,8 +54,7 @@ func MaybeRunWithSudoForPath(cmdStr, path string) error {
 	}
 
 	if needsSudo {
-		cmdHead := strings.Split(cmdStr, "/")[0]
-		maybeWarnPasswordRequired(cmdHead)
+		maybeWarnPasswordRequired(cmdStr)
 	}
 
 	cmd := marecmd.Input{Command: cmdStr, Sudo: needsSudo}
