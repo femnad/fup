@@ -139,6 +139,15 @@ func osVersionGe(version float64) (bool, error) {
 	return osVersion >= version, nil
 }
 
+func osVersionGt(version float64) (bool, error) {
+	osVersion, err := GetOSVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return osVersion > version, nil
+}
+
 func osVersionLe(version float64) (bool, error) {
 	osVersion, err := GetOSVersion()
 	if err != nil {
@@ -146,6 +155,15 @@ func osVersionLe(version float64) (bool, error) {
 	}
 
 	return osVersion <= version, nil
+}
+
+func osVersionLt(version float64) (bool, error) {
+	osVersion, err := GetOSVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return osVersion < version, nil
 }
 
 func statOk(path string) (bool, error) {
@@ -164,5 +182,7 @@ var FactFns = template.FuncMap{
 	"stat":      statOk,
 	"version":   isOsVersion,
 	"versionGe": osVersionGe,
+	"versionGt": osVersionGt,
 	"versionLe": osVersionLe,
+	"versionLt": osVersionLt,
 }
