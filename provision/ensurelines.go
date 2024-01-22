@@ -3,27 +3,67 @@ package provision
 import (
 	"bufio"
 	"fmt"
-	"github.com/femnad/fup/entity"
 	"os"
 
+	mapset "github.com/deckarep/golang-set/v2"
+
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
 )
 
-func ensureLine(config entity.Config, line entity.LineInFile) error {
-	if !when.ShouldRun(line) {
-		internal.Log.Debugf("Skipping changes to %s due to condition %s", line.File, line.When)
-		return nil
+var (
+	ensureFns = map[string]func(string, *os.File, entity.LineInFile) (bool, error){
+		"ensure":  ensure,
+		"replace": replace,
+	}
+)
+
+func ensure(file string, tmpFile *os.File, line entity.LineInFile) (changed bool, err error) {
+	content := mapset.NewSet[string]()
+	for _, l := range line.Content {
+		content.Add(l)
 	}
 
-	tmpFile, err := os.CreateTemp(tmpDir, "fup")
-	if err != nil {
-		return err
+	var newFile bool
+	srcFile, err := os.Open(file)
+	if os.IsNotExist(err) {
+		newFile = true
+	} else if err != nil {
+		return
+	}
+	defer srcFile.Close()
+
+	if !newFile {
+		scanner := bufio.NewScanner(srcFile)
+		for scanner.Scan() {
+			l := scanner.Text()
+			if content.Contains(l) {
+				content.Remove(l)
+			}
+		}
 	}
 
-	srcFile, err := os.Open(line.File)
+	if content.Cardinality() == 0 {
+		return false, nil
+	}
+
+	content.Each(func(l string) bool {
+		_, err = tmpFile.WriteString(fmt.Sprintf("%s\n", l))
+		return err != nil
+	})
+
 	if err != nil {
-		return err
+		return false, fmt.Errorf("error ensuring lines in file %s", file)
+	}
+
+	return true, nil
+}
+
+func replace(file string, tmpFile *os.File, line entity.LineInFile) (changed bool, err error) {
+	srcFile, err := os.Open(file)
+	if err != nil {
+		return
 	}
 	defer srcFile.Close()
 
@@ -41,7 +81,6 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		replacements[replacement.Old] = replacement.New
 	}
 
-	changed := false
 	for scanner.Scan() {
 		var lineToWrite string
 		l := scanner.Text()
@@ -62,19 +101,38 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 
 		_, err = tmpFile.WriteString(lineToWrite + "\n")
 		if err != nil {
-			return err
+			return
 		}
 	}
 
-	tmpPath := tmpFile.Name()
-	err = tmpFile.Close()
+	return changed, nil
+}
+
+func ensureLine(config entity.Config, line entity.LineInFile) error {
+	srcFile := internal.ExpandUser(line.File)
+	if !when.ShouldRun(line) {
+		internal.Log.Debugf("Skipping changes to %s due to condition %s", srcFile, line.When)
+		return nil
+	}
+
+	tmpFile, err := os.CreateTemp(tmpDir, "fup")
 	if err != nil {
 		return err
 	}
 
-	file := line.File
+	ensureFn, ok := ensureFns[line.Name]
+	if !ok {
+		return fmt.Errorf("no method for %s'ing a line", line.Name)
+	}
+
+	changed, err := ensureFn(srcFile, tmpFile, line)
+	if err != nil {
+		return err
+	}
+
+	tmpPath := tmpFile.Name()
 	if !changed {
-		internal.Log.Debugf("Not modifying %s as no changes were found", file)
+		internal.Log.Debugf("Not modifying %s as no changes were found", srcFile)
 		err = os.Remove(tmpPath)
 		if err != nil {
 			return err
@@ -82,10 +140,10 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return nil
 	}
 
-	mv := fmt.Sprintf("mv %s %s", tmpPath, file)
-	err = internal.MaybeRunWithSudoForPath(mv, file)
+	mv := fmt.Sprintf("mv %s %s", tmpPath, srcFile)
+	err = internal.MaybeRunWithSudoForPath(mv, srcFile)
 	if err != nil {
-		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, file, err)
+		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, srcFile, err)
 	}
 
 	executeAfter := line.RunAfter
@@ -93,7 +151,7 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return nil
 	}
 
-	internal.Log.Debugf("Executing step %s after modifying %s", executeAfter.Name(), file)
+	internal.Log.Debugf("Executing step %s after modifying %s", executeAfter.Name(), srcFile)
 	return executeAfter.Run(config)
 }
 

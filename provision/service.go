@@ -257,7 +257,7 @@ func actuate(s entity.Service, action systemdAction) (string, error) {
 	return systemctlCmd(action.actuateCmd, s.Name, !s.System), nil
 }
 
-func ensure(s entity.Service, actionStr string) error {
+func ensureServiceState(s entity.Service, actionStr string) error {
 	action, ok := actions[actionStr]
 	if !ok {
 		return fmt.Errorf("no such action: %s", actionStr)
@@ -293,7 +293,7 @@ func enable(s entity.Service) error {
 		return nil
 	}
 
-	return ensure(s, "enable")
+	return ensureServiceState(s, "enable")
 }
 
 func start(s entity.Service) error {
@@ -301,7 +301,7 @@ func start(s entity.Service) error {
 		return nil
 	}
 
-	return ensure(s, "start")
+	return ensureServiceState(s, "start")
 }
 
 func expandService(s entity.Service, cfg entity.Config) (entity.Service, error) {
@@ -342,7 +342,7 @@ func initService(s entity.Service, cfg entity.Config) error {
 	}
 
 	if s.Stop {
-		err := ensure(s, "stop")
+		err := ensureServiceState(s, "stop")
 		if err != nil {
 			internal.Log.Errorf("error stopping service %s, %v", s.Name, err)
 		}
@@ -350,7 +350,7 @@ func initService(s entity.Service, cfg entity.Config) error {
 	}
 
 	if s.Disable {
-		err := ensure(s, "disable")
+		err := ensureServiceState(s, "disable")
 		if err != nil {
 			internal.Log.Errorf("error disabling service %s, %v", s.Name, err)
 		}

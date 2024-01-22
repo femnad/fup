@@ -7,6 +7,7 @@ type Replacement struct {
 }
 
 type LineInFile struct {
+	Content  []string      `yaml:"content"`
 	File     string        `yaml:"file"`
 	Name     string        `yaml:"name"`
 	Replace  []Replacement `yaml:"replace"`
