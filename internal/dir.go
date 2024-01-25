@@ -1,6 +1,9 @@
 package internal
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func EnsureDirAbsent(dir string) error {
 	_, err := os.Stat(dir)
@@ -14,14 +17,17 @@ func EnsureDirAbsent(dir string) error {
 
 func EnsureDirExists(dir string) error {
 	_, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		err = os.MkdirAll(dir, 0744)
-		if err != nil {
-			return err
-		}
-	} else if err != nil {
+	if err == nil {
+		return nil
+	}
+
+	if !os.IsNotExist(err) {
 		return err
 	}
 
-	return nil
+	err = os.MkdirAll(dir, 0744)
+	if os.IsPermission(err) {
+		return MaybeRunWithSudo(fmt.Sprintf("mkdir %s", dir))
+	}
+	return err
 }

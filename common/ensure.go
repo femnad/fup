@@ -3,9 +3,10 @@ package common
 import (
 	"bufio"
 	"fmt"
-	"github.com/femnad/fup/internal"
 	"os"
 	"path"
+
+	"github.com/femnad/fup/internal"
 )
 
 const permissions = 0o600
