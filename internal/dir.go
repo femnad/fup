@@ -27,7 +27,8 @@ func EnsureDirExists(dir string) error {
 
 	err = os.MkdirAll(dir, 0744)
 	if os.IsPermission(err) {
-		return MaybeRunWithSudo(fmt.Sprintf("mkdir %s", dir))
+		return MaybeRunWithSudo(fmt.Sprintf("mkdir -p %s", dir))
 	}
+
 	return err
 }
