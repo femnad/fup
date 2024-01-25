@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
@@ -109,9 +110,9 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (changed boo
 }
 
 func ensureLine(config entity.Config, line entity.LineInFile) error {
-	srcFile := internal.ExpandUser(line.File)
+	target := internal.ExpandUser(line.File)
 	if !when.ShouldRun(line) {
-		internal.Log.Debugf("Skipping changes to %s due to condition %s", srcFile, line.When)
+		internal.Log.Debugf("Skipping changes to %s due to condition %s", target, line.When)
 		return nil
 	}
 
@@ -125,14 +126,14 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return fmt.Errorf("no method for %s'ing a line", line.Name)
 	}
 
-	changed, err := ensureFn(srcFile, tmpFile, line)
+	changed, err := ensureFn(target, tmpFile, line)
 	if err != nil {
 		return err
 	}
 
 	tmpPath := tmpFile.Name()
 	if !changed {
-		internal.Log.Debugf("Not modifying %s as no changes were found", srcFile)
+		internal.Log.Debugf("Not modifying %s as no changes were found", target)
 		err = os.Remove(tmpPath)
 		if err != nil {
 			return err
@@ -140,10 +141,16 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return nil
 	}
 
-	mv := fmt.Sprintf("mv %s %s", tmpPath, srcFile)
-	err = internal.MaybeRunWithSudoForPath(mv, srcFile)
+	targetDir, _ := path.Split(target)
+	err = ensureDirExist(targetDir)
 	if err != nil {
-		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, srcFile, err)
+		return err
+	}
+
+	mv := fmt.Sprintf("mv %s %s", tmpPath, target)
+	err = internal.MaybeRunWithSudoForPath(mv, target)
+	if err != nil {
+		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, target, err)
 	}
 
 	executeAfter := line.RunAfter
@@ -151,7 +158,7 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return nil
 	}
 
-	internal.Log.Debugf("Executing step %s after modifying %s", executeAfter.Name(), srcFile)
+	internal.Log.Debugf("Executing step %s after modifying %s", executeAfter.Name(), target)
 	return executeAfter.Run(config)
 }
 
