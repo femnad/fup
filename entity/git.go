@@ -173,6 +173,7 @@ func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 	modifiedEnv := make(map[string]string)
 	newEnv := make(map[string]bool)
 	for k, v := range cloneEnv {
+		v = internal.ExpandUser(v)
 		envVal, ok := os.LookupEnv(k)
 		if ok {
 			modifiedEnv[k] = envVal
