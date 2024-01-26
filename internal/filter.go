@@ -7,7 +7,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 )
 
-// Contains checks is needle exists in elems.
+// Contains checks if needle exists in elems.
 // Yoinked from https://gosamples.dev/generics-slice-contains/.
 func Contains[T comparable](elems []T, needle T) bool {
 	for _, elem := range elems {

@@ -17,7 +17,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/xi2/xz"
+	"github.com/ulikunitz/xz"
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
@@ -39,7 +39,6 @@ const (
 	gzipMimeType       = "application/gzip"
 	sharedLibMimeType  = "application/x-sharedlib"
 	tarMimeType        = "application/x-tar"
-	xzDictMax          = 1 << 27
 	xzMimeType         = "application/x-xz"
 	zipMimeType        = "application/zip"
 )
@@ -144,7 +143,7 @@ func getTarReader(reader io.ReadCloser, fileType string) (io.Reader, error) {
 	case tarMimeType:
 		return reader, nil
 	case xzMimeType:
-		return xz.NewReader(reader, xzDictMax)
+		return xz.NewReader(reader)
 	default:
 		return nil, fmt.Errorf("unable to determine tar reader for file type %s", fileType)
 	}
