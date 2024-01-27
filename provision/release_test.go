@@ -167,6 +167,22 @@ func Test_getReleaseInfo(t *testing.T) {
 				target:        "qux",
 			},
 		},
+		{
+			name: "Exec has leading ./",
+			args: args{
+				entries: []archiveEntry{
+					{
+						info: mockExec("foo"),
+						name: "./foo",
+					},
+				},
+			},
+			want: ReleaseInfo{
+				execCandidate: "foo",
+				hasRootDir:    false,
+				target:        "foo",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
