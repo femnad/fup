@@ -313,8 +313,13 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 			return info, fmt.Errorf("error determining root dir for %s", archive.Url)
 		}
 
+		prefix = strings.TrimPrefix(prefix, "./")
 		hasRootDir = strings.Index(prefix, "/") > -1
-		target = root
+		if root == "." {
+			target = prefix
+		} else {
+			target = root
+		}
 	} else if archive.Name() != "" {
 		target = archive.Name()
 	} else {
@@ -322,7 +327,7 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 	}
 
 	if len(execs) == 1 {
-		execCandidate = execs[0].name
+		execCandidate = strings.TrimPrefix(execs[0].name, "./")
 	}
 
 	execCandidate, err = getExecCandidate(prefix, execCandidate)
