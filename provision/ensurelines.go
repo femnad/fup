@@ -14,13 +14,18 @@ import (
 )
 
 var (
-	ensureFns = map[string]func(string, *os.File, entity.LineInFile) (bool, error){
+	ensureFns = map[string]func(string, *os.File, entity.LineInFile) (ensureResult, error){
 		"ensure":  ensure,
 		"replace": replace,
 	}
 )
 
-func ensure(file string, tmpFile *os.File, line entity.LineInFile) (changed bool, err error) {
+type ensureResult struct {
+	changed bool
+	new     bool
+}
+
+func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensureResult, err error) {
 	content := mapset.NewSet[string]()
 	for _, l := range line.Content {
 		content.Add(l)
@@ -46,7 +51,7 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (changed bool
 	}
 
 	if content.Cardinality() == 0 {
-		return false, nil
+		return
 	}
 
 	content.Each(func(l string) bool {
@@ -55,13 +60,13 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (changed bool
 	})
 
 	if err != nil {
-		return false, fmt.Errorf("error ensuring lines in file %s", file)
+		return result, fmt.Errorf("error ensuring lines in file %s", file)
 	}
 
-	return true, nil
+	return ensureResult{changed: true, new: newFile}, nil
 }
 
-func replace(file string, tmpFile *os.File, line entity.LineInFile) (changed bool, err error) {
+func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensureResult, err error) {
 	srcFile, err := os.Open(file)
 	if err != nil {
 		return
@@ -82,6 +87,7 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (changed boo
 		replacements[replacement.Old] = replacement.New
 	}
 
+	var changed bool
 	for scanner.Scan() {
 		var lineToWrite string
 		l := scanner.Text()
@@ -106,7 +112,7 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (changed boo
 		}
 	}
 
-	return changed, nil
+	return ensureResult{changed: changed}, nil
 }
 
 func ensureLine(config entity.Config, line entity.LineInFile) error {
@@ -126,13 +132,13 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return fmt.Errorf("no method for %s'ing a line", line.Name)
 	}
 
-	changed, err := ensureFn(target, tmpFile, line)
+	result, err := ensureFn(target, tmpFile, line)
 	if err != nil {
 		return err
 	}
 
 	tmpPath := tmpFile.Name()
-	if !changed {
+	if !result.changed {
 		internal.Log.Debugf("Not modifying %s as no changes were found", target)
 		err = os.Remove(tmpPath)
 		if err != nil {
@@ -147,7 +153,7 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return err
 	}
 
-	err = internal.Move(tmpPath, target)
+	err = internal.Move(tmpPath, target, result.new)
 	if err != nil {
 		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, target, err)
 	}

@@ -64,7 +64,7 @@ func MaybeRunWithSudoForPath(cmdStr, path string) error {
 	return err
 }
 
-func Move(src, dst string) error {
+func Move(src, dst string, setOwner bool) error {
 	if IsHomePath(dst) {
 		return os.Rename(src, dst)
 	}
@@ -75,5 +75,9 @@ func Move(src, dst string) error {
 		return err
 	}
 
-	return chown(src, rootUser, rootUser)
+	if setOwner {
+		return chown(dst, rootUser, rootUser)
+	}
+
+	return nil
 }
