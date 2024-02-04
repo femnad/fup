@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	version = "0.31.5"
+	version = "0.31.6"
 )
 
 type args struct {

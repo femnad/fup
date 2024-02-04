@@ -68,7 +68,6 @@ func chown(file, user, group string) error {
 		if isHomePath {
 			return nil
 		}
-
 		user = rootUser
 		group = rootUser
 	}

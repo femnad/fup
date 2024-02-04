@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	marecmd "github.com/femnad/mare/cmd"
@@ -60,4 +62,18 @@ func MaybeRunWithSudoForPath(cmdStr, path string) error {
 	cmd := marecmd.Input{Command: cmdStr, Sudo: needsSudo}
 	_, err = marecmd.RunFormatError(cmd)
 	return err
+}
+
+func Move(src, dst string) error {
+	if IsHomePath(dst) {
+		return os.Rename(src, dst)
+	}
+
+	mv := fmt.Sprintf("mv %s %s", src, dst)
+	err := MaybeRunWithSudoForPath(mv, dst)
+	if err != nil {
+		return err
+	}
+
+	return chown(src, rootUser, rootUser)
 }

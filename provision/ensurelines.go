@@ -147,8 +147,7 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return err
 	}
 
-	mv := fmt.Sprintf("mv %s %s", tmpPath, target)
-	err = internal.MaybeRunWithSudoForPath(mv, target)
+	err = internal.Move(tmpPath, target)
 	if err != nil {
 		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, target, err)
 	}
