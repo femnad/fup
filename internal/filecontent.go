@@ -98,6 +98,12 @@ func chown(file, user, group string) error {
 	return MaybeRunWithSudo(chownCmd)
 }
 
+func chmod(target string, mode int) error {
+	octal := strconv.FormatInt(int64(mode), 8)
+	chmodCmd := fmt.Sprintf("chmod %s %s", octal, target)
+	return MaybeRunWithSudoForPath(chmodCmd, target)
+}
+
 func ensureDir(dir string) error {
 	hasDirPerms, err := hasPerms(dir)
 	if err != nil {
@@ -303,9 +309,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	if currentMode != mode || !dstExists {
-		octal := strconv.FormatInt(int64(mode), 8)
-		chmod := fmt.Sprintf("chmod %s %s", octal, target)
-		err = MaybeRunWithSudoForPath(chmod, target)
+		err = chmod(target, mode)
 		if err != nil {
 			return changed, err
 		}

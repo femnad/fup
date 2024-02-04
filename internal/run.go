@@ -75,9 +75,14 @@ func Move(src, dst string, setOwner bool) error {
 		return err
 	}
 
-	if setOwner {
-		return chown(dst, rootUser, rootUser)
+	if !setOwner {
+		return nil
 	}
 
-	return nil
+	err = chown(dst, rootUser, rootUser)
+	if err != nil {
+		return err
+	}
+
+	return chmod(dst, defaultFileMode)
 }
