@@ -95,12 +95,7 @@ func chown(file, user, group string) error {
 	}
 	chownCmd += " " + file
 
-	isRoot, err := IsUserRoot()
-	if err != nil {
-		return err
-	}
-
-	return marecmd.RunNoOutput(marecmd.Input{Command: chownCmd, Sudo: !isRoot})
+	return MaybeRunWithSudo(chownCmd)
 }
 
 func ensureDir(dir string) error {
