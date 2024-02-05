@@ -31,7 +31,7 @@ task:
       - name: git
         repo:
           name: https://gitlab.com/femnad/chezmoi.git
-        dir: ~/.local/share/chezmoi
+          path: ~/.local/share
       - name: cmd
         cmd: ~/bin/chezmoi apply --force
 
