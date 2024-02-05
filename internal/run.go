@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	marecmd "github.com/femnad/mare/cmd"
@@ -65,10 +64,6 @@ func MaybeRunWithSudoForPath(cmdStr, path string) error {
 }
 
 func Move(src, dst string, setOwner bool) error {
-	if IsHomePath(dst) {
-		return os.Rename(src, dst)
-	}
-
 	mv := fmt.Sprintf("mv %s %s", src, dst)
 	err := MaybeRunWithSudoForPath(mv, dst)
 	if err != nil {

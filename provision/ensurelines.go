@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
@@ -76,34 +77,38 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 	scanner := bufio.NewScanner(srcFile)
 	scanner.Split(bufio.ScanLines)
 
-	replacements := make(map[string]string)
-	removals := make(map[string]bool)
-	for _, replacement := range line.Replace {
-		if replacement.Absent {
-			removals[replacement.Old] = true
-			continue
-		}
-
-		replacements[replacement.Old] = replacement.New
-	}
-
 	var changed bool
 	for scanner.Scan() {
 		var lineToWrite string
 		l := scanner.Text()
 
-		_, remove := removals[l]
-		if remove {
-			changed = true
-			continue
+		var absent bool
+		for _, needle := range line.Replace {
+			absent = needle.Absent
+			var regex *regexp.Regexp
+			if needle.Regex {
+				regex, err = regexp.Compile(needle.Old)
+				if err != nil {
+					return result, err
+				}
+
+				if regex.MatchString(l) {
+					changed = true
+					if absent {
+						break
+					}
+					lineToWrite = needle.New
+				}
+			} else if l == needle.Old {
+				changed = true
+				lineToWrite = needle.New
+			} else {
+				lineToWrite = l
+			}
 		}
 
-		newLine, ok := replacements[l]
-		if ok {
-			lineToWrite = newLine
-			changed = true
-		} else {
-			lineToWrite = l
+		if absent && changed {
+			continue
 		}
 
 		_, err = tmpFile.WriteString(lineToWrite + "\n")

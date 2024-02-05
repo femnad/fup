@@ -4,6 +4,7 @@ type Replacement struct {
 	Absent bool   `yaml:"absent"`
 	Old    string `yaml:"old"`
 	New    string `yaml:"new"`
+	Regex  bool   `yaml:"regex"`
 }
 
 type LineInFile struct {
