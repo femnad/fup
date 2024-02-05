@@ -14,7 +14,7 @@ func runTask(task entity.Task, cfg entity.Config) error {
 	name := task.Name()
 	hintMsg := ""
 	if task.Hint != "" {
-		hintMsg = fmt.Sprintf("Hint for running task %s: %s", name, task.Hint)
+		hintMsg = fmt.Sprintf("Hint for running task `%s`: %s", name, task.Hint)
 	}
 
 	if !when.ShouldRun(task) {
