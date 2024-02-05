@@ -14,7 +14,7 @@ type Whenable interface {
 	RunWhen() string
 }
 
-func evalStatement(statement string) (bool, error) {
+func EvalStatement(statement string) (bool, error) {
 	if statement == "" {
 		return true, nil
 	}
@@ -41,7 +41,7 @@ func ShouldRun(whenable Whenable) bool {
 		return true
 	}
 
-	shouldRun, err := evalStatement(statement)
+	shouldRun, err := EvalStatement(statement)
 	if err != nil {
 		internal.Log.Warningf("error evaluating statement %s: %v", statement, err)
 		return false

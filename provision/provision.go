@@ -131,6 +131,11 @@ func NewProvisioner(cfg entity.Config, filter []string) (Provisioner, error) {
 }
 
 func (p Provisioner) Apply() error {
+	err := evalFacts(p.Config)
+	if err != nil {
+		return err
+	}
+
 	return p.provisioners.apply()
 }
 

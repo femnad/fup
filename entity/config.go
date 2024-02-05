@@ -16,6 +16,7 @@ type Config struct {
 	Flatpak         Flatpak           `yaml:"flatpak"`
 	GithubUserKey   UserKey           `yaml:"github_key"`
 	Go              []GoPkg           `yaml:"go"`
+	Hints           []Hint            `yaml:"hint"`
 	Packages        PackageSpec       `yaml:"package"`
 	PostflightTasks []Task            `yaml:"postflight"`
 	PreflightTasks  []Task            `yaml:"preflight"`

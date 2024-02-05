@@ -2,6 +2,8 @@ package provision
 
 import (
 	"errors"
+	"fmt"
+
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
@@ -9,17 +11,26 @@ import (
 )
 
 func runTask(task entity.Task, cfg entity.Config) error {
+	name := task.Name()
+	hintMsg := ""
+	if task.Hint != "" {
+		hintMsg = fmt.Sprintf("Hint for running task %s: %s", name, task.Hint)
+	}
+
 	if !when.ShouldRun(task) {
-		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", task.Desc, task.When)
+		if hintMsg != "" {
+			internal.Log.Warning(hintMsg)
+		}
+		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", name, task.When)
 		return nil
 	}
 
 	if unless.ShouldSkip(task, cfg.Settings) {
-		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", task.Desc, task.Unless)
+		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", name, task.Unless)
 		return nil
 	}
 
-	internal.Log.Infof("Running task: %s", task.Name())
+	internal.Log.Infof("Running task: %s", name)
 	return task.Run(cfg)
 }
 
