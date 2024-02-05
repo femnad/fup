@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	defaultHost   = "github.com"
-	defaultRemote = "origin"
-	gitRepoSuffix = ".git"
+	defaultHost    = "github.com"
+	defaultRemote  = "origin"
+	gitClonePrefix = "git@"
+	gitRepoSuffix  = ".git"
 )
 
 type cloneRef struct {
@@ -40,7 +41,11 @@ func processUrl(repoUrl string) (cloneRef, error) {
 	}
 	ref.base = repoBase
 
-	// Doesn't expect git@<host>:<user>/<repo> URLs.
+	if strings.HasPrefix(repoUrl, gitClonePrefix) {
+		ref.url = repoUrl
+		return ref, nil
+	}
+
 	parsed, err := url.Parse(repoUrl)
 	if err != nil {
 		return ref, err
