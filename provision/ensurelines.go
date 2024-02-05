@@ -84,12 +84,12 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 
 	var changed bool
 	for scanner.Scan() {
-		var lineToWrite string
-		l := scanner.Text()
-
 		var absent bool
+		var found bool
 		var oldLine string
 		var newLine string
+		l := scanner.Text()
+
 		for _, needle := range replacements {
 			var regex *regexp.Regexp
 			absent = needle.Absent
@@ -103,29 +103,27 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 				}
 
 				if regex.MatchString(l) {
-					changed = true
-					if absent {
-						break
-					}
-					lineToWrite = newLine
+					found = true
+					l = newLine
+					break
 				}
 			} else if l == oldLine {
-				changed = true
-				lineToWrite = newLine
-			} else {
-				lineToWrite = l
+				found = true
+				l = newLine
+				break
 			}
 		}
 
-		if changed {
+		if found {
 			delete(replacements, oldLine)
+			changed = true
 		}
 
 		if absent && changed {
 			continue
 		}
 
-		_, err = tmpFile.WriteString(lineToWrite + "\n")
+		_, err = tmpFile.WriteString(l + "\n")
 		if err != nil {
 			return
 		}

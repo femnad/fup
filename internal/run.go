@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"strings"
 
 	marecmd "github.com/femnad/mare/cmd"
 )
@@ -13,8 +12,7 @@ func maybeWarnPasswordRequired(cmdStr string) {
 		return
 	}
 
-	cmdHead := strings.Split(cmdStr, " ")[0]
-	Log.Warningf("Sudo authentication required for escalating privileges to run command %s", cmdHead)
+	Log.Warningf("Sudo authentication required for escalating privileges to run command `%s`", cmdStr)
 }
 
 func needsSudoForPath(dst string) (bool, error) {
