@@ -57,11 +57,12 @@ func runShellCmd(step Step, cfg Config) error {
 }
 
 func runGitClone(step Step, cfg Config) error {
-	path := ExpandSettings(cfg.Settings, step.Dir)
+	path := step.Repo.Path
 	if path == "" {
-		return fmt.Errorf("cannot clone repo %s without a path for step", step.Repo.Name)
+		path = cfg.Settings.CloneDir
 	}
-	return CloneTo(step.Repo, path)
+	path = ExpandSettings(cfg.Settings, path)
+	return CloneUnderPath(step.Repo, path, cfg.Settings.CloneEnv)
 }
 
 func fileCmd(step Step, cfg Config) error {

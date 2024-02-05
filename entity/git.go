@@ -154,15 +154,6 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 	return nil
 }
 
-func CloneTo(repo Repo, path string) error {
-	repoUrl, err := processUrl(repo.Name)
-	if err != nil {
-		return err
-	}
-
-	return clone(repo, repoUrl, path)
-}
-
 func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 	repoUrl, err := processUrl(repo.Name)
 	if err != nil {
