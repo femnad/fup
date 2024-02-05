@@ -77,17 +77,27 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 	scanner := bufio.NewScanner(srcFile)
 	scanner.Split(bufio.ScanLines)
 
+	replacements := make(map[string]entity.Replacement)
+	for _, replacement := range line.Replace {
+		replacements[replacement.Old] = replacement
+	}
+
 	var changed bool
 	for scanner.Scan() {
 		var lineToWrite string
 		l := scanner.Text()
 
 		var absent bool
-		for _, needle := range line.Replace {
-			absent = needle.Absent
+		var oldLine string
+		var newLine string
+		for _, needle := range replacements {
 			var regex *regexp.Regexp
+			absent = needle.Absent
+			oldLine = needle.Old
+			newLine = needle.New
+
 			if needle.Regex {
-				regex, err = regexp.Compile(needle.Old)
+				regex, err = regexp.Compile(oldLine)
 				if err != nil {
 					return result, err
 				}
@@ -97,14 +107,18 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 					if absent {
 						break
 					}
-					lineToWrite = needle.New
+					lineToWrite = newLine
 				}
-			} else if l == needle.Old {
+			} else if l == oldLine {
 				changed = true
-				lineToWrite = needle.New
+				lineToWrite = newLine
 			} else {
 				lineToWrite = l
 			}
+		}
+
+		if changed {
+			delete(replacements, oldLine)
 		}
 
 		if absent && changed {
