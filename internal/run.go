@@ -2,6 +2,8 @@ package internal
 
 import (
 	"fmt"
+	"os"
+	"path"
 
 	marecmd "github.com/femnad/mare/cmd"
 )
@@ -46,8 +48,16 @@ func MaybeRunWithSudo(cmdStr string) error {
 	return err
 }
 
-func MaybeRunWithSudoForPath(cmdStr, path string) error {
-	needsSudo, err := needsSudoForPath(path)
+func MaybeRunWithSudoForPath(cmdStr, targetPath string) error {
+	if !path.IsAbs(targetPath) {
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		targetPath = path.Join(wd, targetPath)
+	}
+
+	needsSudo, err := needsSudoForPath(targetPath)
 	if err != nil {
 		return err
 	}

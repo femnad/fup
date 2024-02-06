@@ -18,6 +18,10 @@ func ensureDirAbsent(dir string) error {
 }
 
 func ensureDirExist(dir string) error {
+	if dir == "" {
+		return nil
+	}
+
 	dirName := internal.ExpandUser(dir)
 	if err := internal.EnsureDirExists(dirName); err != nil {
 		return fmt.Errorf("error creating directory %s: %v", dirName, err)
