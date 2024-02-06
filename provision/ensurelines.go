@@ -97,17 +97,24 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 			newLine = needle.New
 
 			if needle.Regex {
+				if l == newLine {
+					found = true
+					break
+				}
+
 				regex, err = regexp.Compile(oldLine)
 				if err != nil {
 					return result, err
 				}
 
 				if regex.MatchString(l) {
+					changed = true
 					found = true
 					l = newLine
 					break
 				}
 			} else if l == oldLine {
+				changed = true
 				found = true
 				l = newLine
 				break
@@ -116,7 +123,6 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 
 		if found {
 			delete(replacements, oldLine)
-			changed = true
 		}
 
 		if absent && changed {
@@ -127,6 +133,18 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 		if err != nil {
 			return
 		}
+	}
+
+	for _, replacement := range replacements {
+		if replacement.Absent || !replacement.Ensure {
+			continue
+		}
+
+		_, err = tmpFile.WriteString(replacement.New + "\n")
+		if err != nil {
+			return
+		}
+		changed = true
 	}
 
 	return ensureResult{changed: changed}, nil

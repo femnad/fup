@@ -2,6 +2,7 @@ package entity
 
 type Replacement struct {
 	Absent bool   `yaml:"absent"`
+	Ensure bool   `yaml:"ensure"`
 	Old    string `yaml:"old"`
 	New    string `yaml:"new"`
 	Regex  bool   `yaml:"regex"`
