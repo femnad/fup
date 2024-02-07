@@ -16,6 +16,10 @@ func EnsureDirAbsent(dir string) error {
 }
 
 func EnsureDirExists(dir string) error {
+	if dir == "" {
+		return nil
+	}
+
 	_, err := os.Stat(dir)
 	if err == nil {
 		return nil
