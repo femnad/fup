@@ -18,7 +18,7 @@ func runTask(task entity.Task, cfg entity.Config) error {
 	}
 
 	if !when.ShouldRun(task) {
-		if hintMsg != "" {
+		if hintMsg != "" && !unless.ShouldSkip(task, cfg.Settings) {
 			internal.Log.Warning(hintMsg)
 		}
 		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", name, task.When)
