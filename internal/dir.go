@@ -5,6 +5,17 @@ import (
 	"os"
 )
 
+func EnsureFileAbsent(file string) error {
+	_, err := os.Stat(file)
+	if err == nil {
+		return os.Remove(file)
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	return nil
+}
+
 func EnsureDirAbsent(dir string) error {
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
