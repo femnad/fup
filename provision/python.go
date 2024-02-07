@@ -16,7 +16,7 @@ import (
 
 func pipInstall(pipBin, pkg string) error {
 	cmd := fmt.Sprintf("%s install %s", pipBin, pkg)
-	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
+	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 	venvDir := path.Join(baseDir, name)
 
 	cmd := fmt.Sprintf("virtualenv %s", venvDir)
-	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
+	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error creating virtualenv for package %s: %v", name, err)
 		return err

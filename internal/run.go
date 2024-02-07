@@ -44,7 +44,7 @@ func MaybeRunWithSudo(cmdStr string) error {
 	}
 
 	cmd := marecmd.Input{Command: cmdStr, Sudo: !isRoot}
-	_, err = marecmd.RunFormatError(cmd)
+	err = marecmd.RunErrOnly(cmd)
 	return err
 }
 
@@ -67,7 +67,7 @@ func MaybeRunWithSudoForPath(cmdStr, targetPath string) error {
 	}
 
 	cmd := marecmd.Input{Command: cmdStr, Sudo: needsSudo}
-	_, err = marecmd.RunFormatError(cmd)
+	err = marecmd.RunErrOnly(cmd)
 	return err
 }
 

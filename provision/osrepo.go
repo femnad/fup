@@ -22,7 +22,7 @@ func runUpdateCmds(cmds mapset.Set[string]) []error {
 
 	cmds.Each(func(cmd string) bool {
 		input := marecmd.Input{Command: cmd, Sudo: !isRoot}
-		_, err = marecmd.RunFormatError(input)
+		err = marecmd.RunErrOnly(input)
 		errs = append(errs, err)
 		return false
 	})

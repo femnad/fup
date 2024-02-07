@@ -661,7 +661,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 			internal.Log.Debugf("Running command %s under path %s", cmd, pwd)
 		}
 
-		_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true})
+		err = marecmd.RunErrOnly(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true})
 		if err != nil {
 			internal.Log.Errorf("error running post download command: %v", err)
 			return err

@@ -47,7 +47,7 @@ func (i Installer) maybeRunWithSudo(cmds ...string) error {
 	}
 
 	cmdStr := strings.Join(cmds, " ")
-	_, err = marecmd.RunFormatError(marecmd.Input{
+	err = marecmd.RunErrOnly(marecmd.Input{
 		Command:         cmdStr,
 		Sudo:            !isRoot,
 		SudoPreserveEnv: i.Pkg.PreserveEnv(),
@@ -74,7 +74,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 
 func (i Installer) Version(pkg string) (string, error) {
 	input := marecmd.Input{Command: fmt.Sprintf("%s info %s", i.Pkg.PkgExec(), pkg)}
-	out, err := marecmd.RunFormatError(input)
+	out, err := marecmd.RunFmtErr(input)
 	if err != nil {
 		return "", err
 	}
@@ -158,7 +158,7 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 
 func (i Installer) InstalledPackages(pkg PkgManager) (mapset.Set[string], error) {
 	listCmd := fmt.Sprintf("%s list --installed", pkg.PkgExec())
-	resp, err := marecmd.RunFormatError(marecmd.Input{Command: listCmd})
+	resp, err := marecmd.RunFmtErr(marecmd.Input{Command: listCmd})
 	if err != nil {
 		return nil, err
 	}

@@ -18,7 +18,7 @@ type installer struct {
 }
 
 func (i installer) runMaybeSudo(cmd string) error {
-	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !i.isRoot})
+	_, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd, Sudo: !i.isRoot})
 	return err
 }
 
@@ -97,7 +97,7 @@ func (i installer) configManagerInstall(repo string) error {
 func (i installer) releasePackagesInstall(url []string, osId string) error {
 	packageList := strings.Join(url, " ")
 	cmd := fmt.Sprintf("rpm -E %%%s", osId)
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
+	out, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd})
 	if err != nil {
 		return err
 	}

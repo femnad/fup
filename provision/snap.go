@@ -11,7 +11,7 @@ import (
 )
 
 func isSnapInstalled(snap entity.Snap) bool {
-	out, _ := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("snap list %s", snap.Name)})
+	out, _ := marecmd.RunFmtErr(marecmd.Input{Command: fmt.Sprintf("snap list %s", snap.Name)})
 	return out.Code == 0
 }
 

@@ -123,7 +123,7 @@ func getent(key, database string) (int, error) {
 		return defaultId, nil
 	}
 
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("getent %s %s", database, key)})
+	out, err := marecmd.RunFmtErr(marecmd.Input{Command: fmt.Sprintf("getent %s %s", database, key)})
 	if err != nil {
 		return 0, err
 	}
@@ -150,7 +150,7 @@ func getStatSum(f string) (statSum, error) {
 	}
 
 	cmd := fmt.Sprintf("stat -c %%a %s", f)
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !isRoot})
+	out, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd, Sudo: !isRoot})
 	if err != nil {
 		if strings.HasSuffix(strings.TrimSpace(out.Stderr), statNoExistsError) {
 			return s, os.ErrNotExist
@@ -163,7 +163,7 @@ func getStatSum(f string) (statSum, error) {
 		return s, err
 	}
 
-	out, err = marecmd.RunFormatError(marecmd.Input{Command: fmt.Sprintf("sha256sum %s", f), Sudo: !isRoot})
+	out, err = marecmd.RunFmtErr(marecmd.Input{Command: fmt.Sprintf("sha256sum %s", f), Sudo: !isRoot})
 	if err != nil {
 		return s, err
 	}

@@ -20,7 +20,7 @@ func addUserToGroup(user, group string) error {
 
 	internal.Log.Infof("Adding user %s to group %s", user, group)
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
-	_, err = marecmd.RunFormatError(marecmd.Input{Command: usermod, Sudo: !isRoot})
+	err = marecmd.RunErrOnly(marecmd.Input{Command: usermod, Sudo: !isRoot})
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func groupAdd(group entity.Group) error {
 	cmd += " " + group.Name
 
 	internal.Log.Infof("Creating group %s", group.Name)
-	_, err = marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: !isRoot})
+	err = marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: !isRoot})
 	return err
 }
 

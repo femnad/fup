@@ -86,7 +86,7 @@ func writeTmpl(s entity.Service) (string, error) {
 
 func runSystemctlCmd(cmd string, service entity.Service) error {
 	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
-	_, err := marecmd.RunFormatError(marecmd.Input{Command: cmd, Sudo: service.System})
+	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: service.System})
 	return err
 }
 
@@ -104,7 +104,7 @@ func writeServiceFile(file, content string) (bool, error) {
 
 func maybeRestart(s entity.Service) error {
 	cmd := systemctlCmd("is-active", s.Name, !s.System)
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: cmd})
+	out, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd})
 	if err != nil {
 		if strings.TrimSpace(out.Stdout) == "inactive" {
 			return nil
@@ -115,7 +115,7 @@ func maybeRestart(s entity.Service) error {
 	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
 
 	cmd = systemctlCmd("restart", s.Name, !s.System)
-	return marecmd.RunNoOutput(marecmd.Input{Command: cmd, Sudo: s.System})
+	return marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: s.System})
 }
 
 func getServiceExec(serviceFile string) (string, error) {
@@ -269,7 +269,7 @@ func ensureServiceState(s entity.Service, actionStr string) error {
 	}
 
 	// Don't need sudo for check actions, so don't use runSystemctlCmd
-	resp, _ := marecmd.RunFormatError(marecmd.Input{Command: checkCmd})
+	resp, _ := marecmd.RunFmtErr(marecmd.Input{Command: checkCmd})
 	if negated && resp.Code != 0 {
 		return nil
 	} else if !negated && resp.Code == 0 {

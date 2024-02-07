@@ -129,7 +129,7 @@ func (a AptRepo) Install() error {
 		return err
 	}
 
-	out, err := marecmd.RunFormatError(marecmd.Input{Command: "dpkg --print-architecture"})
+	out, err := marecmd.RunFmtErr(marecmd.Input{Command: "dpkg --print-architecture"})
 	if err != nil {
 		return err
 	}

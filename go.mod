@@ -6,7 +6,7 @@ require (
 	github.com/alexflint/go-arg v1.4.3
 	github.com/antchfx/htmlquery v1.3.0
 	github.com/deckarep/golang-set/v2 v2.6.0
-	github.com/femnad/mare v0.10.0
+	github.com/femnad/mare v0.14.0
 	github.com/gabriel-vasile/mimetype v1.4.3
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
