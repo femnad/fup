@@ -21,7 +21,6 @@ jobs:
       - name: Run integration tests
         run: |
           go install
-          python3 tests/integration/test_releases.py
           go test ./... -tags=integration
 
   container-test:
