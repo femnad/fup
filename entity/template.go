@@ -1,6 +1,7 @@
 package entity
 
 type Template struct {
+	Content string            `yaml:"content"`
 	Src     string            `yaml:"src"`
 	Dest    string            `yaml:"dest"`
 	Mode    int               `yaml:"mode"`

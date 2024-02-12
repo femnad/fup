@@ -48,7 +48,12 @@ func getLocalTemplate(config entity.Config, tmplSrc string) ([]byte, error) {
 	return os.ReadFile(tmplPath)
 }
 
-func getTemplateContent(config entity.Config, tmplSrc string) ([]byte, error) {
+func getTemplateContent(config entity.Config, tmpl entity.Template) ([]byte, error) {
+	if tmpl.Content != "" {
+		return []byte(tmpl.Content), nil
+	}
+
+	tmplSrc := tmpl.Src
 	if !config.IsRemote() {
 		return getLocalTemplate(config, tmplSrc)
 	}
@@ -73,7 +78,7 @@ func applyTemplate(tmpl entity.Template, config entity.Config) error {
 		return nil
 	}
 
-	templateContent, err := getTemplateContent(config, tmpl.Src)
+	templateContent, err := getTemplateContent(config, tmpl)
 	if err != nil {
 		return err
 	}

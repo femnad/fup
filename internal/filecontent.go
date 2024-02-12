@@ -104,20 +104,6 @@ func chmod(target string, mode int) error {
 	return MaybeRunWithSudoForPath(chmodCmd, target)
 }
 
-func ensureDir(dir string) error {
-	hasDirPerms, err := hasPerms(dir)
-	if err != nil {
-		return err
-	}
-
-	if hasDirPerms {
-		return os.MkdirAll(dir, 0o755)
-	}
-
-	mkdirCmd := fmt.Sprintf("mkdir -p %s", dir)
-	return MaybeRunWithSudo(mkdirCmd)
-}
-
 func getent(key, database string) (int, error) {
 	if key == "" {
 		return defaultId, nil
@@ -281,7 +267,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	dir, _ := path.Split(target)
-	err = ensureDir(dir)
+	err = EnsureDirExists(dir)
 	if err != nil {
 		return changed, err
 	}
