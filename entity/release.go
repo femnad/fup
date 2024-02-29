@@ -18,6 +18,7 @@ type ExecuteAfterSpec struct {
 }
 
 type Release struct {
+	Cleanup       bool              `yaml:"cleanup"`
 	DontLink      bool              `yaml:"dont_link"`
 	DontUpdate    bool              `yaml:"dont_update"`
 	ExecuteAfter  ExecuteAfterSpec  `yaml:"execute_after"`

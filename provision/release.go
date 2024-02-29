@@ -54,7 +54,7 @@ type extractionHint struct {
 	target   string
 }
 
-type extractionFn func(entity.Release, extractionHint) (ReleaseInfo, error)
+type extractionFn func(ReleaseInfo, extractionHint) error
 
 // ReleaseInfo stores an archive's root dir and specifies if the root dir is part of the archive files.
 type ReleaseInfo struct {
@@ -106,31 +106,42 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 	err = os.MkdirAll(dirName, dirMode)
 	if err != nil {
 		return
+
+	}
+	hint := extractionHint{
+		file:     tempFile,
+		fileType: fileType.String(),
+		target:   dirName,
+	}
+	info, err = getInfo(release, hint)
+	if err != nil {
+		return info, err
+	}
+
+	absTarget, err := getAbsTarget(dirName, info)
+	if err != nil {
+		return
+	}
+
+	if release.Cleanup {
+		internal.Log.Debugf("Purging directory %s", absTarget)
+		err = os.RemoveAll(absTarget)
+		if err != nil {
+			return info, fmt.Errorf("error cleaning up dir %s before extraction: %v", absTarget, err)
+		}
 	}
 
 	extractFn, err := getExtractionFn(fileType.String())
 	if err != nil {
 		return
 	}
-	info, err = extractFn(release, extractionHint{
-		file:     tempFile,
-		fileType: fileType.String(),
-		target:   dirName,
-	})
-	if err != nil {
-		return
-	}
-
-	info.target, err = getAbsTarget(dirName, info)
+	err = extractFn(info, hint)
 	if err != nil {
 		return
 	}
 
 	err = os.Remove(tempFile)
-	if err != nil {
-		return info, err
-	}
-
+	info.target = absTarget
 	return
 }
 
@@ -401,27 +412,26 @@ func getTarEntries(tempFile, fileType string) (entries []archiveEntry, err error
 	return entries, nil
 }
 
+func untarInfo(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
+	entries, err := getTarEntries(hint.file, hint.fileType)
+	if err != nil {
+		return
+	}
+
+	return getReleaseInfo(release, entries)
+}
+
 // Shamelessly lifted from https://golangdocs.com/tar-gzip-in-golang
-func untar(archive entity.Release, source extractionHint) (info ReleaseInfo, err error) {
-	entries, err := getTarEntries(source.file, source.fileType)
-	if err != nil {
-		return
-	}
-
-	info, err = getReleaseInfo(archive, entries)
-	if err != nil {
-		return
-	}
-
+func untar(info ReleaseInfo, source extractionHint) error {
 	f, err := os.Open(source.file)
 	if err != nil {
-		return
+		return err
 	}
 	defer f.Close()
 
 	reader, err := getTarReader(f, source.fileType)
 	if err != nil {
-		return
+		return err
 	}
 
 	var header *tar.Header
@@ -431,17 +441,17 @@ func untar(archive entity.Release, source extractionHint) (info ReleaseInfo, err
 		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
-			return
+			return err
 		}
 
 		outputPath := getOutputPath(info, header.Name, source.target)
 		err = extractCompressedFile(header.FileInfo(), outputPath, tarReader)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
-	return info, nil
+	return nil
 }
 
 func getZipInfo(tempFile string) (entries []archiveEntry, err error) {
@@ -465,17 +475,16 @@ func getZipInfo(tempFile string) (entries []archiveEntry, err error) {
 	return entries, nil
 }
 
-func unzip(archive entity.Release, source extractionHint) (info ReleaseInfo, err error) {
-	entries, err := getZipInfo(source.file)
+func unzipInfo(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
+	entries, err := getZipInfo(hint.file)
 	if err != nil {
 		return
 	}
 
-	info, err = getReleaseInfo(archive, entries)
-	if err != nil {
-		return
-	}
+	return getReleaseInfo(release, entries)
+}
 
+func unzip(info ReleaseInfo, source extractionHint) (err error) {
 	zipArchive, err := zip.OpenReader(source.file)
 	if err != nil {
 		return
@@ -489,10 +498,10 @@ func unzip(archive entity.Release, source extractionHint) (info ReleaseInfo, err
 		}
 	}
 
-	return info, nil
+	return nil
 }
 
-func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
+func binaryInfo(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
 	name := release.Name()
 	if name == "" {
 		_, name = path.Split(release.Url)
@@ -502,12 +511,16 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 		target = name
 	}
 
+	return ReleaseInfo{execCandidate: name, hasRootDir: true, target: target}, nil
+}
+
+func copyBinary(info ReleaseInfo, hint extractionHint) (err error) {
 	src, err := os.Open(hint.file)
 	if err != nil {
 		return
 	}
 
-	copyTarget := path.Join(hint.target, target, name)
+	copyTarget := path.Join(hint.target, info.target, info.execCandidate)
 	copyTargetDir, _ := path.Split(copyTarget)
 	err = ensureDirExist(copyTargetDir)
 	if err != nil {
@@ -524,12 +537,20 @@ func copyBinary(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 		return
 	}
 
-	err = dst.Close()
-	if err != nil {
-		return
-	}
+	return dst.Close()
+}
 
-	return ReleaseInfo{execCandidate: name, hasRootDir: true, target: target}, nil
+func getInfo(release entity.Release, hint extractionHint) (ReleaseInfo, error) {
+	switch hint.fileType {
+	case executableMimeType, sharedLibMimeType:
+		return binaryInfo(release, hint)
+	case bzipMimeType, gzipMimeType, tarMimeType, xzMimeType:
+		return untarInfo(release, hint)
+	case zipMimeType:
+		return unzipInfo(release, hint)
+	default:
+		return ReleaseInfo{}, fmt.Errorf("unable to determine extractor for file type %s", hint.fileType)
+	}
 }
 
 func getExtractionFn(fileType string) (extractionFn, error) {
