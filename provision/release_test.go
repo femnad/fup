@@ -77,7 +77,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "foo",
 				hasRootDir:    true,
-				target:        "dir",
+				relTarget:     "dir",
 			},
 		},
 		{
@@ -91,7 +91,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "foo",
 				hasRootDir:    false,
-				target:        "foo",
+				relTarget:     "foo",
 			},
 		},
 		{
@@ -116,7 +116,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "foo",
 				hasRootDir:    false,
-				target:        "qux",
+				relTarget:     "qux",
 			},
 		},
 		{
@@ -140,7 +140,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "foo",
 				hasRootDir:    false,
-				target:        "foo",
+				relTarget:     "foo",
 			},
 		},
 		{
@@ -164,7 +164,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "baz/foo",
 				hasRootDir:    true,
-				target:        "qux",
+				relTarget:     "qux",
 			},
 		},
 		{
@@ -180,7 +180,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "foo",
 				hasRootDir:    false,
-				target:        "foo",
+				relTarget:     "foo",
 			},
 		},
 	}
