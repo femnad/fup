@@ -60,7 +60,8 @@ type extractionFn func(ReleaseInfo, extractionHint) error
 type ReleaseInfo struct {
 	execCandidate  string
 	hasRootDir     bool
-	target         string
+	absTarget      string
+	relTarget      string
 	targetOverride string
 }
 
@@ -69,7 +70,7 @@ func (r ReleaseInfo) GetTarget() string {
 		return r.targetOverride
 	}
 
-	return r.target
+	return r.relTarget
 }
 
 func downloadRelease(release entity.Release, s settings.Settings) (string, error) {
@@ -141,7 +142,7 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 	}
 
 	err = os.Remove(tempFile)
-	info.target = absTarget
+	info.absTarget = absTarget
 	return
 }
 
@@ -349,14 +350,14 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 	return ReleaseInfo{
 		execCandidate:  execCandidate,
 		hasRootDir:     hasRootDir,
-		target:         target,
+		relTarget:      target,
 		targetOverride: archive.Target}, nil
 }
 
 func getOutputPath(info ReleaseInfo, fileName, dirName string) string {
 	if info.hasRootDir {
-		if info.targetOverride != "" && strings.HasPrefix(fileName, info.target) {
-			fileName = strings.Replace(fileName, info.target, info.targetOverride, 1)
+		if info.targetOverride != "" && strings.HasPrefix(fileName, info.relTarget) {
+			fileName = strings.Replace(fileName, info.relTarget, info.targetOverride, 1)
 		}
 		return filepath.Join(dirName, fileName)
 	}
@@ -365,12 +366,12 @@ func getOutputPath(info ReleaseInfo, fileName, dirName string) string {
 }
 
 func getAbsTarget(dirName string, info ReleaseInfo) (string, error) {
-	if path.IsAbs(info.target) {
-		return info.target, nil
+	if path.IsAbs(info.relTarget) {
+		return info.relTarget, nil
 	}
 
 	if path.IsAbs(dirName) {
-		return path.Join(dirName, info.target), nil
+		return path.Join(dirName, info.relTarget), nil
 	}
 
 	wd, err := os.Getwd()
@@ -501,7 +502,7 @@ func unzip(info ReleaseInfo, source extractionHint) (err error) {
 	return nil
 }
 
-func binaryInfo(release entity.Release, hint extractionHint) (info ReleaseInfo, err error) {
+func binaryInfo(release entity.Release, _ extractionHint) (info ReleaseInfo, err error) {
 	name := release.Name()
 	if name == "" {
 		_, name = path.Split(release.Url)
@@ -511,7 +512,7 @@ func binaryInfo(release entity.Release, hint extractionHint) (info ReleaseInfo, 
 		target = name
 	}
 
-	return ReleaseInfo{execCandidate: name, hasRootDir: true, target: target}, nil
+	return ReleaseInfo{execCandidate: name, hasRootDir: true, relTarget: target}, nil
 }
 
 func copyBinary(info ReleaseInfo, hint extractionHint) (err error) {
@@ -520,7 +521,7 @@ func copyBinary(info ReleaseInfo, hint extractionHint) (err error) {
 		return
 	}
 
-	copyTarget := path.Join(hint.target, info.target, info.execCandidate)
+	copyTarget := path.Join(hint.target, info.relTarget, info.execCandidate)
 	copyTargetDir, _ := path.Split(copyTarget)
 	err = ensureDirExist(copyTargetDir)
 	if err != nil {
@@ -651,7 +652,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		return err
 	}
 
-	target := info.target
+	target := info.absTarget
 	if info.targetOverride != "" {
 		target, _ = path.Split(target)
 		target = path.Join(target, info.targetOverride)
