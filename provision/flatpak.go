@@ -106,18 +106,16 @@ func installFlatpak(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error
 		return err
 	}
 
-	if installed {
-		return nil
-	}
+	if !installed {
+		err = ensurePkgRemote(pkg, remotes)
+		if err != nil {
+			return err
+		}
 
-	err = ensurePkgRemote(pkg, remotes)
-	if err != nil {
-		return err
-	}
-
-	err = ensureInstalled(pkg)
-	if err != nil {
-		return err
+		err = ensureInstalled(pkg)
+		if err != nil {
+			return err
+		}
 	}
 
 	return ensureLauncher(pkg)
