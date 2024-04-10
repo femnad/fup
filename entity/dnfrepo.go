@@ -53,7 +53,7 @@ func (d DnfRepo) GetUnless() unless.Unless {
 	return unless.Unless{}
 }
 
-func (DnfRepo) GetVersion(_ settings.Settings) (string, error) {
+func (DnfRepo) LookupVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 

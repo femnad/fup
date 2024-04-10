@@ -26,7 +26,7 @@ func (c CargoPkg) GetUnless() unless.Unless {
 	return c.Unless
 }
 
-func (c CargoPkg) GetVersion(_ settings.Settings) (string, error) {
+func (c CargoPkg) LookupVersion(_ settings.Settings) (string, error) {
 	return c.Version, nil
 }
 

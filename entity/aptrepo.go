@@ -38,7 +38,7 @@ func (a AptRepo) GetUnless() unless.Unless {
 	}
 }
 
-func (AptRepo) GetVersion(_ settings.Settings) (string, error) {
+func (AptRepo) LookupVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 

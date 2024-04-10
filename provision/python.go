@@ -14,8 +14,12 @@ import (
 	"github.com/femnad/fup/precheck/unless"
 )
 
-func pipInstall(pipBin, pkg string) error {
+func pipInstall(pipBin, pkg, version string) error {
 	cmd := fmt.Sprintf("%s install %s", pipBin, pkg)
+	if version != "" {
+		cmd += fmt.Sprintf("==%s", version)
+	}
+
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
 		return err
@@ -45,14 +49,19 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 
 	venvPip := path.Join(venvDir, "bin", "pip")
 
-	err = pipInstall(venvPip, name)
+	version, err := pkg.LookupVersion(cfg.Settings)
+	if err != nil {
+		return err
+	}
+
+	err = pipInstall(venvPip, name, version)
 	if err != nil {
 		internal.Log.Errorf("error installing pip package %s: %v", name, err)
 		return err
 	}
 
 	for _, req := range pkg.Reqs {
-		err = pipInstall(venvPip, req)
+		err = pipInstall(venvPip, req, "")
 		if err != nil {
 			internal.Log.Errorf("error installing required pip package %s for %s: %v", req, name, err)
 			return err

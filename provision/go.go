@@ -26,7 +26,7 @@ func qualifyPkg(pkg entity.GoPkg, s settings.Settings) (string, error) {
 		return "", fmt.Errorf("unable to qualify package: %s", name)
 	}
 
-	version, err := pkg.GetVersion(s)
+	version, err := pkg.LookupVersion(s)
 	if err != nil {
 		return "", err
 	}

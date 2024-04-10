@@ -35,8 +35,8 @@ func (u Unless) String() string {
 type Unlessable interface {
 	DefaultVersionCmd() string
 	GetUnless() Unless
-	GetVersion(settings.Settings) (string, error)
 	KeepUpToDate() bool
+	LookupVersion(settings.Settings) (string, error)
 	Name() string
 }
 
@@ -97,7 +97,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		return true
 	}
 
-	version, err := unlessable.GetVersion(s)
+	version, err := unlessable.LookupVersion(s)
 	if err != nil {
 		internal.Log.Errorf("Error determining desired version for %s: %v", name, err)
 		return false
@@ -126,7 +126,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 
 func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string {
 	lookup := map[string]string{}
-	version, err := unlessable.GetVersion(s)
+	version, err := unlessable.LookupVersion(s)
 	if err != nil {
 		internal.Log.Errorf("Error resolving stat %s: %v", stat, err)
 		return stat
