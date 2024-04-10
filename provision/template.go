@@ -107,7 +107,7 @@ func applyTemplates(config entity.Config) error {
 	for _, tmpl := range config.Templates {
 		err := applyTemplate(tmpl, config)
 		if err != nil {
-			internal.Log.Errorf("error applying template: %v", err)
+			internal.Log.Errorf("error applying template with destination %s: %v", tmpl.Dest, err)
 		}
 		tmplErr = append(tmplErr, err)
 	}
