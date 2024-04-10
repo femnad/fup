@@ -41,7 +41,7 @@ func (r Release) GetVersionLookup() VersionLookupSpec {
 	return r.VersionLookup
 }
 
-func (r Release) GetLookupURL() string {
+func (r Release) GetLookupID() string {
 	return r.VersionLookup.URL
 }
 
