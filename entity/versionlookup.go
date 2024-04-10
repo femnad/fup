@@ -15,12 +15,14 @@ import (
 const (
 	githubLatestRelease = "github-latest"
 	githubMatchingTag   = "github-tag"
+	pypiLatestVersion   = "pypi-latest"
 )
 
 var (
 	strategies = map[string]func(VersionLookupSpec, string) (string, error){
 		githubLatestRelease: githubStableSpec,
 		githubMatchingTag:   gitHubFirstMatchingTagSpec,
+		pypiLatestVersion:   pypiLatestVersionSpec,
 	}
 )
 
@@ -94,7 +96,7 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 			continue
 		}
 
-		return nodeText, nil
+		return strings.TrimSpace(nodeText), nil
 	}
 
 	return "", fmt.Errorf("unable to find matches via query %s on URL %s", query, spec.URL)
@@ -170,19 +172,28 @@ func gitHubFirstMatchingTagSpec(spec VersionLookupSpec, releaseURL string) (stri
 	return "", fmt.Errorf("error finding matching tag for spec %+v", spec)
 }
 
-func queryFromStrategy(spec VersionLookupSpec, archiveURL string) (string, error) {
+func pypiLatestVersionSpec(spec VersionLookupSpec, pkgName string) (string, error) {
+	packageURL := fmt.Sprintf("https://pypi.org/project/%s/", pkgName)
+	lookupSpec := VersionLookupSpec{
+		Query: "//h1[@class='package-header__name']",
+		URL:   packageURL,
+	}
+	return resolveQuery(lookupSpec)
+}
+
+func queryFromStrategy(spec VersionLookupSpec, assetURL string) (string, error) {
 	fn, ok := strategies[spec.Strategy]
 	if !ok {
 		return "", fmt.Errorf("no such strategy %s", spec.Strategy)
 	}
 
-	return fn(spec, archiveURL)
+	return fn(spec, assetURL)
 }
 
-func versionFromSpec(spec VersionLookupSpec, archiveURL string) (text string, err error) {
+func versionFromSpec(spec VersionLookupSpec, assetURL string) (text string, err error) {
 	var version string
 	if spec.Strategy != "" {
-		version, err = queryFromStrategy(spec, archiveURL)
+		version, err = queryFromStrategy(spec, assetURL)
 		if err != nil {
 			return "", err
 		}
@@ -192,9 +203,7 @@ func versionFromSpec(spec VersionLookupSpec, archiveURL string) (text string, er
 	if spec.Query != "" {
 		text, err = resolveQuery(spec)
 		if err != nil {
-			if err != nil {
-				return "", err
-			}
+			return "", err
 		}
 	} else if spec.FollowURL {
 		text, err = remote.FollowRedirects(spec.URL)
@@ -208,8 +217,8 @@ func versionFromSpec(spec VersionLookupSpec, archiveURL string) (text string, er
 	return
 }
 
-func lookupVersion(spec VersionLookupSpec, archiveURL string) (version string, err error) {
-	version, err = versionFromSpec(spec, archiveURL)
+func lookupVersion(spec VersionLookupSpec, assetURL string) (version string, err error) {
+	version, err = versionFromSpec(spec, assetURL)
 	if err != nil {
 		return "", err
 	}

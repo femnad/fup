@@ -5,7 +5,7 @@ import "github.com/femnad/fup/settings"
 type versioned interface {
 	GetVersion() string
 	GetVersionLookup() VersionLookupSpec
-	GetLookupURL() string
+	GetLookupID() string
 	Name() string
 }
 
@@ -26,7 +26,7 @@ func getVersion(v versioned, s settings.Settings) (string, error) {
 	}
 
 	if hasVersionLookup(v) {
-		return lookupVersion(v.GetVersionLookup(), v.GetLookupURL())
+		return lookupVersion(v.GetVersionLookup(), v.GetLookupID())
 	}
 
 	return "", nil

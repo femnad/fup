@@ -25,8 +25,8 @@ func (p PythonPkg) GetVersionLookup() VersionLookupSpec {
 	return p.VersionLookup
 }
 
-func (p PythonPkg) GetLookupURL() string {
-	return p.VersionLookup.URL
+func (p PythonPkg) GetLookupID() string {
+	return p.Name()
 }
 
 func (p PythonPkg) hasVersionLookup() bool {
