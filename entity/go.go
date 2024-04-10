@@ -23,7 +23,7 @@ func (g GoPkg) GetUnless() unless.Unless {
 	return g.Unless
 }
 
-func (g GoPkg) GetVersion(s settings.Settings) (string, error) {
+func (g GoPkg) LookupVersion(s settings.Settings) (string, error) {
 	if g.Version != "" {
 		return g.Version, nil
 	}

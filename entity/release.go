@@ -33,6 +33,18 @@ type Release struct {
 	When          string            `yaml:"when"`
 }
 
+func (r Release) GetVersion() string {
+	return r.Version
+}
+
+func (r Release) GetVersionLookup() VersionLookupSpec {
+	return r.VersionLookup
+}
+
+func (r Release) GetLookupURL() string {
+	return r.VersionLookup.URL
+}
+
 func (r Release) String() string {
 	return r.Url
 }
@@ -45,33 +57,12 @@ func (r Release) expand(property string) string {
 	return ""
 }
 
-func (r Release) hasVersionLookup() bool {
-	return r.VersionLookup.URL != "" || r.VersionLookup.Strategy != ""
-}
-
-func (r Release) version(s settings.Settings) (string, error) {
-	if r.Version != "" {
-		return r.Version, nil
-	}
-
-	storedVersion := s.Versions[r.Name()]
-	if storedVersion != "" {
-		return storedVersion, nil
-	}
-
-	if r.hasVersionLookup() {
-		return lookupVersion(r.VersionLookup, r.Url)
-	}
-
-	return "", nil
-}
-
 func (r Release) DefaultVersionCmd() string {
 	return fmt.Sprintf("%s --version", r.Name())
 }
 
 func (r Release) ExpandURL(s settings.Settings) (string, error) {
-	version, err := r.version(s)
+	version, err := getVersion(r, s)
 	if err != nil {
 		return "", err
 	}
@@ -112,8 +103,8 @@ func (r Release) GetUnless() unless.Unless {
 	return r.Unless
 }
 
-func (r Release) GetVersion(s settings.Settings) (string, error) {
-	return r.version(s)
+func (r Release) LookupVersion(s settings.Settings) (string, error) {
+	return getVersion(r, s)
 }
 
 func (r Release) KeepUpToDate() bool {

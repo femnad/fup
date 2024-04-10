@@ -155,7 +155,7 @@ func (s Step) GetUnless() unless.Unless {
 	return s.Unless
 }
 
-func (Step) GetVersion(_ settings.Settings) (string, error) {
+func (Step) LookupVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
@@ -202,7 +202,7 @@ func (t Task) GetUnless() unless.Unless {
 	return t.Unless
 }
 
-func (t Task) GetVersion(_ settings.Settings) (string, error) {
+func (t Task) LookupVersion(_ settings.Settings) (string, error) {
 	return "", nil
 }
 
