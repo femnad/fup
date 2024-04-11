@@ -105,6 +105,10 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 func getRepo(spec VersionLookupSpec, releaseURL string) (string, error) {
 	repo := spec.GithubRepo
 	if repo == "" {
+		if releaseURL == "" {
+			return "", fmt.Errorf("need a release URL for determining GitHub repo without explicity repo config")
+		}
+
 		fields := strings.Split(releaseURL, "/")
 		// URL should have the format: https://github.com/<principal>/<repo>/...
 		if len(fields) < 5 {
