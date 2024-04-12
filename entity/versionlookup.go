@@ -106,7 +106,7 @@ func getRepo(spec VersionLookupSpec, releaseURL string) (string, error) {
 	repo := spec.GithubRepo
 	if repo == "" {
 		if releaseURL == "" {
-			return "", fmt.Errorf("need a release URL for determining GitHub repo without explicity repo config")
+			return "", fmt.Errorf("need a release URL for determining GitHub repo without explicit repo config")
 		}
 
 		fields := strings.Split(releaseURL, "/")

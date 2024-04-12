@@ -695,8 +695,11 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 
 func ensureReleases(releases []entity.Release, s settings.Settings) error {
 	var releaseErrs []error
-	for _, archive := range releases {
-		err := ensureRelease(archive, s)
+	for _, release := range releases {
+		err := ensureRelease(release, s)
+		if err != nil {
+			internal.Log.Errorf("Error ensuring release %s: %v", release.Name(), err)
+		}
 		releaseErrs = append(releaseErrs, err)
 	}
 
