@@ -2,9 +2,10 @@ package entity
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/settings"
-	"os"
 )
 
 type NamedLink struct {
@@ -42,7 +43,7 @@ func (r Release) GetVersionLookup() VersionLookupSpec {
 }
 
 func (r Release) GetLookupID() string {
-	return r.VersionLookup.URL
+	return r.Url
 }
 
 func (r Release) String() string {

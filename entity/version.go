@@ -1,6 +1,10 @@
 package entity
 
-import "github.com/femnad/fup/settings"
+import (
+	"fmt"
+
+	"github.com/femnad/fup/settings"
+)
 
 type versioned interface {
 	GetVersion() string
@@ -26,6 +30,10 @@ func getVersion(v versioned, s settings.Settings) (string, error) {
 	}
 
 	if hasVersionLookup(v) {
+		lookupId := v.GetLookupID()
+		if lookupId == "" {
+			return "", fmt.Errorf("lookup ID for versioned %+v is empty", v)
+		}
 		return lookupVersion(v.GetVersionLookup(), v.GetLookupID())
 	}
 
