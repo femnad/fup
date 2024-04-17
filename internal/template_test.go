@@ -125,6 +125,35 @@ baz`,
 			},
 			want: "v123",
 		},
+		{
+			name: "Simple tail",
+			args: args{
+				proc: "tail 0",
+				input: `foo
+bar
+baz`,
+			},
+			want: "baz",
+		},
+		{
+			name: "Negative tail",
+			args: args{
+				proc: "tail -1",
+				input: `foo
+bar
+baz`,
+			},
+			want: "foo",
+		},
+		{
+			name: "Tail error",
+			args: args{
+				proc: "tail 3",
+				input: `bar
+baz`,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

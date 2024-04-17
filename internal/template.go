@@ -3,6 +3,7 @@ package internal
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"strings"
 	"text/template"
 )
@@ -10,6 +11,7 @@ import (
 var UtilFns = template.FuncMap{
 	"cut":     cut,
 	"head":    head,
+	"tail":    tail,
 	"iter":    iterItems,
 	"iterMap": iterMap,
 	"revCut":  reverseCut,
@@ -45,6 +47,21 @@ func cut(i int, s string) (string, error) {
 
 func head(i int, s string) (string, error) {
 	return splitBy("\n", i, s)
+}
+
+func tail(i int, s string) (string, error) {
+	if i < 0 {
+		headIdx := math.Abs(float64(i))
+		return head(int(headIdx)-1, s)
+	}
+	lines := strings.Split(s, "\n")
+	numLines := len(lines)
+	if i > numLines-1 {
+		return "", fmt.Errorf("invalid tail index %d for %s", i, s)
+	}
+
+	fwdIdx := numLines - 1 - i
+	return lines[fwdIdx], nil
 }
 
 func iterItems(items ...string) []string {
