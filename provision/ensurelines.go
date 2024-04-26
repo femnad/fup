@@ -2,6 +2,7 @@ package provision
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -69,7 +70,9 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensur
 
 func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensureResult, err error) {
 	srcFile, err := os.Open(file)
-	if err != nil {
+	if errors.Is(err, os.ErrNotExist) {
+		return result, nil
+	} else if err != nil {
 		return
 	}
 	defer srcFile.Close()
