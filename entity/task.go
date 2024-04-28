@@ -115,16 +115,20 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 
 type Step struct {
 	unless.BasicUnlessable
-	Cmd     string `yaml:"cmd"`
+	// For cmd and shell
+	Cmd string `yaml:"cmd"`
+	// For file
 	Content string `yaml:"content"`
-	Dir     string `yaml:"dir"`
-	Mode    int    `yaml:"mode"`
-	Pwd     string `yaml:"pwd"`
-	Repo    Repo   `yaml:"repo"`
+	// For file
+	Mode int `yaml:"mode"`
+	// For cmd and shell
+	Pwd  string `yaml:"pwd"`
+	Repo Repo   `yaml:"repo"`
 	// For cmd
 	Sudo bool `yaml:"sudo"`
 	// For link and rename
-	Shell    string `yaml:"shell"`
+	Shell string `yaml:"shell"`
+	// For rename and symlink
 	Src      string `yaml:"src"`
 	StepName string `yaml:"name"`
 	// For download, file, link and rename
@@ -132,7 +136,8 @@ type Step struct {
 	Unless unless.Unless `yaml:"unless"`
 	// For file
 	Validate string `yaml:"validate"`
-	Url      string `yaml:"url"`
+	// For download
+	Url string `yaml:"url"`
 }
 
 func (s Step) String() string {
