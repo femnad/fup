@@ -36,9 +36,7 @@ func processUrl(repoUrl string) (cloneRef, error) {
 	}
 
 	repoBase := components[numComponents-1]
-	if strings.HasSuffix(repoBase, gitRepoSuffix) {
-		repoBase = repoBase[:len(repoBase)-len(gitRepoSuffix)]
-	}
+	repoBase = strings.TrimSuffix(repoBase, gitRepoSuffix)
 	ref.base = repoBase
 
 	if strings.HasPrefix(repoUrl, gitClonePrefix) {
@@ -134,6 +132,10 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 
 	for remote, remoteUrl := range repo.Remotes {
 		remoteExpanded, remoteErr := processUrl(remoteUrl)
+		if remoteErr != nil {
+			return remoteErr
+		}
+
 		_, remoteErr = r.CreateRemote(&config.RemoteConfig{
 			Name: remote,
 			URLs: []string{remoteExpanded.url},
@@ -177,11 +179,14 @@ func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 			newEnv[k] = true
 		}
 		err = os.Setenv(k, v)
+		if err != nil {
+			return err
+		}
 	}
 
 	cloneErr := clone(repo, repoUrl, cloneDir)
 
-	for k, _ := range newEnv {
+	for k := range newEnv {
 		err = os.Unsetenv(k)
 		if err != nil {
 			return errors.Join(cloneErr, err)

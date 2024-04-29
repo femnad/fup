@@ -29,10 +29,6 @@ func (p PythonPkg) GetLookupID() string {
 	return p.Name()
 }
 
-func (p PythonPkg) hasVersionLookup() bool {
-	return p.VersionLookup.URL != ""
-}
-
 func (p PythonPkg) DefaultVersionCmd() string {
 	return fmt.Sprintf("%s -V", p.Name())
 }
