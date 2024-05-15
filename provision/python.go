@@ -29,6 +29,20 @@ func pipInstall(pipBin, pkg, version string) error {
 }
 
 func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
+	name := pkg.Name()
+	baseDir := internal.ExpandUser(cfg.Settings.VirtualEnvDir)
+	venvDir := path.Join(baseDir, name)
+	venvPip := path.Join(venvDir, "bin", "pip")
+
+	if pkg.Library {
+		pkg.Unless = unless.Unless{
+			Cmd: fmt.Sprintf("%s show %s", venvPip, name),
+		}
+		if pkg.GetVersion() != "" {
+			pkg.Unless.Post = `head 1 | splitBy ": " -1`
+		}
+	}
+
 	if unless.ShouldSkip(pkg, cfg.Settings) {
 		internal.Log.Debugf("skipping pip install for %s", pkg.Name())
 		return nil
@@ -36,18 +50,12 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 
 	internal.Log.Infof("Installing Python package %s", pkg.Name())
 
-	name := pkg.Name()
-	baseDir := internal.ExpandUser(cfg.Settings.VirtualEnvDir)
-	venvDir := path.Join(baseDir, name)
-
 	cmd := fmt.Sprintf("virtualenv %s", venvDir)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
 		internal.Log.Errorf("error creating virtualenv for package %s: %v", name, err)
 		return err
 	}
-
-	venvPip := path.Join(venvDir, "bin", "pip")
 
 	version, err := pkg.LookupVersion(cfg.Settings)
 	if err != nil {
@@ -71,7 +79,7 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 	home := os.Getenv("HOME")
 	homeBin := path.Join(home, "bin")
 
-	if len(pkg.BinLinks) == 0 {
+	if len(pkg.BinLinks) == 0 && !pkg.Library {
 		pkg.BinLinks = []string{pkg.Name()}
 	}
 	for _, link := range pkg.BinLinks {

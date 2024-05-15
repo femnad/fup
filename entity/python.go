@@ -9,9 +9,10 @@ import (
 
 type PythonPkg struct {
 	unless.BasicUnlessable
+	BinLinks      []string          `yaml:"link"`
+	Library       bool              `yaml:"library"`
 	Pkg           string            `yaml:"name"`
 	Reqs          []string          `yaml:"reqs"`
-	BinLinks      []string          `yaml:"link"`
 	Unless        unless.Unless     `yaml:"unless"`
 	Version       string            `yaml:"version"`
 	VersionLookup VersionLookupSpec `yaml:"version_lookup"`
