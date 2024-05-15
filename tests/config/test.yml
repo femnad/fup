@@ -39,3 +39,5 @@ template:
   - src: unattended-upgrades.conf
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
     when: os "ubuntu"
+
+line:
