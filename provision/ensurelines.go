@@ -64,12 +64,13 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensur
 			if checkContent {
 				if contentIdx < numContentLines && contentLines[contentIdx] == current {
 					contentMatchProgress = true
+					if contentIdx == numContentLines-1 {
+						contentPresent = true
+					}
 					contentIdx++
 				} else {
 					contentMatchProgress = false
-				}
-				if contentMatchProgress && contentIdx == numContentLines-1 {
-					contentPresent = true
+					contentIdx = 0
 				}
 			}
 
@@ -77,10 +78,16 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensur
 				newLines.Remove(current)
 			}
 			lineIdx++
+
+			_, err = tmpFile.WriteString(fmt.Sprintf("%s\n", current))
+			if err != nil {
+				return result, err
+			}
 		}
+
 	}
 
-	if newLines.Cardinality() == 0 {
+	if newLines.Cardinality() == 0 && contentPresent {
 		return
 	}
 

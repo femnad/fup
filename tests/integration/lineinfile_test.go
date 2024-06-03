@@ -33,7 +33,20 @@ func TestLineInFile(t *testing.T) {
 bar
 baz
 `
+	contentFound := `exa
+
+[default]
+x=y
+
+end
+`
+	contentNotFound := `[default]
+line
+x=y
+`
 	bazFile := fmt.Sprintf("%s/baz", testDir)
+	contentFoundFile := fmt.Sprintf("%s/fred", testDir)
+	contentNotFoundFile := fmt.Sprintf("%s/barney", testDir)
 
 	tests := []struct {
 		name       string
@@ -166,6 +179,37 @@ nope
 						Ensure: true,
 					},
 				},
+			},
+		},
+		{
+			name: "Content already present",
+			files: map[string]string{
+				"fred": contentFound,
+			},
+			want: map[string]string{"fred": contentFound},
+			lineInFile: entity.LineInFile{
+				File: contentFoundFile,
+				Name: "ensure",
+				Content: `[default]
+x=y`,
+			},
+		},
+		{
+			name: "Content not present",
+			files: map[string]string{
+				"barney": contentNotFound,
+			},
+			want: map[string]string{"barney": `[default]
+line
+x=y
+[default]
+x=y
+`},
+			lineInFile: entity.LineInFile{
+				File: contentNotFoundFile,
+				Name: "ensure",
+				Content: `[default]
+x=y`,
 			},
 		},
 	}
