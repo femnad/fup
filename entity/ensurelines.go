@@ -9,8 +9,9 @@ type Replacement struct {
 }
 
 type LineInFile struct {
-	Content  []string      `yaml:"content"`
+	Content  string        `yaml:"content"`
 	File     string        `yaml:"file"`
+	Lines    []string      `yaml:"lines"`
 	Name     string        `yaml:"name"`
 	Replace  []Replacement `yaml:"replace"`
 	RunAfter Step          `yaml:"run_after"`

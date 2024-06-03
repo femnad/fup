@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
@@ -28,9 +29,9 @@ type ensureResult struct {
 }
 
 func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensureResult, err error) {
-	content := mapset.NewSet[string]()
-	for _, l := range line.Content {
-		content.Add(l)
+	newLines := mapset.NewSet[string]()
+	for _, l := range line.Lines {
+		newLines.Add(l)
 	}
 
 	var newFile bool
@@ -42,27 +43,69 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensur
 	}
 	defer srcFile.Close()
 
+	contentMatchProgress := false
+	contentPresent := false
+	contentLines := strings.Split(line.Content, "\n")
+	numContentLines := len(contentLines)
+
 	if !newFile {
 		scanner := bufio.NewScanner(srcFile)
+		var contentIdx int
+		var current string
+
+		var lineIdx int
 		for scanner.Scan() {
-			l := scanner.Text()
-			if content.Contains(l) {
-				content.Remove(l)
+			current = scanner.Text()
+
+			checkContent := !contentPresent
+			if contentMatchProgress || lineIdx == 0 {
+				checkContent = true
+			}
+			if checkContent {
+				if contentIdx < numContentLines && contentLines[contentIdx] == current {
+					contentMatchProgress = true
+					if contentIdx == numContentLines-1 {
+						contentPresent = true
+					}
+					contentIdx++
+				} else {
+					contentMatchProgress = false
+					contentIdx = 0
+				}
+			}
+
+			if newLines.Contains(current) {
+				newLines.Remove(current)
+			}
+			lineIdx++
+
+			_, err = tmpFile.WriteString(fmt.Sprintf("%s\n", current))
+			if err != nil {
+				return result, err
 			}
 		}
+
 	}
 
-	if content.Cardinality() == 0 {
+	if newLines.Cardinality() == 0 && contentPresent {
 		return
 	}
 
-	content.Each(func(l string) bool {
+	newLines.Each(func(l string) bool {
 		_, err = tmpFile.WriteString(fmt.Sprintf("%s\n", l))
 		return err != nil
 	})
-
 	if err != nil {
 		return result, fmt.Errorf("error ensuring lines in file %s", file)
+	}
+
+	if !contentPresent {
+		for _, l := range contentLines {
+			_, err = tmpFile.WriteString(fmt.Sprintf("%s\n", l))
+			if err != nil {
+				return result, fmt.Errorf("error ensuring content in file %s", file)
+			}
+		}
 	}
 
 	return ensureResult{changed: true, new: newFile}, nil
