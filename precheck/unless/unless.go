@@ -18,6 +18,8 @@ type Unless struct {
 	Pwd      string `yaml:"pwd"`
 	Shell    bool   `yaml:"shell"`
 	Stat     string `yaml:"stat"`
+	// For when the returned version is different from what needs to be replace the version part in URL.
+	VersionOutput string `yaml:"version_output"`
 }
 
 func (u Unless) String() string {
@@ -114,6 +116,10 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 		internal.Log.Errorf("Error running postproc function for %s: %v", name, err)
 		// Post processor function failed, best not to skip the operation.
 		return false
+	}
+
+	if unless.VersionOutput != "" {
+		version = unless.VersionOutput
 	}
 
 	if postProc != version {
