@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	defaultRemote  = "flathub"
 	flatpakExec    = "flatpak"
 	launcherScript = `#!/usr/bin/env bash
 flatpak run %s
@@ -46,6 +47,17 @@ func findRequiredRemote(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) (
 }
 
 func ensurePkgRemote(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error {
+	if pkg.Remote == "" {
+		for _, remote := range remotes {
+			if remote.Name != defaultRemote {
+				continue
+			}
+			return ensureRemote(remote)
+		}
+
+		return fmt.Errorf("unable to determine remote for %s", pkg.Name)
+	}
+
 	remote, err := findRequiredRemote(pkg, remotes)
 	if err != nil {
 		return err
