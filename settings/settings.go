@@ -19,17 +19,17 @@ const (
 type FactMap map[string]map[string]string
 
 type Settings struct {
-	BinDir        string            `yaml:"bin_dir"`
-	CloneDir      string            `yaml:"clone_dir"`
-	CloneEnv      map[string]string `yaml:"clone_env"`
-	EnsureEnv     map[string]string `yaml:"ensure_env"`
-	EnsurePaths   []string          `yaml:"ensure_paths"`
-	HostFacts     FactMap           `yaml:"host_facts"`
-	ReleaseDir    string            `yaml:"release_dir"`
-	SSHCloneDir   string            `yaml:"ssh_clone_dir"`
-	TemplateDir   string            `yaml:"template_dir"`
-	Versions      map[string]string `yaml:"versions"`
-	VirtualEnvDir string            `yaml:"virtualenv_dir"`
+	BinDir        string            `yaml:"bin_dir,omitempty"`
+	CloneDir      string            `yaml:"clone_dir,omitempty"`
+	CloneEnv      map[string]string `yaml:"clone_env,omitempty"`
+	EnsureEnv     map[string]string `yaml:"ensure_env,omitempty"`
+	EnsurePaths   []string          `yaml:"ensure_paths,omitempty"`
+	HostFacts     FactMap           `yaml:"host_facts,omitempty"`
+	ReleaseDir    string            `yaml:"release_dir,omitempty"`
+	SSHCloneDir   string            `yaml:"ssh_clone_dir,omitempty"`
+	TemplateDir   string            `yaml:"template_dir,omitempty"`
+	Versions      map[string]string `yaml:"versions,omitempty"`
+	VirtualEnvDir string            `yaml:"virtualenv_dir,omitempty"`
 }
 
 func (s Settings) GetBinPath() string {

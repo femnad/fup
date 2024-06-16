@@ -308,7 +308,12 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 
 	var execs []archiveEntry
 	for _, entry := range entries {
-		rootDir := strings.Split(entry.name, "/")
+		name := strings.TrimPrefix(entry.name, "./")
+		if name == "" {
+			continue
+		}
+
+		rootDir := strings.Split(name, "/")
 		roots.Add(rootDir[0])
 		if common.IsExecutableFile(entry.info) {
 			execs = append(execs, entry)
