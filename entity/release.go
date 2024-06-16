@@ -19,19 +19,19 @@ type ExecuteAfterSpec struct {
 }
 
 type Release struct {
-	Cleanup       bool              `yaml:"cleanup"`
-	DontLink      bool              `yaml:"dont_link"`
-	DontUpdate    bool              `yaml:"dont_update"`
-	ExecuteAfter  ExecuteAfterSpec  `yaml:"execute_after"`
-	NamedLink     []NamedLink       `yaml:"named_link"`
-	Ref           string            `yaml:"name"`
-	Symlink       []string          `yaml:"link"`
-	Target        string            `yaml:"target"`
-	Unless        unless.Unless     `yaml:"unless"`
-	Url           string            `yaml:"url"`
-	Version       string            `yaml:"version"`
-	VersionLookup VersionLookupSpec `yaml:"version_lookup"`
-	When          string            `yaml:"when"`
+	Cleanup       bool              `yaml:"cleanup,omitempty"`
+	DontLink      bool              `yaml:"dont_link,omitempty"`
+	DontUpdate    bool              `yaml:"dont_update,omitempty"`
+	ExecuteAfter  ExecuteAfterSpec  `yaml:"execute_after,omitempty"`
+	NamedLink     []NamedLink       `yaml:"named_link,omitempty"`
+	Ref           string            `yaml:"name,omitempty"`
+	Symlink       []string          `yaml:"link,omitempty"`
+	Target        string            `yaml:"target,omitempty"`
+	Unless        unless.Unless     `yaml:"unless,omitempty"`
+	Url           string            `yaml:"url,omitempty"`
+	Version       string            `yaml:"version,omitempty"`
+	VersionLookup VersionLookupSpec `yaml:"version_lookup,omitempty"`
+	When          string            `yaml:"when,omitempty"`
 }
 
 func (r Release) GetVersion() string {

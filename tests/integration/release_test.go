@@ -66,7 +66,7 @@ func TestReleases(t *testing.T) {
 	tests := []struct {
 		name     string
 		release  entity.Release
-		symlink  symlink
+		symlinks []symlink
 		absolute bool
 	}{
 		{
@@ -75,10 +75,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-no-root-dir.tar",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/foo/foo",
-			},
+			}},
 		},
 		{
 			name: "tar_archive_root_dir_different_than_exec",
@@ -86,10 +86,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.tar",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/foo-1.2.3-amd64/foo",
-			},
+			}},
 		},
 		{
 			name: "tar_archive_root_dir_different_than_exec_override_target",
@@ -98,10 +98,10 @@ func TestReleases(t *testing.T) {
 				Target: "fred",
 				Url:    "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.tar",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/fred/foo",
-			},
+			}},
 		},
 		{
 			name: "tar_archive_root_dir_same_as_exec",
@@ -109,10 +109,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.tar",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/foo/foo",
-			},
+			}},
 		},
 		{
 			name: "tar_archive_root_dir_same_as_exec_override_target",
@@ -121,10 +121,10 @@ func TestReleases(t *testing.T) {
 				Target: "qux",
 				Url:    "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.tar",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/qux/foo",
-			},
+			}},
 		},
 		{
 			name: "zip_archive_no_root_dir",
@@ -132,10 +132,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-no-root-dir.zip",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/foo/foo",
-			},
+			}},
 		},
 		{
 			name: "zip_archive_root_dir_different_than_exec",
@@ -143,10 +143,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.zip",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/foo-1.2.3-amd64/foo",
-			},
+			}},
 		},
 		{
 			name: "zip_archive_root_dir_different_than_exec_override_target",
@@ -155,10 +155,10 @@ func TestReleases(t *testing.T) {
 				Target: "baz",
 				Url:    "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-different-than-exec.zip",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/baz/foo",
-			},
+			}},
 		},
 		{
 			name: "zip_archive_root_dir_same_as_exec",
@@ -166,10 +166,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/foo/foo",
-			},
+			}},
 		},
 		{
 			name: "zip_archive_root_dir_same_as_exec_override_target",
@@ -178,10 +178,10 @@ func TestReleases(t *testing.T) {
 				Target: "bar",
 				Url:    "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "bin/foo",
 				target:   "ext/bar/foo",
-			},
+			}},
 		},
 		{
 			name: "zip_archive_root_dir_same_as_exec_abs_dirs",
@@ -189,10 +189,10 @@ func TestReleases(t *testing.T) {
 				Ref: "foo",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-root-dir-same-as-exec.zip",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "~/out/bin/foo",
 				target:   "~/out/ext/foo/foo",
-			},
+			}},
 			absolute: true,
 		},
 		{
@@ -202,10 +202,10 @@ func TestReleases(t *testing.T) {
 				Target: "foo",
 				Url:    "https://github.com/femnad/fup/releases/download/test-payload/release-binary",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "~/out/bin/baz",
 				target:   "~/out/ext/foo/baz",
-			},
+			}},
 			absolute: true,
 		},
 		{
@@ -214,10 +214,10 @@ func TestReleases(t *testing.T) {
 				Target: "foo",
 				Url:    "https://github.com/femnad/fup/releases/download/test-payload/release-binary",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "~/out/bin/release-binary",
 				target:   "~/out/ext/foo/release-binary",
-			},
+			}},
 			absolute: true,
 		},
 		{
@@ -226,9 +226,47 @@ func TestReleases(t *testing.T) {
 				Ref: "",
 				Url: "https://github.com/femnad/fup/releases/download/test-payload/release-binary",
 			},
-			symlink: symlink{
+			symlinks: []symlink{{
 				linkName: "~/out/bin/release-binary",
 				target:   "~/out/ext/release-binary/release-binary",
+			}},
+			absolute: true,
+		},
+		{
+			name: "tar-only-dirs-in-root",
+			release: entity.Release{
+				Ref:     "xyz",
+				Url:     "https://github.com/femnad/fup/releases/download/test-payload/release-only-dirs-in-root.tar",
+				Symlink: []string{"foo/baz", "bar/qux"},
+			},
+			symlinks: []symlink{
+				{
+					linkName: "~/out/bin/baz",
+					target:   "~/out/ext/xyz/foo/baz",
+				},
+				{
+					linkName: "~/out/bin/qux",
+					target:   "~/out/ext/xyz/bar/qux",
+				},
+			},
+			absolute: true,
+		},
+		{
+			name: "zip-only-dirs-in-root",
+			release: entity.Release{
+				Ref:     "xyz",
+				Url:     "https://github.com/femnad/fup/releases/download/test-payload/release-only-dirs-in-root.zip",
+				Symlink: []string{"foo/baz", "bar/qux"},
+			},
+			symlinks: []symlink{
+				{
+					linkName: "~/out/bin/baz",
+					target:   "~/out/ext/xyz/foo/baz",
+				},
+				{
+					linkName: "~/out/bin/qux",
+					target:   "~/out/ext/xyz/bar/qux",
+				},
 			},
 			absolute: true,
 		},
@@ -258,36 +296,38 @@ func TestReleases(t *testing.T) {
 				return
 			}
 
-			linkName := internal.ExpandUser(tt.symlink.linkName)
-			linkName, err = ensureAbs(linkName, artifactsDir)
-			if err != nil {
-				t.Fatalf("Error ensuring %s is absolute: %v", linkName, err)
-				return
-			}
-
-			target := internal.ExpandUser(tt.symlink.target)
-			target, err = ensureAbs(target, artifactsDir)
-			if err != nil {
-				t.Fatalf("Error ensuring %s is absolute: %v", target, err)
-				return
-			}
-
 			err = runFup("release", configFile)
 			if err != nil {
 				t.Errorf("error running fup: %v", err)
 				return
 			}
 
-			var targetLink string
-			targetLink, err = os.Readlink(linkName)
-			if err != nil {
-				t.Errorf("Error resolving symlink %s: %v", target, err)
-				return
-			}
+			for _, link := range tt.symlinks {
+				linkName := internal.ExpandUser(link.linkName)
+				linkName, err = ensureAbs(linkName, artifactsDir)
+				if err != nil {
+					t.Fatalf("Error ensuring %s is absolute: %v", linkName, err)
+					return
+				}
 
-			if targetLink != target {
-				t.Fatalf("Link %s expected to point to %s but points to %s", linkName, target, targetLink)
-				return
+				target := internal.ExpandUser(link.target)
+				target, err = ensureAbs(target, artifactsDir)
+				if err != nil {
+					t.Fatalf("Error ensuring %s is absolute: %v", target, err)
+					return
+				}
+
+				var targetLink string
+				targetLink, err = os.Readlink(linkName)
+				if err != nil {
+					t.Errorf("Error resolving symlink %s: %v", target, err)
+					return
+				}
+
+				if targetLink != target {
+					t.Fatalf("Link %s expected to point to %s but points to %s", linkName, target, targetLink)
+					return
+				}
 			}
 
 			err = cleanupReleasesTest(configFile, absoluteArtifactsDir, relativeArtifactsDir)
