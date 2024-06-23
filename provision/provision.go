@@ -152,7 +152,7 @@ func (p Provisioner) ensureReleases() error {
 		return errors.New("empty release directory")
 	}
 
-	return ensureReleases(p.Config.Releases, p.Config.Settings)
+	return ensureReleases(p.Config.Releases, p.Config.GithubReleases, p.Config.Settings)
 }
 
 func (p Provisioner) runPreflightTasks() error {

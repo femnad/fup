@@ -14,6 +14,7 @@ type Config struct {
 	DnfRepos        []DnfRepo         `yaml:"dnf_repo"`
 	EnsureLines     []LineInFile      `yaml:"line"`
 	Flatpak         Flatpak           `yaml:"flatpak"`
+	GithubReleases  []GithubRelease   `yaml:"github-release"`
 	GithubUserKey   UserKey           `yaml:"github_key"`
 	Go              []GoPkg           `yaml:"go"`
 	Hints           []Hint            `yaml:"hint"`
