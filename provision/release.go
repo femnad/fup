@@ -586,7 +586,7 @@ func download(closer io.ReadCloser, target string) error {
 		buf := make([]byte, bufferSize)
 
 		readBytes, readErr := closer.Read(buf)
-		if !errors.Is(readErr, io.EOF) {
+		if readErr != nil && !errors.Is(readErr, io.EOF) {
 			return readErr
 		}
 
