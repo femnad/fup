@@ -16,6 +16,7 @@ type NamedLink struct {
 type ExecuteAfterSpec struct {
 	Cmd    []string `yaml:"cmd"`
 	SetPwd bool     `yaml:"set_pwd"`
+	Sudo   bool     `yaml:"sudo"`
 }
 
 type Release struct {

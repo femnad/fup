@@ -689,7 +689,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 			internal.Log.Debugf("Running command %s under path %s", cmd, pwd)
 		}
 
-		err = marecmd.RunErrOnly(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true})
+		err = marecmd.RunErrOnly(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: executeAfter.Sudo})
 		if err != nil {
 			internal.Log.Errorf("error running post download command: %v", err)
 			return err
