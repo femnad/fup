@@ -13,7 +13,7 @@ type NamedLink struct {
 	Target string `yaml:"target"`
 }
 
-type ExecuteAfterSpec struct {
+type ExecuteSpec struct {
 	Cmd    []string `yaml:"cmd"`
 	SetPwd bool     `yaml:"set_pwd"`
 	Sudo   bool     `yaml:"sudo"`
@@ -23,7 +23,8 @@ type Release struct {
 	Cleanup       bool              `yaml:"cleanup,omitempty"`
 	DontLink      bool              `yaml:"dont_link,omitempty"`
 	DontUpdate    bool              `yaml:"dont_update,omitempty"`
-	ExecuteAfter  ExecuteAfterSpec  `yaml:"execute_after,omitempty"`
+	ExecuteAfter  ExecuteSpec       `yaml:"execute_after,omitempty"`
+	ExecuteBefore ExecuteSpec       `yaml:"execute_before,omitempty"`
 	NamedLink     []NamedLink       `yaml:"named_link,omitempty"`
 	Ref           string            `yaml:"name,omitempty"`
 	Symlink       []string          `yaml:"link,omitempty"`

@@ -65,6 +65,12 @@ type ReleaseInfo struct {
 	targetOverride string
 }
 
+type executionCtx struct {
+	s             settings.Settings
+	releaseTarget string
+	version       string
+}
+
 func (r ReleaseInfo) GetTarget() string {
 	if r.targetOverride != "" {
 		return r.targetOverride
@@ -627,6 +633,30 @@ func guessArchiveName(releaseUrl string) (string, error) {
 	return strings.Split(parsed.Path, "/")[2], nil
 }
 
+func performExecutions(eCtx executionCtx, spec entity.ExecuteSpec) error {
+	for _, cmd := range spec.Cmd {
+		cmd = settings.ExpandStringWithLookup(eCtx.s, cmd, map[string]string{"version": eCtx.version})
+		pwd := ""
+		if spec.SetPwd {
+			pwd = path.Join(eCtx.s.ReleaseDir, eCtx.releaseTarget)
+			pwd = internal.ExpandUser(pwd)
+		}
+		if pwd == "" {
+			internal.Log.Debugf("Running command %s", cmd)
+		} else {
+			internal.Log.Debugf("Running command %s under path %s", cmd, pwd)
+		}
+
+		err := marecmd.RunErrOnly(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: spec.Sudo})
+		if err != nil {
+			internal.Log.Errorf("error running post download command: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func ensureRelease(release entity.Release, s settings.Settings) error {
 	releaseURL, err := release.ExpandURL(s)
 	if err != nil {
@@ -651,6 +681,17 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		return nil
 	}
 
+	version := release.Version
+	if version == "" {
+		version = s.Versions[release.Name()]
+	}
+
+	eCtx := executionCtx{s: s, version: version}
+	err = performExecutions(eCtx, release.ExecuteBefore)
+	if err != nil {
+		return err
+	}
+
 	info, err := Extract(release, s)
 	if err != nil {
 		internal.Log.Errorf("Error downloading release %s: %v", releaseURL, err)
@@ -670,33 +711,8 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		}
 	}
 
-	version := release.Version
-	if version == "" {
-		version = s.Versions[release.Name()]
-	}
-
-	executeAfter := release.ExecuteAfter
-	for _, cmd := range executeAfter.Cmd {
-		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
-		pwd := ""
-		if executeAfter.SetPwd {
-			pwd = path.Join(s.ReleaseDir, info.GetTarget())
-			pwd = internal.ExpandUser(pwd)
-		}
-		if pwd == "" {
-			internal.Log.Debugf("Running command %s", cmd)
-		} else {
-			internal.Log.Debugf("Running command %s under path %s", cmd, pwd)
-		}
-
-		err = marecmd.RunErrOnly(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: executeAfter.Sudo})
-		if err != nil {
-			internal.Log.Errorf("error running post download command: %v", err)
-			return err
-		}
-	}
-
-	return nil
+	eCtx.releaseTarget = info.GetTarget()
+	return performExecutions(eCtx, release.ExecuteAfter)
 }
 
 func processGithubReleases(githubReleases []entity.GithubRelease) ([]entity.Release, error) {
@@ -719,6 +735,7 @@ func processGithubReleases(githubReleases []entity.GithubRelease) ([]entity.Rele
 			DontLink:      githubRelease.DontLink,
 			DontUpdate:    githubRelease.DontUpdate,
 			ExecuteAfter:  githubRelease.ExecuteAfter,
+			ExecuteBefore: githubRelease.ExecuteBefore,
 			NamedLink:     githubRelease.NamedLink,
 			Ref:           ref,
 			Symlink:       githubRelease.Symlink,
