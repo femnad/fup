@@ -680,7 +680,8 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		cmd = settings.ExpandStringWithLookup(s, cmd, map[string]string{"version": version})
 		pwd := ""
 		if executeAfter.SetPwd {
-			pwd = info.GetTarget()
+			pwd = path.Join(s.ReleaseDir, info.GetTarget())
+			pwd = internal.ExpandUser(pwd)
 		}
 		if pwd == "" {
 			internal.Log.Debugf("Running command %s", cmd)
