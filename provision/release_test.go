@@ -203,7 +203,7 @@ func Test_getReleaseInfo(t *testing.T) {
 			want: ReleaseInfo{
 				execCandidate: "baz",
 				hasRootDir:    true,
-				relTarget:     "foo",
+				relTarget:     "foo/bar",
 			},
 		},
 	}

@@ -354,9 +354,10 @@ func getReleaseInfo(release entity.Release, entries []archiveEntry) (info Releas
 		execCandidate = strings.TrimPrefix(execs[0].name, "./")
 	} else if numExecs > 1 {
 		for _, exec := range execs {
-			_, baseName := path.Split(exec.name)
+			dir, baseName := path.Split(exec.name)
 			if baseName == release.Ref {
 				execCandidate = baseName
+				target = strings.TrimSuffix(strings.TrimPrefix(dir, "./"), "/")
 				break
 			}
 		}
