@@ -183,6 +183,29 @@ func Test_getReleaseInfo(t *testing.T) {
 				relTarget:     "foo",
 			},
 		},
+		{
+			name: "Multiple execs",
+			args: args{
+				entries: []archiveEntry{
+					{
+						info: mockExec("baz"),
+						name: "./foo/bar/baz",
+					},
+					{
+						info: mockExec("bazqux"),
+						name: "./foo/qux/bazqux",
+					},
+				},
+				release: entity.Release{
+					Ref: "baz",
+				},
+			},
+			want: ReleaseInfo{
+				execCandidate: "baz",
+				hasRootDir:    true,
+				relTarget:     "foo",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

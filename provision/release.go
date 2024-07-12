@@ -305,7 +305,7 @@ func getExecCandidate(prefix, execCandidate string) (string, error) {
 	return strings.TrimPrefix(execCandidate, prefix), nil
 }
 
-func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info ReleaseInfo, err error) {
+func getReleaseInfo(release entity.Release, entries []archiveEntry) (info ReleaseInfo, err error) {
 	names := mare.Map(entries, func(entry archiveEntry) string {
 		return entry.name
 	})
@@ -333,7 +333,7 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 	if roots.Cardinality() == 1 {
 		root, ok := roots.Pop()
 		if !ok {
-			return info, fmt.Errorf("error determining root dir for %s", archive.Url)
+			return info, fmt.Errorf("error determining root dir for %s", release.Url)
 		}
 
 		prefix = strings.TrimPrefix(prefix, "./")
@@ -343,14 +343,23 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 		} else {
 			target = root
 		}
-	} else if archive.Name() != "" {
-		target = archive.Name()
+	} else if release.Name() != "" {
+		target = release.Name()
 	} else {
 		target = execs[0].name
 	}
 
-	if len(execs) == 1 {
+	numExecs := len(execs)
+	if numExecs == 1 {
 		execCandidate = strings.TrimPrefix(execs[0].name, "./")
+	} else if numExecs > 1 {
+		for _, exec := range execs {
+			_, baseName := path.Split(exec.name)
+			if baseName == release.Ref {
+				execCandidate = baseName
+				break
+			}
+		}
 	}
 
 	execCandidate, err = getExecCandidate(prefix, execCandidate)
@@ -362,7 +371,7 @@ func getReleaseInfo(archive entity.Release, entries []archiveEntry) (info Releas
 		execCandidate:  execCandidate,
 		hasRootDir:     hasRootDir,
 		relTarget:      target,
-		targetOverride: archive.Target}, nil
+		targetOverride: release.Target}, nil
 }
 
 func getOutputPath(info ReleaseInfo, fileName, dirName string) string {
