@@ -148,6 +148,10 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 	}
 
 	err = os.Remove(tempFile)
+	if err != nil {
+		return
+	}
+
 	info.absTarget = absTarget
 	return
 }
