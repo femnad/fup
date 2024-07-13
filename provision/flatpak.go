@@ -16,7 +16,7 @@ const (
 	defaultRemote  = "flathub"
 	flatpakExec    = "flatpak"
 	launcherScript = `#!/usr/bin/env bash
-flatpak run %s
+flatpak run %s $@
 `
 )
 
