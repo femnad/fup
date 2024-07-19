@@ -36,11 +36,18 @@ func extractTar(reader *tar.Reader, outputPath string, fileSet mapset.Set[string
 
 		info := header.FileInfo()
 		name := header.Name
-		if !fileSet.Contains(name) {
+		if fileSet.Cardinality() > 0 && !fileSet.Contains(name) {
 			continue
 		}
 
 		target := path.Join(outputPath, name)
+		_, err = os.Stat(target)
+		if err == nil {
+			continue
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+
 		err = extractCompressedFile(info, target, reader)
 		if err != nil {
 			return err
@@ -93,6 +100,10 @@ func extract(response remote.Response, archive entity.Archive) error {
 }
 
 func shouldSkip(archive entity.Archive) (bool, error) {
+	if len(archive.Files) == 0 {
+		return false, nil
+	}
+
 	for _, file := range archive.Files {
 		target := internal.ExpandUser(path.Join(archive.Target, file))
 		_, err := os.Stat(target)
