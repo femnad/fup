@@ -92,6 +92,8 @@ func extract(response remote.Response, archive entity.Archive) error {
 }
 
 func extractArchive(archive entity.Archive) error {
+	internal.Log.Infof("Extracting archive %s", archive.URL)
+
 	response, err := remote.ReadResponseBody(archive.URL)
 	if err != nil {
 		return err
