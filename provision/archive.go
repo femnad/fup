@@ -9,6 +9,7 @@ import (
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
 	"io"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -91,10 +92,38 @@ func extract(response remote.Response, archive entity.Archive) error {
 	return fmt.Errorf("unable to determine archive reader for %s", archiveUrl)
 }
 
-func extractArchive(archive entity.Archive) error {
-	internal.Log.Infof("Extracting archive %s", archive.URL)
+func shouldSkip(archive entity.Archive) (bool, error) {
+	for _, file := range archive.Files {
+		target := internal.ExpandUser(path.Join(archive.Target, file))
+		_, err := os.Stat(target)
+		if err == nil {
+			continue
+		}
+		if !os.IsNotExist(err) {
+			return false, err
+		} else {
+			return false, nil
+		}
+	}
 
-	response, err := remote.ReadResponseBody(archive.URL)
+	return true, nil
+}
+
+func extractArchive(archive entity.Archive) error {
+	skip, err := shouldSkip(archive)
+	if err != nil {
+		return err
+	}
+
+	archiveURL := archive.URL
+	if skip {
+		internal.Log.Debugf("Skipping extracting archive %s", archiveURL)
+		return nil
+	}
+
+	internal.Log.Infof("Extracting archive %s", archiveURL)
+
+	response, err := remote.ReadResponseBody(archiveURL)
 	if err != nil {
 		return err
 	}
