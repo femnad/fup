@@ -115,6 +115,7 @@ func NewProvisioner(cfg entity.Config, filter []string) (Provisioner, error) {
 		{"service", p.initServices},
 		{"dir", p.ensureDirs},
 		{"line", p.ensureLines},
+		{"archive", p.extractArchive},
 		{"flatpak", p.flatpakInstall},
 		{"snap", p.snapInstall},
 		{"group", p.userInGroup},
@@ -231,6 +232,12 @@ func (p Provisioner) ensureLines() error {
 	internal.Log.Noticef("Ensuring lines in files")
 
 	return ensureLines(p.Config)
+}
+
+func (p Provisioner) extractArchive() error {
+	internal.Log.Noticef("Extracting archives")
+
+	return extractArchives(p.Config)
 }
 
 func (p Provisioner) flatpakInstall() error {
