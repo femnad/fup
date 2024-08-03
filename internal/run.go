@@ -82,10 +82,10 @@ func Move(src, dst string, setOwner bool) error {
 		return nil
 	}
 
-	err = chown(dst, rootUser, rootUser)
+	err = Chown(dst, rootUser, rootUser)
 	if err != nil {
 		return err
 	}
 
-	return chmod(dst, defaultFileMode)
+	return Chmod(dst, defaultFileMode)
 }

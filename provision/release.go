@@ -37,6 +37,8 @@ const (
 	executableMimeType = "application/x-executable"
 	githubReleaseRegex = "https://github.com/[a-zA-Z_-]+/[a-zA-Z_-]+/releases/download/[v0-9.]+/[a-zA-Z0-9_.-]+"
 	gzipMimeType       = "application/gzip"
+	rootUser           = "root"
+	setuidExecutable   = 0o4755
 	sharedLibMimeType  = "application/x-sharedlib"
 	tarMimeType        = "application/x-tar"
 	xzMimeType         = "application/x-xz"
@@ -138,6 +140,15 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 		}
 	}
 
+	var chromeSandbox string
+	if release.ChromeSandbox != "" {
+		chromeSandbox = path.Join(absTarget, release.ChromeSandbox)
+		err = internal.EnsureFileAbsent(chromeSandbox)
+		if err != nil {
+			return info, fmt.Errorf("error removing chrome-sandbox file %s: %v", chromeSandbox, err)
+		}
+	}
+
 	extractFn, err := getExtractionFn(fileType.String())
 	if err != nil {
 		return
@@ -145,6 +156,18 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 	err = extractFn(info, hint)
 	if err != nil {
 		return
+	}
+
+	if chromeSandbox != "" {
+		err = internal.Chown(chromeSandbox, rootUser, rootUser)
+		if err != nil {
+			return info, err
+		}
+
+		err = internal.Chmod(chromeSandbox, setuidExecutable)
+		if err != nil {
+			return info, err
+		}
 	}
 
 	err = os.Remove(tempFile)

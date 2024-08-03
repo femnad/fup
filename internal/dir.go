@@ -7,10 +7,17 @@ import (
 
 func EnsureFileAbsent(file string) error {
 	_, err := os.Stat(file)
-	if err == nil {
-		return os.Remove(file)
-	} else if !os.IsNotExist(err) {
-		return err
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	err = os.Remove(file)
+	if os.IsPermission(err) {
+		return MaybeRunWithSudo(fmt.Sprintf("rm %s", file))
 	}
 
 	return nil
@@ -52,5 +59,5 @@ func EnsureDirExists(dir string) error {
 		return err
 	}
 
-	return chown(dir, rootUser, rootUser)
+	return Chown(dir, rootUser, rootUser)
 }

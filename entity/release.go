@@ -20,6 +20,7 @@ type ExecuteSpec struct {
 }
 
 type Release struct {
+	ChromeSandbox string            `yaml:"chrome-sandbox"`
 	Cleanup       bool              `yaml:"cleanup,omitempty"`
 	DontLink      bool              `yaml:"dont_link,omitempty"`
 	DontUpdate    bool              `yaml:"dont_update,omitempty"`

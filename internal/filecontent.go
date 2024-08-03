@@ -62,7 +62,7 @@ func checksum(f string) (string, error) {
 	return hex.EncodeToString(sum), nil
 }
 
-func chown(file, user, group string) error {
+func Chown(file, user, group string) error {
 	isHomePath := IsHomePath(file)
 	if user == "" && group == "" {
 		if isHomePath {
@@ -98,7 +98,7 @@ func chown(file, user, group string) error {
 	return MaybeRunWithSudo(chownCmd)
 }
 
-func chmod(target string, mode int) error {
+func Chmod(target string, mode int) error {
 	octal := strconv.FormatInt(int64(mode), 8)
 	chmodCmd := fmt.Sprintf("chmod %s %s", octal, target)
 	return MaybeRunWithSudoForPath(chmodCmd, target)
@@ -295,7 +295,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	}
 
 	if currentMode != mode || !dstExists {
-		err = chmod(target, mode)
+		err = Chmod(target, mode)
 		if err != nil {
 			return changed, err
 		}
@@ -307,7 +307,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 		return changed, err
 	}
 
-	err = chown(target, file.User, file.Group)
+	err = Chown(target, file.User, file.Group)
 	if err != nil {
 		return false, err
 	}
