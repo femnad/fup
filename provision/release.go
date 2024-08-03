@@ -706,7 +706,8 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	}
 
 	if release.Name() == "" {
-		name, err := guessArchiveName(releaseURL)
+		var name string
+		name, err = guessArchiveName(releaseURL)
 		if err != nil {
 			return err
 		}
@@ -794,8 +795,18 @@ func processGithubReleases(githubReleases []entity.GithubRelease) ([]entity.Rele
 	return releases, nil
 }
 
+func ghCliAvailable(s settings.Settings) bool {
+	if !s.UseGHClient {
+		return false
+	}
+
+	err := marecmd.RunErrOnly(marecmd.Input{Command: "gh auth status"})
+	return err == nil
+}
+
 func ensureReleases(config entity.Config) error {
 	var releaseErrs []error
+	config.Settings.Internal = settings.InternalSettings{GhAvailable: ghCliAvailable(config.Settings)}
 
 	releases := config.Releases
 	processedReleases, err := processGithubReleases(config.GithubReleases)

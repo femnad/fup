@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/remote"
+	"github.com/femnad/fup/settings"
 )
 
 const (
@@ -17,22 +17,6 @@ const (
 	githubMatchingTag   = "github-tag"
 	pypiLatestVersion   = "pypi-latest"
 )
-
-var (
-	strategies = map[string]func(VersionLookupSpec, string) (string, error){
-		githubLatestRelease: githubStableSpec,
-		githubMatchingTag:   gitHubFirstMatchingTagSpec,
-		pypiLatestVersion:   pypiLatestVersionSpec,
-	}
-)
-
-type githubReleaseResp struct {
-	TagName string `json:"tag_name"`
-}
-
-type githubTagResp struct {
-	Name string `json:"name"`
-}
 
 type VersionLookupSpec struct {
 	ExcludeSuffix []string `yaml:"exclude_suffix"`
@@ -120,72 +104,14 @@ func getRepo(spec VersionLookupSpec, releaseURL string) (string, error) {
 	return repo, nil
 }
 
-func fetchGithubResp(spec VersionLookupSpec, releaseURL, urlSpec string) (resp []byte, err error) {
-	repo, err := getRepo(spec, releaseURL)
-	if err != nil {
-		return
+func queryFromStrategy(spec VersionLookupSpec, assetURL string, s settings.Settings) (string, error) {
+	resolver := specResolver{useGHClient: s.Internal.GhAvailable}
+	strategies := map[string]func(VersionLookupSpec, string) (string, error){
+		githubLatestRelease: resolver.githubStable,
+		githubMatchingTag:   resolver.gitHubFirstMatchingTag,
+		pypiLatestVersion:   resolver.pypiLatestVersion,
 	}
 
-	apiURL := fmt.Sprintf(urlSpec, repo)
-	return remote.ReadResponseBytes(apiURL)
-}
-
-func githubStableSpec(spec VersionLookupSpec, releaseURL string) (string, error) {
-	resp, err := fetchGithubResp(spec, releaseURL, "https://api.github.com/repos/%s/releases/latest")
-	if err != nil {
-		return "", err
-	}
-
-	var release githubReleaseResp
-	err = json.Unmarshal(resp, &release)
-	if err != nil {
-		return "", err
-	}
-
-	return release.TagName, nil
-}
-
-func gitHubFirstMatchingTagSpec(spec VersionLookupSpec, releaseURL string) (string, error) {
-	resp, err := fetchGithubResp(spec, releaseURL, "https://api.github.com/repos/%s/tags")
-	if err != nil {
-		return "", err
-	}
-
-	var tags []githubTagResp
-	err = json.Unmarshal(resp, &tags)
-	if err != nil {
-		return "", err
-	}
-
-	var regex *regexp.Regexp
-	if spec.MatchRegex != "" {
-		regex, err = regexp.Compile(spec.MatchRegex)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	for _, tag := range tags {
-		if regex != nil && !regex.MatchString(tag.Name) {
-			continue
-		}
-
-		return tag.Name, nil
-	}
-
-	return "", fmt.Errorf("error finding matching tag for spec %+v", spec)
-}
-
-func pypiLatestVersionSpec(spec VersionLookupSpec, pkgName string) (string, error) {
-	packageURL := fmt.Sprintf("https://pypi.org/project/%s/", pkgName)
-	lookupSpec := VersionLookupSpec{
-		Query: "//h1[@class='package-header__name']",
-		URL:   packageURL,
-	}
-	return resolveQuery(lookupSpec)
-}
-
-func queryFromStrategy(spec VersionLookupSpec, assetURL string) (string, error) {
 	fn, ok := strategies[spec.Strategy]
 	if !ok {
 		return "", fmt.Errorf("no such strategy %s", spec.Strategy)
@@ -194,10 +120,10 @@ func queryFromStrategy(spec VersionLookupSpec, assetURL string) (string, error) 
 	return fn(spec, assetURL)
 }
 
-func versionFromSpec(spec VersionLookupSpec, assetURL string) (text string, err error) {
+func versionFromSpec(spec VersionLookupSpec, assetURL string, s settings.Settings) (text string, err error) {
 	var version string
 	if spec.Strategy != "" {
-		version, err = queryFromStrategy(spec, assetURL)
+		version, err = queryFromStrategy(spec, assetURL, s)
 		if err != nil {
 			return "", err
 		}
@@ -221,8 +147,8 @@ func versionFromSpec(spec VersionLookupSpec, assetURL string) (text string, err 
 	return
 }
 
-func lookupVersion(spec VersionLookupSpec, assetURL string) (version string, err error) {
-	version, err = versionFromSpec(spec, assetURL)
+func lookupVersion(spec VersionLookupSpec, assetURL string, s settings.Settings) (version string, err error) {
+	version, err = versionFromSpec(spec, assetURL, s)
 	if err != nil {
 		return "", err
 	}
