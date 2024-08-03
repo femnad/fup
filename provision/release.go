@@ -736,13 +736,18 @@ func processGithubReleases(githubReleases []entity.GithubRelease) ([]entity.Rele
 			return releases, fmt.Errorf("no ref specified for GitHub release: %+v", githubRelease)
 		}
 
-		refTokens := strings.Split(githubRelease.Ref, "/")
-		if len(refTokens) != 2 {
-			return releases, fmt.Errorf("unexpected release name %s", githubRelease.Ref)
-		}
-		ref := refTokens[1]
-		releaseUrl := fmt.Sprintf("https://github.com/%s/releases/download/%s", githubRelease.Ref,
+		githubRef := githubRelease.Ref
+		releaseUrl := fmt.Sprintf("https://github.com/%s/releases/download/%s", githubRef,
 			githubRelease.Url)
+
+		ref := githubRelease.ExecName
+		if ref == "" {
+			refTokens := strings.Split(githubRef, "/")
+			if len(refTokens) != 2 {
+				return releases, fmt.Errorf("unexpected release name %s", githubRef)
+			}
+			ref = refTokens[1]
+		}
 
 		release := entity.Release{
 			Cleanup:       githubRelease.Cleanup,
@@ -766,10 +771,11 @@ func processGithubReleases(githubReleases []entity.GithubRelease) ([]entity.Rele
 	return releases, nil
 }
 
-func ensureReleases(releases []entity.Release, githubReleases []entity.GithubRelease, s settings.Settings) error {
+func ensureReleases(config entity.Config) error {
 	var releaseErrs []error
 
-	processedReleases, err := processGithubReleases(githubReleases)
+	releases := config.Releases
+	processedReleases, err := processGithubReleases(config.GithubReleases)
 	if err == nil {
 		releases = append(releases, processedReleases...)
 	} else {
@@ -777,7 +783,7 @@ func ensureReleases(releases []entity.Release, githubReleases []entity.GithubRel
 	}
 
 	for _, release := range releases {
-		err = ensureRelease(release, s)
+		err = ensureRelease(release, config.Settings)
 		if err != nil {
 			internal.Log.Errorf("Error ensuring release %s: %v", release.Name(), err)
 		}
