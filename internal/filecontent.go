@@ -63,15 +63,6 @@ func checksum(f string) (string, error) {
 }
 
 func Chown(file, user, group string) error {
-	isHomePath := IsHomePath(file)
-	if user == "" && group == "" {
-		if isHomePath {
-			return nil
-		}
-		user = rootUser
-		group = rootUser
-	}
-
 	userId, err := getent(user, getentUserDatabase)
 	if err != nil {
 		return err
@@ -82,26 +73,32 @@ func Chown(file, user, group string) error {
 		return err
 	}
 
-	if isHomePath {
-		return os.Chown(file, userId, groupId)
+	err = os.Chown(file, userId, groupId)
+	if err == nil {
+		return nil
 	}
 
-	chownCmd := "chown "
-	if user != "" {
-		chownCmd += user
+	if !os.IsPermission(err) {
+		return err
 	}
-	if group != "" {
-		chownCmd += ":" + user
-	}
-	chownCmd += " " + file
 
+	chownCmd := fmt.Sprintf("chown %s:%s %s", user, group, file)
 	return MaybeRunWithSudo(chownCmd)
 }
 
 func Chmod(target string, mode int) error {
+	err := os.Chmod(target, os.FileMode(mode))
+	if err == nil {
+		return nil
+	}
+
+	if !os.IsPermission(err) {
+		return err
+	}
+
 	octal := strconv.FormatInt(int64(mode), 8)
 	chmodCmd := fmt.Sprintf("chmod %s %s", octal, target)
-	return MaybeRunWithSudoForPath(chmodCmd, target)
+	return MaybeRunWithSudo(chmodCmd)
 }
 
 func getent(key, database string) (int, error) {
