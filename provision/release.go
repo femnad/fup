@@ -62,7 +62,6 @@ type extractionFn func(ReleaseInfo, extractionHint) error
 type ReleaseInfo struct {
 	execCandidate  string
 	hasRootDir     bool
-	absRoot        string
 	absTarget      string
 	relTarget      string
 	targetOverride string
@@ -99,15 +98,6 @@ func downloadRelease(release entity.Release, s settings.Settings) (string, error
 	}
 
 	return downloadTempFile(response)
-}
-
-func releaseRoot(absTarget string) string {
-	dir, base := path.Split(absTarget)
-	if dir == "" {
-		return base
-	}
-
-	return releaseRoot(path.Clean(dir))
 }
 
 func processDownload(release entity.Release, s settings.Settings) (info ReleaseInfo, err error) {
@@ -150,13 +140,9 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 		}
 	}
 
-	// We need this because absTarget refers to the path where the release executable resides.
-	root := releaseRoot(info.relTarget)
-	absRoot := path.Join(dirName, root)
-
 	var chromeSandbox string
 	if release.ChromeSandbox != "" {
-		chromeSandbox = path.Join(absRoot, release.ChromeSandbox)
+		chromeSandbox = path.Join(absTarget, release.ChromeSandbox)
 		err = internal.EnsureFileAbsent(chromeSandbox)
 		if err != nil {
 			return info, fmt.Errorf("error removing chrome-sandbox file %s: %v", chromeSandbox, err)
@@ -190,7 +176,6 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 	}
 
 	info.absTarget = absTarget
-	info.absRoot = absRoot
 	return
 }
 
@@ -751,7 +736,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 		return err
 	}
 
-	target := info.absRoot
+	target := info.absTarget
 	if info.targetOverride != "" {
 		target, _ = path.Split(target)
 		target = path.Join(target, info.targetOverride)
