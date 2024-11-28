@@ -75,7 +75,7 @@ func (i installer) installCorePlugins() error {
 }
 
 func (i installer) ensureCorePlugins() error {
-	cmd := fmt.Sprintf("dnf list installed %s", pluginsCore)
+	cmd := fmt.Sprintf("dnf list --installed %s", pluginsCore)
 	out, err := marecmd.Run(marecmd.Input{Command: cmd})
 	if out.Code == 1 {
 		return i.installCorePlugins()
@@ -119,7 +119,8 @@ func (d DnfRepo) Install() error {
 	}
 
 	if len(d.Packages) > 0 {
-		osId, err := precheck.GetOSId()
+		var osId string
+		osId, err = precheck.GetOSId()
 		if err != nil {
 			return err
 		}

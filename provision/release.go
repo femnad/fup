@@ -60,6 +60,7 @@ type extractionFn func(ReleaseInfo, extractionHint) error
 
 // ReleaseInfo stores an archive's root dir and specifies if the root dir is part of the archive files.
 type ReleaseInfo struct {
+	base           string
 	execCandidate  string
 	hasRootDir     bool
 	absTarget      string
@@ -142,7 +143,7 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 
 	var chromeSandbox string
 	if release.ChromeSandbox != "" {
-		chromeSandbox = path.Join(absTarget, release.ChromeSandbox)
+		chromeSandbox = path.Join(dirName, info.base, release.ChromeSandbox)
 		err = internal.EnsureFileAbsent(chromeSandbox)
 		if err != nil {
 			return info, fmt.Errorf("error removing chrome-sandbox file %s: %v", chromeSandbox, err)
@@ -396,6 +397,7 @@ func getReleaseInfo(release entity.Release, entries []archiveEntry) (info Releas
 	}
 
 	return ReleaseInfo{
+		base:           prefix,
 		execCandidate:  execCandidate,
 		hasRootDir:     hasRootDir,
 		relTarget:      target,
