@@ -90,7 +90,7 @@ func (i installer) configManagerInstall(repo string) error {
 		return err
 	}
 
-	cmd := fmt.Sprintf("dnf config-manager --add-repo %s", repo)
+	cmd := fmt.Sprintf("dnf config-manager addrepo --from-repofile=%s", repo)
 	return i.runMaybeSudo(cmd)
 }
 
