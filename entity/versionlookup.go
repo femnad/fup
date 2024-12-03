@@ -147,7 +147,7 @@ func versionFromSpec(spec VersionLookupSpec, assetURL string, s settings.Setting
 	return
 }
 
-func lookupVersion(spec VersionLookupSpec, assetURL string, s settings.Settings) (version string, err error) {
+func LookupVersion(spec VersionLookupSpec, assetURL string, s settings.Settings) (version string, err error) {
 	version, err = versionFromSpec(spec, assetURL, s)
 	if err != nil {
 		return "", err

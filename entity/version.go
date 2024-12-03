@@ -34,7 +34,7 @@ func getVersion(v versioned, s settings.Settings) (string, error) {
 		if lookupId == "" {
 			return "", fmt.Errorf("lookup ID for versioned %+v is empty", v)
 		}
-		return lookupVersion(v.GetVersionLookup(), v.GetLookupID(), s)
+		return LookupVersion(v.GetVersionLookup(), v.GetLookupID(), s)
 	}
 
 	return "", nil
