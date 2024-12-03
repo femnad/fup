@@ -31,6 +31,7 @@ type VersionLookupCmd struct {
 	AssetURL  string `arg:"-a,--asset-url"`
 	LookupURL string `arg:"positional,required" help:"Version lookup URL"`
 	Query     string `arg:"positional,required" help:"Version lookup query"`
+	PostProc  string `arg:"-p,--post-proc" help:"Post processing function"`
 }
 
 type args struct {
@@ -98,8 +99,9 @@ func lookup(parsed args) {
 		log.Fatalf("%v\n", err)
 	}
 	spec := entity.VersionLookupSpec{
-		Query: versionLookup.Query,
-		URL:   versionLookup.LookupURL,
+		PostProc: versionLookup.PostProc,
+		Query:    versionLookup.Query,
+		URL:      versionLookup.LookupURL,
 	}
 
 	var out string
