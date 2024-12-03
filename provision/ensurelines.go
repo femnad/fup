@@ -95,8 +95,8 @@ func ensure(file string, tmpFile *os.File, line entity.LineInFile) (result ensur
 		_, err = tmpFile.WriteString(fmt.Sprintf("%s\n", l))
 		return err != nil
 	})
-	if err != nil {
-		return result, fmt.Errorf("error ensuring lines in file %s", file)
+	if newLines.Cardinality() > 0 && err != nil {
+		return result, fmt.Errorf("error ensuring lines in file %s: %s", file, err)
 	}
 
 	if !contentPresent {
