@@ -16,16 +16,20 @@ import (
 )
 
 const (
-	keyRingsDir = "/etc/apt/keyrings"
-	sourcesDir  = "/etc/apt/sources.list.d"
+	defaultComponents = "stable"
+	keyRingsDir       = "/etc/apt/keyrings"
+	sourcesDir        = "/etc/apt/sources.list.d"
 )
 
 type AptRepo struct {
 	unless.BasicUnlessable
-	GPGKey   string `yaml:"gpg_key"`
-	RepoName string `yaml:"name"`
-	Repo     string `yaml:"repo"`
-	When     string `yaml:"when"`
+	Distribution string `yaml:"distribution"`
+	Components   string `yaml:"components"`
+	GPGKey       string `yaml:"gpg_key"`
+	Pin          bool   `yaml:"pin"`
+	RepoName     string `yaml:"name"`
+	Repo         string `yaml:"repo"`
+	When         string `yaml:"when"`
 }
 
 func (a AptRepo) DefaultVersionCmd() string {
@@ -135,23 +139,51 @@ func (a AptRepo) Install() error {
 	}
 	architecture := strings.TrimSpace(out.Stdout)
 
-	versionCodename, err := precheck.GetOSVersionCodename()
-	if err != nil {
-		return err
+	distribution := a.Distribution
+	if distribution == "" {
+		distribution, err = precheck.GetOSVersionCodename()
+		if err != nil {
+			return err
+		}
 	}
 
-	content := fmt.Sprintf("deb [arch=${architecture} signed-by=%s] %s ${codename} stable\n", keyRingFile,
-		a.Repo)
-	content = settings.Expand(content, map[string]string{
-		"architecture": architecture,
-		"codename":     versionCodename,
-	})
-	repoFile := path.Join(sourcesDir, fmt.Sprintf("%s.list", a.RepoName))
+	components := a.Components
+	if components == "" {
+		components = defaultComponents
+	}
+
+	name := a.RepoName
+	repo := a.Repo
+	content := fmt.Sprintf("deb [arch=%s signed-by=%s] %s %s %s\n", architecture, keyRingFile,
+		repo, distribution, components)
+	repoFile := path.Join(sourcesDir, fmt.Sprintf("%s.list", name))
 
 	_, err = internal.WriteContent(internal.ManagedFile{
 		Content: content,
 		Path:    repoFile,
 	})
+	if err != nil {
+		return err
+	}
 
+	if !a.Pin {
+		return nil
+	}
+
+	origin, _ := path.Split(repo)
+	fields := strings.Split(origin, "://")
+	if len(fields) < 2 {
+		return fmt.Errorf("unable to determine origin from repository %s", repo)
+	}
+
+	origin = strings.TrimSuffix(fields[1], "/")
+	pinContent := fmt.Sprintf(`Package: *
+Pin: origin %s
+Pin-Priority: 1000`, origin)
+	pinFile := fmt.Sprintf("/etc/apt/preferences.d/%s", name)
+	_, err = internal.WriteContent(internal.ManagedFile{
+		Content: pinContent,
+		Path:    pinFile,
+	})
 	return err
 }
