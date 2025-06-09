@@ -1,8 +1,11 @@
 package entity
 
 import (
+	"bytes"
 	"fmt"
+	"path"
 	"strings"
+	"text/template"
 
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck"
@@ -11,7 +14,16 @@ import (
 	marecmd "github.com/femnad/mare/cmd"
 )
 
-const pluginsCore = "dnf-plugins-core"
+const (
+	pluginsCore      = "dnf-plugins-core"
+	repoFileTemplate = `[{{ .Name }}]
+name="{{ .Description }}"
+baseurl={{ .URL }}
+enabled=1
+gpgcheck=1
+gpgkey="{{ .GPGKey }}"
+`
+)
 
 type installer struct {
 	isRoot bool
@@ -22,11 +34,19 @@ func (i installer) runMaybeSudo(cmd string) error {
 	return err
 }
 
+type repoSpec struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+	URL         string `yaml:"url"`
+	GPGKey      string `yaml:"gpg_key"`
+}
+
 type DnfRepo struct {
 	unless.BasicUnlessable
 	RepoName string   `yaml:"name"`
 	Packages []string `yaml:"packages"`
 	Repo     string   `yaml:"repo"`
+	RepoSpec repoSpec `yaml:"repo_spec"`
 	Url      []string `yaml:"url"`
 	When     string   `yaml:"when"`
 }
@@ -107,10 +127,44 @@ func (i installer) releasePackagesInstall(url []string, osId string) error {
 	return i.runMaybeSudo(cmd)
 }
 
+func writeRepoSpec(spec repoSpec) error {
+	tmpl, err := template.New("repo").Parse(repoFileTemplate)
+	if err != nil {
+		return err
+	}
+
+	repoFile := path.Join("/etc/yum.repos.d", fmt.Sprintf("%s.repo", spec.Name))
+	out := bytes.Buffer{}
+
+	err = tmpl.Execute(&out, spec)
+	if err != nil {
+		return err
+	}
+
+	err = internal.MaybeRunWithSudo(fmt.Sprintf("rpm --import %s", spec.GPGKey))
+	if err != nil {
+		return err
+	}
+
+	_, err = internal.WriteContent(internal.ManagedFile{
+		Content: out.String(),
+		Path:    repoFile,
+		Mode:    0644,
+		User:    "root",
+		Group:   "root",
+	})
+	return nil
+}
+
 func (d DnfRepo) Install() error {
 	isRoot, err := internal.IsUserRoot()
 	if err != nil {
 		return err
+	}
+
+	empty := repoSpec{}
+	if d.RepoSpec != empty {
+		return writeRepoSpec(d.RepoSpec)
 	}
 
 	i := installer{isRoot: isRoot}
