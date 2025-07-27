@@ -3,7 +3,6 @@ package provision
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path"
 
 	marecmd "github.com/femnad/mare/cmd"
@@ -76,9 +75,7 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 		}
 	}
 
-	home := os.Getenv("HOME")
-	homeBin := path.Join(home, "bin")
-
+	homeBin := internal.ExpandUser(cfg.Settings.BinDir)
 	if len(pkg.BinLinks) == 0 && !pkg.Library {
 		pkg.BinLinks = []string{pkg.Name()}
 	}
