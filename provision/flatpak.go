@@ -9,6 +9,7 @@ import (
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/settings"
 	marecmd "github.com/femnad/mare/cmd"
 )
 
@@ -92,13 +93,12 @@ func ensureInstalled(pkg entity.FlatpakPkg) error {
 	return nil
 }
 
-func ensureLauncher(flatpak entity.FlatpakPkg) error {
+func ensureLauncher(stg settings.Settings, flatpak entity.FlatpakPkg) error {
 	if flatpak.Launcher == "" {
 		return nil
 	}
 
-	home := os.Getenv("HOME")
-	homeBin := path.Join(home, "bin")
+	homeBin := internal.ExpandUser(stg.BinDir)
 	launcherPath := path.Join(homeBin, flatpak.Launcher)
 
 	_, err := os.Stat(launcherPath)
@@ -112,7 +112,7 @@ func ensureLauncher(flatpak entity.FlatpakPkg) error {
 	return os.WriteFile(launcherPath, []byte(launcherContent), 0755)
 }
 
-func installFlatpak(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error {
+func installFlatpak(stg settings.Settings, pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error {
 	installed, err := isInstalled(pkg)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func installFlatpak(pkg entity.FlatpakPkg, remotes []entity.FlatpakRemote) error
 		}
 	}
 
-	return ensureLauncher(pkg)
+	return ensureLauncher(stg, pkg)
 }
 
 func flatpakInstall(config entity.Config) error {
@@ -142,7 +142,7 @@ func flatpakInstall(config entity.Config) error {
 
 	var flatpakErr []error
 	for _, pkg := range config.Flatpak.Packages {
-		err = installFlatpak(pkg, config.Flatpak.Remotes)
+		err = installFlatpak(config.Settings, pkg, config.Flatpak.Remotes)
 		flatpakErr = append(flatpakErr, err)
 	}
 
