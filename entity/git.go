@@ -22,6 +22,10 @@ const (
 	gitRepoSuffix  = ".git"
 )
 
+var (
+	onePasswordSocket = internal.ExpandUser("~/.1password/agent.sock")
+)
+
 type cloneRef struct {
 	url  string
 	base string
@@ -124,6 +128,14 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 	}
 
 	internal.Log.Infof("Cloning repo %s", repo.Name)
+
+	_, err = os.Stat(onePasswordSocket)
+	if err == nil {
+		err = os.Setenv("SSH_AUTH_SOCK", onePasswordSocket)
+		if err != nil {
+			return err
+		}
+	}
 
 	r, err := git.PlainClone(cloneDir, false, &opt)
 	if err != nil {
