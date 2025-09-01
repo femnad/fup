@@ -21,6 +21,7 @@ const (
 type VersionLookupSpec struct {
 	ExcludeSuffix []string `yaml:"exclude_suffix"`
 	FollowURL     bool     `yaml:"follow_url"`
+	GetRedirect   bool     `yaml:"get_redirect"`
 	GetFirst      bool     `yaml:"get_first"`
 	GetLast       bool     `yaml:"get_last"`
 	GithubRepo    string   `yaml:"github_repo"`
@@ -130,12 +131,21 @@ func versionFromSpec(spec VersionLookupSpec, assetURL string, s settings.Setting
 		return version, nil
 	}
 
+	if spec.FollowURL {
+		var specUrl string
+		specUrl, err = remote.FollowRedirects(spec.URL)
+		if err != nil {
+			return "", err
+		}
+		spec.URL = specUrl
+	}
+
 	if spec.Query != "" {
 		text, err = resolveQuery(spec)
 		if err != nil {
 			return "", err
 		}
-	} else if spec.FollowURL {
+	} else if spec.GetRedirect {
 		text, err = remote.FollowRedirects(spec.URL)
 		if err != nil {
 			return "", err

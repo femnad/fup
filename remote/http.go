@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/femnad/fup/internal"
@@ -14,13 +15,15 @@ import (
 
 const (
 	locationKey  = "location"
+	maxRedirects = 5
 	userAgentKey = "user-agent"
 	userAgent    = "femnad/fup"
 	utfPrefix    = "UTF-8''"
 )
 
 var (
-	okStatuses = []int{http.StatusOK}
+	absoluteURLRegex = regexp.MustCompile("^http(s)?://.*")
+	okStatuses       = []int{http.StatusOK}
 )
 
 type Response struct {
@@ -117,7 +120,11 @@ func Download(url, target string) error {
 	return nil
 }
 
-func FollowRedirects(startURL string) (string, error) {
+func followRedirects(startURL string, count int) (string, error) {
+	if count > maxRedirects {
+		return "", fmt.Errorf("exceeded max redirects %d for URL %s", maxRedirects, startURL)
+	}
+
 	parsed, err := url.Parse(startURL)
 	if err != nil {
 		return "", err
@@ -135,11 +142,23 @@ func FollowRedirects(startURL string) (string, error) {
 	location := resp.Header.Get(locationKey)
 	if location == "" {
 		location = startURL
-	} else if location != "" {
+	} else if !absoluteURLRegex.MatchString(location) {
 		location, err = url.JoinPath(parsed.Host, location)
 		if err != nil {
 			return "", err
 		}
 	}
+
+	if resp.StatusCode == http.StatusMovedPermanently || resp.StatusCode == http.StatusFound {
+		if !absoluteURLRegex.MatchString(location) {
+			location = fmt.Sprintf("https://%s", location)
+		}
+		return followRedirects(location, count+1)
+	}
+
 	return location, nil
+}
+
+func FollowRedirects(startURL string) (string, error) {
+	return followRedirects(startURL, 0)
 }

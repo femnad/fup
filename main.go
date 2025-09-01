@@ -28,10 +28,12 @@ type ApplyCmd struct {
 }
 
 type VersionLookupCmd struct {
-	AssetURL  string `arg:"-a,--asset-url"`
-	LookupURL string `arg:"positional,required" help:"Version lookup URL"`
-	Query     string `arg:"positional,required" help:"Version lookup query"`
-	PostProc  string `arg:"-p,--post-proc" help:"Post processing function"`
+	AssetURL    string `arg:"-a,--asset-url"`
+	FollowURL   bool   `arg:"-o,--follow-redirect" help:"Follow redirects"`
+	GetRedirect bool   `arg:"-r,--get-redirect" help:"Get redirect URL"`
+	LookupURL   string `arg:"positional,required" help:"Version lookup URL"`
+	PostProc    string `arg:"-p,--post-proc" help:"Post processing function"`
+	Query       string `arg:"positional,required" help:"Version lookup query"`
 }
 
 type args struct {
@@ -99,9 +101,11 @@ func lookup(parsed args) {
 		log.Fatalf("%v\n", err)
 	}
 	spec := entity.VersionLookupSpec{
-		PostProc: versionLookup.PostProc,
-		Query:    versionLookup.Query,
-		URL:      versionLookup.LookupURL,
+		FollowURL:   versionLookup.FollowURL,
+		GetRedirect: versionLookup.GetRedirect,
+		PostProc:    versionLookup.PostProc,
+		Query:       versionLookup.Query,
+		URL:         versionLookup.LookupURL,
 	}
 
 	var out string
