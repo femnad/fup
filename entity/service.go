@@ -6,7 +6,14 @@ type Unit struct {
 	Environment map[string]string `yaml:"env"`
 	Exec        string            `yaml:"exec"`
 	Options     map[string]string `yaml:"options"`
+	Type        string            `yaml:"type"`
 	WantedBy    string            `yaml:"wanted_by"`
+}
+
+type Timer struct {
+	Calendar        string `yaml:"calendar"`
+	Desc            string `yaml:"desc"`
+	RandomizedDelay string `yaml:"randomized_delay"`
 }
 
 type Service struct {
@@ -18,6 +25,7 @@ type Service struct {
 	System       bool   `yaml:"system"`
 	Stop         bool   `yaml:"stop"`
 	Unit         Unit   `yaml:"unit"`
+	Timer        *Timer `yaml:"timer"`
 	When         string `yaml:"when"`
 }
 
