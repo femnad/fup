@@ -1,4 +1,4 @@
-from ubuntu:mantic
+from ubuntu:plucky
 
 run apt update -y && apt install -y curl gnupg2 systemd
 
