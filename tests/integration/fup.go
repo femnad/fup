@@ -32,8 +32,8 @@ func runFup(provisioner, configFile string) error {
 	if goPath == "" {
 		goPath = internal.ExpandUser("~/go")
 	}
-	fup := path.Join(goPath, "bin", "fup", "apply")
+	fup := path.Join(goPath, "bin", "fup")
 
-	err := marecmd.RunErrOnly(marecmd.Input{Command: fmt.Sprintf("%s -p %s -f %s", fup, provisioner, configFile)})
+	err := marecmd.RunErrOnly(marecmd.Input{Command: fmt.Sprintf("%s %s -p %s -f %s", fup, "apply", provisioner, configFile)})
 	return err
 }
