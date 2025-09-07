@@ -2,13 +2,13 @@ package integration
 
 import (
 	"fmt"
-	"github.com/femnad/fup/entity"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path"
 
+	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	marecmd "github.com/femnad/mare/cmd"
+	"gopkg.in/yaml.v3"
 )
 
 func writeConfig(cfg entity.Config, configFile string) error {
@@ -32,7 +32,7 @@ func runFup(provisioner, configFile string) error {
 	if goPath == "" {
 		goPath = internal.ExpandUser("~/go")
 	}
-	fup := path.Join(goPath, "bin", "fup")
+	fup := path.Join(goPath, "bin", "fup", "apply")
 
 	err := marecmd.RunErrOnly(marecmd.Input{Command: fmt.Sprintf("%s -p %s -f %s", fup, provisioner, configFile)})
 	return err
