@@ -1,4 +1,4 @@
-from fedora:39
+from fedora:42
 
 run dnf install -y curl gnupg2 systemd
 
