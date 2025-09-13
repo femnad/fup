@@ -54,11 +54,15 @@ func addRepos(config entity.Config) error {
 		internal.Log.Infof("Adding repo %s", repo.Name())
 
 		err := repo.Install()
-		if err != nil && repo.UpdateCmd() != "" {
+		if err != nil {
 			internal.Log.Errorf("Error installing repo %s: %v", repo.Name(), err)
+			errs = append(errs, err)
+			continue
+		}
+
+		if repo.UpdateCmd() != "" {
 			updateCmds.Add(repo.UpdateCmd())
 		}
-		errs = append(errs, err)
 	}
 
 	updateErrs := runUpdateCmds(updateCmds)
