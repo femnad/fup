@@ -54,10 +54,6 @@ func (a AptRepo) RunWhen() string {
 	return a.When
 }
 
-func (AptRepo) UpdateCmd() string {
-	return "apt update"
-}
-
 func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 	key, err := remote.ReadResponseBytes(keyUrl)
 	if err != nil {

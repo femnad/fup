@@ -66,7 +66,3 @@ func (Dnf) RemoteInstall(pkgs []entity.RemotePackage) error {
 
 	return nil
 }
-
-func (Dnf) UpdateCmd() string {
-	return ""
-}

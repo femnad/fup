@@ -96,7 +96,7 @@ func (Apt) RemoteInstall(pkgs []entity.RemotePackage) error {
 
 	targetArgs := strings.Join(regularTargets, " ")
 	if targetArgs != "" {
-		err = internal.MaybeRunWithSudo(fmt.Sprintf("apt install -y %s", targetArgs))
+		err = internal.MaybeRunWithSudo(fmt.Sprintf("apt install -Uy %s", targetArgs))
 		if err != nil {
 			return err
 		}
