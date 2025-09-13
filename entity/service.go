@@ -24,8 +24,8 @@ type Service struct {
 	Name         string `yaml:"name"`
 	System       bool   `yaml:"system"`
 	Stop         bool   `yaml:"stop"`
-	Unit         Unit   `yaml:"unit"`
-	Timer        *Timer `yaml:"timer"`
+	Unit         *Unit  `yaml:"unit,omitempty"`
+	Timer        *Timer `yaml:"timer,omitempty"`
 	When         string `yaml:"when"`
 }
 

@@ -2,9 +2,9 @@ package provision
 
 import (
 	"errors"
-	"github.com/femnad/fup/settings"
 
 	"github.com/femnad/fup/entity"
+	"github.com/femnad/fup/settings"
 )
 
 func cloneRepos(repos []entity.Repo, s settings.Settings) error {

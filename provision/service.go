@@ -194,6 +194,10 @@ func maybeRunRestoreCon(serviceFilePath string) error {
 }
 
 func persistUnit(s entity.Service) (restart bool, err error) {
+	if s.Unit == nil {
+		return false, nil
+	}
+
 	name := s.Name
 	execFields := strings.Split(s.Unit.Exec, " ")
 	if len(execFields) == 0 {
@@ -381,7 +385,7 @@ func enable(s entity.Service) error {
 		return nil
 	}
 
-	if s.Unit.Type != oneshotService {
+	if s.Unit != nil && s.Unit.Type != oneshotService {
 		err := ensureServiceState(s, "enable", "service")
 		if err != nil {
 			return err
@@ -400,7 +404,7 @@ func start(s entity.Service) error {
 		return nil
 	}
 
-	if s.Unit.Type != oneshotService {
+	if s.Unit != nil && s.Unit.Type != oneshotService {
 		err := ensureServiceState(s, "start", "service")
 		if err != nil {
 			return err
@@ -415,7 +419,7 @@ func start(s entity.Service) error {
 }
 
 func expandService(s entity.Service, cfg entity.Config) (entity.Service, error) {
-	if s.DontTemplate {
+	if s.DontTemplate || s.Unit == nil {
 		return s, nil
 	}
 
