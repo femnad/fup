@@ -206,7 +206,7 @@ func persist(s entity.Service) error {
 		return nil
 	}
 
-	if changed && !internal.IsHomePath(serviceFilePath) {
+	if !internal.IsHomePath(serviceFilePath) {
 		err = maybeRunRestoreCon(serviceFilePath)
 		if err != nil {
 			return err
