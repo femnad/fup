@@ -64,13 +64,11 @@ func ensureGroup(group entity.Group) error {
 func doEnsureUserInGroups(spec entity.UserGroupSpec) error {
 	userName := spec.Name
 	u, err := user.Lookup(userName)
-	if err != nil && !spec.Ensure {
-		return err
-	}
-
-	err = ensureUser(userName)
-	if err != nil {
-		return err
+	if err != nil && spec.Ensure {
+		err = ensureUser(userName)
+		if err != nil {
+			return err
+		}
 	}
 
 	groups := spec.Groups
