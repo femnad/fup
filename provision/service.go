@@ -41,6 +41,7 @@ var (
 
 const (
 	negationPrefix       = "!"
+	oneshotService       = "oneshot"
 	serviceExecLineStart = "ExecStart="
 	svcTmpl              = `[Unit]
 Description={{ .Unit.Desc }}
@@ -60,6 +61,16 @@ Environment={{$key}}={{$value}}
 [Install]
 WantedBy={{ if .Unit.WantedBy }}{{ .Unit.WantedBy }}{{ else }}{{ "default" }}{{ end }}.target
 `
+	timerTmpl = `[Unit]
+Description={{ .Timer.Desc }}
+
+[Timer]
+OnCalendar={{ .Timer.Calendar }}
+RandomizedDelaySec={{ .Timer.RandomizedDelay }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target`
 )
 
 func writeTmpl(s entity.Service) (string, error) {
@@ -68,6 +79,9 @@ func writeTmpl(s entity.Service) (string, error) {
 	options := make(map[string]string)
 	for k, v := range s.Unit.Options {
 		options[k] = os.ExpandEnv(v)
+	}
+	if s.Unit.Type != "" {
+		options["Type"] = s.Unit.Type
 	}
 	s.Unit.Options = options
 
@@ -84,26 +98,50 @@ func writeTmpl(s entity.Service) (string, error) {
 	return b.String(), nil
 }
 
+func writeTimerTmpl(s entity.Service) (string, error) {
+	buf := bytes.Buffer{}
+
+	tt, err := template.New("timer").Parse(timerTmpl)
+	if err != nil {
+		return "", fmt.Errorf("error creating template: %v", err)
+	}
+
+	err = tt.Execute(&buf, s)
+	if err != nil {
+		return "", fmt.Errorf("error applying timer template: %v", err)
+	}
+
+	return buf.String(), nil
+}
+
 func runSystemctlCmd(cmd string, service entity.Service) error {
 	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: service.System})
 	return err
 }
 
-func getServiceFilePath(s entity.Service) string {
+func getUnitFilePath(s entity.Service, unitType string) string {
 	if s.System {
-		return fmt.Sprintf("%s/%s.service", systemServiceDir, s.Name)
+		return fmt.Sprintf("%s/%s.%s", systemServiceDir, s.Name, unitType)
 	}
 
-	return fmt.Sprintf("%s/%s.service", userServiceDir, s.Name)
+	return fmt.Sprintf("%s/%s.%s", userServiceDir, s.Name, unitType)
 }
 
-func writeServiceFile(file, content string) (bool, error) {
+func getServiceFilePath(s entity.Service) string {
+	return getUnitFilePath(s, "service")
+}
+
+func getTimerFilePath(s entity.Service) string {
+	return getUnitFilePath(s, "timer")
+}
+
+func writeUnitFile(file, content string) (bool, error) {
 	return internal.WriteContent(internal.ManagedFile{Path: file, Content: content})
 }
 
-func maybeRestart(s entity.Service) error {
-	cmd := systemctlCmd("is-active", s.Name, !s.System)
+func maybeRestart(s entity.Service, unitType string) error {
+	cmd := systemctlCmd("is-active", s.Name, unitType, !s.System)
 	out, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd})
 	if err != nil {
 		if strings.TrimSpace(out.Stdout) == "inactive" {
@@ -114,7 +152,7 @@ func maybeRestart(s entity.Service) error {
 
 	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
 
-	cmd = systemctlCmd("restart", s.Name, !s.System)
+	cmd = systemctlCmd("restart", s.Name, unitType, !s.System)
 	return marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: s.System})
 }
 
@@ -155,79 +193,129 @@ func maybeRunRestoreCon(serviceFilePath string) error {
 	return internal.MaybeRunWithSudo(cmd)
 }
 
-func persist(s entity.Service) error {
-	if s.DontTemplate {
-		return nil
-	}
-
-	service := s.Name
+func persistUnit(s entity.Service) (restart bool, err error) {
+	name := s.Name
 	execFields := strings.Split(s.Unit.Exec, " ")
 	if len(execFields) == 0 {
-		return fmt.Errorf("unable to determine executable for service %s", service)
+		return restart, fmt.Errorf("unable to determine executable for service %s", name)
 	}
 
 	exec := execFields[0]
 	info, err := os.Stat(exec)
 	if err != nil {
-		return fmt.Errorf("error looking up executable for service %s: %v", service, err)
+		return restart, fmt.Errorf("error looking up executable for service %s: %v", name, err)
 	}
 
 	if !common.IsExecutableFile(info) {
-		return fmt.Errorf("executable %s for service %s does not point to an executable file", exec, service)
+		return restart, fmt.Errorf("executable %s for service %s does not point to an executable file", exec, name)
 	}
 
 	if s.Unit.Desc == "" {
-		return fmt.Errorf("description required for templating service %s", service)
+		return restart, fmt.Errorf("description required for templating service %s", name)
 	}
 
 	serviceFilePath := getServiceFilePath(s)
 	if !s.System {
 		dir, _ := path.Split(serviceFilePath)
 		if err = internal.EnsureDirExists(dir); err != nil {
-			return err
+			return
 		}
 	}
 
 	prevExec, err := getServiceExec(serviceFilePath)
 	if err != nil {
-		return err
+		return
 	}
+	newExec := prevExec != "" && prevExec != s.Unit.Exec
 
 	o, err := writeTmpl(s)
 	if err != nil {
-		return err
+		return
 	}
 
-	changed, err := writeServiceFile(serviceFilePath, o)
+	changed, err := writeUnitFile(serviceFilePath, o)
 	if err != nil {
-		return err
+		return
 	}
-	if !changed {
+
+	restart = changed || newExec
+
+	if restart && !internal.IsHomePath(serviceFilePath) {
+		err = maybeRunRestoreCon(serviceFilePath)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func maybePersistTimer(s entity.Service) (bool, error) {
+	if s.Timer == nil {
+		return false, nil
+	}
+
+	o, err := writeTimerTmpl(s)
+	if err != nil {
+		return false, err
+	}
+
+	timerFilePath := getTimerFilePath(s)
+	return writeUnitFile(timerFilePath, o)
+}
+
+func reload(s entity.Service, unitType string) error {
+	internal.Log.Infof("Reloading unit files for %s", s.Name)
+	c := systemctlCmd("daemon-reload", "", unitType, !s.System)
+	return runSystemctlCmd(c, s)
+}
+
+func persist(s entity.Service) error {
+	if s.DontTemplate {
 		return nil
 	}
 
-	if !internal.IsHomePath(serviceFilePath) {
-		err = maybeRunRestoreCon(serviceFilePath)
+	restartService, err := persistUnit(s)
+	if err != nil {
+		return err
+	}
+
+	restartTimer, err := maybePersistTimer(s)
+	if err != nil {
+		return err
+	}
+
+	if s.Timer == nil {
+		if !restartService {
+			return nil
+		}
+	} else if !restartService && !restartTimer {
+		return nil
+	}
+
+	err = reload(s, "service")
+	if err != nil {
+		return err
+	}
+	if s.Timer != nil {
+		err = reload(s, "timer")
+	}
+
+	err = maybeRestart(s, "service")
+	if err != nil {
+		return err
+	}
+	if s.Timer != nil {
+		err = maybeRestart(s, "timer")
 		if err != nil {
 			return err
 		}
 	}
 
-	internal.Log.Infof("Reloading unit files for %s", s.Name)
-	c := systemctlCmd("daemon-reload", "", !s.System)
-	err = runSystemctlCmd(c, s)
-	if err != nil {
-		return err
-	}
-
-	if prevExec == "" || prevExec == s.Unit.Exec {
-		return nil
-	}
-
-	return maybeRestart(s)
+	return nil
 }
 
-func systemctlCmd(action, target string, user bool) string {
+func systemctlCmd(action, target, unitType string, user bool) string {
 	var maybeUser string
 	var maybeTarget string
 
@@ -235,13 +323,13 @@ func systemctlCmd(action, target string, user bool) string {
 		maybeUser = "--user "
 	}
 	if target != "" {
-		maybeTarget = " " + target
+		maybeTarget = fmt.Sprintf(" %s.%s", target, unitType)
 	}
 
 	return fmt.Sprintf("systemctl %s%s%s", maybeUser, action, maybeTarget)
 }
 
-func check(s entity.Service, action systemdAction) (string, bool, error) {
+func check(s entity.Service, action systemdAction, unitType string) (string, bool, error) {
 	var negated bool
 
 	checkAction := action.checkCmd
@@ -250,20 +338,20 @@ func check(s entity.Service, action systemdAction) (string, bool, error) {
 		checkAction = strings.TrimLeft(checkAction, negationPrefix)
 	}
 
-	return systemctlCmd(checkAction, s.Name, !s.System), negated, nil
+	return systemctlCmd(checkAction, s.Name, unitType, !s.System), negated, nil
 }
 
-func actuate(s entity.Service, action systemdAction) (string, error) {
-	return systemctlCmd(action.actuateCmd, s.Name, !s.System), nil
+func actuate(s entity.Service, action systemdAction, unitType string) (string, error) {
+	return systemctlCmd(action.actuateCmd, s.Name, unitType, !s.System), nil
 }
 
-func ensureServiceState(s entity.Service, actionStr string) error {
+func ensureServiceState(s entity.Service, actionStr, unitType string) error {
 	action, ok := actions[actionStr]
 	if !ok {
 		return fmt.Errorf("no such action: %s", actionStr)
 	}
 
-	checkCmd, negated, err := check(s, action)
+	checkCmd, negated, err := check(s, action, unitType)
 	if err != nil {
 		return err
 	}
@@ -276,7 +364,7 @@ func ensureServiceState(s entity.Service, actionStr string) error {
 		return nil
 	}
 
-	actuateCmd, err := actuate(s, action)
+	actuateCmd, err := actuate(s, action, unitType)
 	if err != nil {
 		return err
 	}
@@ -293,7 +381,18 @@ func enable(s entity.Service) error {
 		return nil
 	}
 
-	return ensureServiceState(s, "enable")
+	if s.Unit.Type != oneshotService {
+		err := ensureServiceState(s, "enable", "service")
+		if err != nil {
+			return err
+		}
+	}
+
+	if s.Timer != nil {
+		return ensureServiceState(s, "enable", "timer")
+	}
+
+	return nil
 }
 
 func start(s entity.Service) error {
@@ -301,7 +400,18 @@ func start(s entity.Service) error {
 		return nil
 	}
 
-	return ensureServiceState(s, "start")
+	if s.Unit.Type != oneshotService {
+		err := ensureServiceState(s, "start", "service")
+		if err != nil {
+			return err
+		}
+	}
+
+	if s.Timer != nil {
+		return ensureServiceState(s, "start", "timer")
+	}
+
+	return nil
 }
 
 func expandService(s entity.Service, cfg entity.Config) (entity.Service, error) {
@@ -335,49 +445,86 @@ func expandService(s entity.Service, cfg entity.Config) (entity.Service, error) 
 	return s, nil
 }
 
+func maybeStop(s entity.Service) error {
+	if !s.Stop {
+		return nil
+	}
+	err := ensureServiceState(s, "stop", "service")
+	if err != nil {
+		internal.Log.Errorf("error stopping service %s, %v", s.Name, err)
+		return err
+	}
+
+	if s.Timer != nil {
+		err = ensureServiceState(s, "stop", "timer")
+		if err != nil {
+			internal.Log.Errorf("error stopping timer %s, %v", s.Name, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func maybeDisable(s entity.Service) error {
+	if !s.Disable {
+		return nil
+	}
+	err := ensureServiceState(s, "disable", "service")
+	if err != nil {
+		internal.Log.Errorf("error disabling service %s, %v", s.Name, err)
+		return err
+	}
+
+	if s.Timer != nil {
+		err = ensureServiceState(s, "disable", "timer")
+		if err != nil {
+			internal.Log.Errorf("error disabling timer %s, %v", s.Name, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func initService(s entity.Service, cfg entity.Config) error {
 	if !when.ShouldRun(s) {
 		internal.Log.Debugf("Skipping initializing %s as when condition %s evaluated to false", s.Name, s.When)
 		return nil
 	}
 
-	if s.Stop {
-		err := ensureServiceState(s, "stop")
-		if err != nil {
-			internal.Log.Errorf("error stopping service %s, %v", s.Name, err)
-		}
-		return err
-	}
-
-	if s.Disable {
-		err := ensureServiceState(s, "disable")
-		if err != nil {
-			internal.Log.Errorf("error disabling service %s, %v", s.Name, err)
-		}
-		return err
-	}
-
-	s, err := expandService(s, cfg)
+	err := maybeStop(s)
 	if err != nil {
-		internal.Log.Errorf("error expanding service %s: %v", s.Name, err)
+		return err
+	}
+
+	err = maybeDisable(s)
+	if err != nil {
+		return err
+	}
+
+	name := s.Name
+	s, err = expandService(s, cfg)
+	if err != nil {
+		internal.Log.Errorf("error expanding service %s: %v", name, err)
 		return err
 	}
 
 	err = persist(s)
 	if err != nil {
-		internal.Log.Errorf("error persisting service %s: %v", s.Name, err)
+		internal.Log.Errorf("error persisting service %s: %v", name, err)
 		return err
 	}
 
 	err = enable(s)
 	if err != nil {
-		internal.Log.Errorf("error enabling service %s: %v", s.Name, err)
+		internal.Log.Errorf("error enabling service %s: %v", name, err)
 		return err
 	}
 
 	err = start(s)
 	if err != nil {
-		internal.Log.Errorf("error starting service %s: %v", s.Name, err)
+		internal.Log.Errorf("error starting service %s: %v", name, err)
 		return err
 	}
 

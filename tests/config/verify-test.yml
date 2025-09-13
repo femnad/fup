@@ -5,11 +5,11 @@ executables:
 paths:
   - path: ~/.local/share/chezmoi
     type: dir
-  - path: ~/bin/chm
+  - path: ~/.local/bin/chm
     type: exec
   - path: ~/.config/fup/fup.yml
     type: file
-  - path: ~/bin/chezmoi
+  - path: ~/.local/bin/chezmoi
     type: symlink
     target: ${release_dir}/chezmoi/chezmoi
 

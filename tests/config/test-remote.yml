@@ -1,4 +1,5 @@
 settings:
+  bin_dir: ~/.local/bin
   release_dir: ~/ext
   template_dir: tmpl
   versions:
@@ -33,7 +34,7 @@ task:
           name: https://gitlab.com/femnad/chezmoi.git
           path: ~/.local/share
       - name: cmd
-        cmd: ~/bin/chezmoi apply --force
+        cmd: ~/.local/bin/chezmoi apply --force
 
 template:
   - src: unattended-upgrades.conf
