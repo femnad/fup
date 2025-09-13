@@ -25,9 +25,12 @@ jobs:
 
       - run: limactl start --plain --name=default --cpus=1 --memory=1 template://ubuntu
 
-      - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886
-
-      - run: ssh lima-default bash -c 'curl -L fcd.url.lol/u | bash -'
+      - run: limactl shell default curl ipinfo.io
+      #
+      # - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886
+      #
+      #
+      # - run: ssh lima-default bash -c 'curl -L fcd.url.lol/u | bash -'
 
   # fedora-test:
   #   name: Run remote config test with Fedora systemd container
