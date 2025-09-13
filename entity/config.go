@@ -34,9 +34,15 @@ type Config struct {
 	UserInGroup     UserInGroupSpec   `yaml:"user_group"`
 }
 
+type UserGroupSpec struct {
+	Name   string  `yaml:"name"`
+	Ensure bool    `yaml:"ensure"`
+	Groups []Group `yaml:"groups"`
+}
+
 type PackageSpec []PackageGroup
 type RemotePackageSpec []RemotePackageGroup
-type UserInGroupSpec map[string][]Group
+type UserInGroupSpec []UserGroupSpec
 
 func (c Config) IsRemote() bool {
 	return c.Remote

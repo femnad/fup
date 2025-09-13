@@ -12,6 +12,10 @@ import (
 	"github.com/femnad/mare"
 )
 
+func ensureUser(userName string) error {
+	return internal.MaybeRunWithSudo(fmt.Sprintf("useradd -m %s", userName))
+}
+
 func addUserToGroup(user, group string) error {
 	isRoot, err := internal.IsUserRoot()
 	if err != nil {
@@ -57,12 +61,19 @@ func ensureGroup(group entity.Group) error {
 	return groupAdd(group)
 }
 
-func doEnsureUserInGroups(username string, groups []entity.Group) error {
-	u, err := user.Lookup(username)
+func doEnsureUserInGroups(spec entity.UserGroupSpec) error {
+	userName := spec.Name
+	u, err := user.Lookup(userName)
+	if err != nil && !spec.Ensure {
+		return err
+	}
+
+	err = ensureUser(userName)
 	if err != nil {
 		return err
 	}
 
+	groups := spec.Groups
 	for _, g := range groups {
 		if !g.Ensure {
 			continue
@@ -81,11 +92,12 @@ func doEnsureUserInGroups(username string, groups []entity.Group) error {
 
 	var userGroups []string
 	for _, gid := range groupIds {
-		groupName, err := user.LookupGroupId(gid)
+		var group *user.Group
+		group, err = user.LookupGroupId(gid)
 		if err != nil {
 			return err
 		}
-		userGroups = append(userGroups, groupName.Name)
+		userGroups = append(userGroups, group.Name)
 	}
 
 	desiredGroups := mare.MapToString(groups, func(group entity.Group) string {
@@ -96,7 +108,7 @@ func doEnsureUserInGroups(username string, groups []entity.Group) error {
 	missing := desired.Difference(current)
 
 	missing.Each(func(missingGroup string) bool {
-		err = addUserToGroup(username, missingGroup)
+		err = addUserToGroup(userName, missingGroup)
 		if err != nil {
 			return true
 		}
@@ -109,9 +121,9 @@ func doEnsureUserInGroups(username string, groups []entity.Group) error {
 	return nil
 }
 
-func ensureUserInGroups(userGroupsMap entity.UserInGroupSpec) error {
-	for u, groups := range userGroupsMap {
-		err := doEnsureUserInGroups(u, groups)
+func ensureUserInGroups(userGroupSpecs entity.UserInGroupSpec) error {
+	for _, spec := range userGroupSpecs {
+		err := doEnsureUserInGroups(spec)
 		if err != nil {
 			return err
 		}
