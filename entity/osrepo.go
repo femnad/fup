@@ -8,5 +8,6 @@ import (
 type OSRepo interface {
 	unless.Unlessable
 	when.Whenable
+	Exists() (bool, error)
 	Install() error
 }

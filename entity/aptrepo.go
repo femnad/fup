@@ -3,8 +3,10 @@ package entity
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/femnad/fup/internal"
@@ -115,6 +117,25 @@ func (AptRepo) ensureKeyFile(keyUrl, keyRingFile string) error {
 		Group:   "root",
 	})
 	return err
+}
+
+func (a AptRepo) Exists() (bool, error) {
+	entries, err := os.ReadDir(sourcesDir)
+	if err != nil {
+		return false, err
+	}
+
+	regex := regexp.MustCompile(`^` + a.Name() + `\.(list|sources)$`)
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() {
+			continue
+		}
+		if regex.MatchString(entry.Name()) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (a AptRepo) Install() error {

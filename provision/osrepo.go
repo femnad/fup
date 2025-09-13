@@ -29,9 +29,17 @@ func addRepos(config entity.Config) error {
 			continue
 		}
 
+		exists, err := repo.Exists()
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		if exists {
+			continue
+		}
 		internal.Log.Infof("Adding repo %s", repo.Name())
 
-		err := repo.Install()
+		err = repo.Install()
 		if err != nil {
 			internal.Log.Errorf("Error installing repo %s: %v", repo.Name(), err)
 			errs = append(errs, err)

@@ -2,7 +2,9 @@ package entity
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 	"text/template"
@@ -27,6 +29,10 @@ gpgkey="{{ .GPGKey }}"
 
 type installer struct {
 	isRoot bool
+}
+
+type repoListEntry struct {
+	ID string `json:"id"`
 }
 
 func (i installer) runMaybeSudo(cmd string) error {
@@ -130,6 +136,10 @@ func writeRepoSpec(spec repoSpec) error {
 	}
 
 	repoFile := path.Join("/etc/yum.repos.d", fmt.Sprintf("%s.repo", spec.Name))
+	if _, err = os.Stat(repoFile); err == nil {
+		return nil
+	}
+
 	out := bytes.Buffer{}
 
 	err = tmpl.Execute(&out, spec)
@@ -150,6 +160,27 @@ func writeRepoSpec(spec repoSpec) error {
 		Group:   "root",
 	})
 	return nil
+}
+
+func (d DnfRepo) Exists() (bool, error) {
+	out, err := marecmd.RunOutBuffer(marecmd.Input{Command: "dnf repolist --enabled --json"})
+	if err != nil {
+		return false, err
+	}
+
+	var repoListOut []repoListEntry
+	err = json.NewDecoder(&out.Stdout).Decode(&repoListOut)
+	if err != nil {
+		return false, err
+	}
+
+	for _, entry := range repoListOut {
+		if entry.ID == d.RepoName {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (d DnfRepo) Install() error {
