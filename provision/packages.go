@@ -135,10 +135,10 @@ func (p packager) ensurePackages(spec entity.PackageSpec) error {
 	return errors.Join(installErr, removeErr)
 }
 
-func (p packager) installRemotePackages(spec entity.RemotePackageSpec, s settings.Settings) (bool, error) {
+func (p packager) installRemotePackages(spec entity.RemotePackageSpec, s settings.Settings) error {
 	pkgToInstall, err := p.determiner.matchingRemotePkg(spec)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	return p.installer.RemoteInstall(pkgToInstall, s)
@@ -147,19 +147,10 @@ func (p packager) installRemotePackages(spec entity.RemotePackageSpec, s setting
 func installPackages(p Provisioner) error {
 	var pkgErrs []error
 
-	var remoteUpdates bool
-	remoteUpdates, err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
+	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
 	if err != nil {
 		internal.Log.Errorf("error installing remote packages: %v", err)
 		pkgErrs = append(pkgErrs, err)
-	}
-
-	if remoteUpdates {
-		// Remote packages may have initialized repositories which may require updating the package database.
-		if err = p.Packager.installer.Update(); err != nil {
-			internal.Log.Errorf("error updating package database: %v", err)
-			pkgErrs = append(pkgErrs, err)
-		}
 	}
 
 	if err = p.Packager.ensurePackages(p.Config.Packages); err != nil {

@@ -22,7 +22,6 @@ type PkgManager interface {
 	PreserveEnv() bool
 	RemoveCmd() []string
 	RemoteInstall(pkgs []entity.RemotePackage) error
-	UpdateCmd() string
 }
 
 type Installer struct {
@@ -103,10 +102,9 @@ func desiredPkgVersion(pkg entity.RemotePackage, s settings.Settings) string {
 	return version
 }
 
-func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s settings.Settings) (bool, error) {
+func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s settings.Settings) error {
 	missing := mapset.NewSet[entity.RemotePackage]()
 
-	var changed bool
 	var existingVersion string
 	var err error
 	desired.Each(func(pkg entity.RemotePackage) bool {
@@ -132,11 +130,11 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	})
 
 	if err != nil {
-		return changed, err
+		return err
 	}
 
 	if missing.Equal(mapset.NewSet[entity.RemotePackage]()) {
-		return changed, nil
+		return nil
 	}
 
 	var urls []string
@@ -153,7 +151,7 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	sort.Strings(urls)
 	internal.Log.Infof("Remote packages to install: %s", strings.Join(urls, " "))
 
-	return true, i.Pkg.RemoteInstall(pkgs)
+	return i.Pkg.RemoteInstall(pkgs)
 }
 
 func (i Installer) InstalledPackages(pkg PkgManager) (mapset.Set[string], error) {
@@ -204,14 +202,4 @@ func (i Installer) Remove(undesired mapset.Set[string]) error {
 	removeCmd = append(removeCmd, pkgToRemove...)
 
 	return i.maybeRunWithSudo(removeCmd...)
-}
-
-func (i Installer) Update() error {
-	updateCmd := i.Pkg.UpdateCmd()
-	if updateCmd == "" {
-		return nil
-	}
-
-	cmd := []string{i.Pkg.PkgExec(), updateCmd}
-	return i.maybeRunWithSudo(cmd...)
 }
