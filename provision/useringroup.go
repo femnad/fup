@@ -64,10 +64,16 @@ func ensureGroup(group entity.Group) error {
 func doEnsureUserInGroups(spec entity.UserGroupSpec) error {
 	userName := spec.Name
 	u, err := user.Lookup(userName)
-	if err != nil && spec.Ensure {
-		err = ensureUser(userName)
-		if err != nil {
-			return err
+	if err != nil {
+		if spec.Ensure {
+			err = ensureUser(userName)
+			if err != nil {
+				return err
+			}
+		} else {
+			internal.Logger.Warn().Str("user", userName).Msg(
+				"User does not exist, skipping group modifications")
+			return nil
 		}
 	}
 
