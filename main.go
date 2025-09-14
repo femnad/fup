@@ -76,8 +76,7 @@ func apply(parsed args) {
 
 	p, err := provision.NewProvisioner(config, applyCfg.Provisioners)
 	if err != nil {
-		internal.Logger.Error().Err(err).Msg("Error creating provisioner")
-		return
+		internal.Logger.Fatal().Err(err).Msg("Error creating provisioner")
 	}
 
 	err = p.Apply()
