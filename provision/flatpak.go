@@ -144,7 +144,7 @@ func flatpakInstall(config entity.Config) error {
 	for _, pkg := range config.Flatpak.Packages {
 		err = installFlatpak(config.Settings, pkg, config.Flatpak.Remotes)
 		if err != nil {
-			internal.Logger.Warn().Err(err).Str("package", pkg.Name).Msg("Error installing Flatpak")
+			internal.Logger.Error().Err(err).Str("package", pkg.Name).Msg("Error installing Flatpak")
 		}
 		flatpakErr = append(flatpakErr, err)
 	}
