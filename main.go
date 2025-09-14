@@ -82,8 +82,7 @@ func apply(parsed args) {
 
 	err = p.Apply()
 	if err != nil {
-		fmt.Printf("Some provisioners had errors:\n%v\n", err)
-		os.Exit(1)
+		internal.Logger.Fatal().Err(err).Msg("Error applying provisioner")
 	}
 }
 

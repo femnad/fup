@@ -27,7 +27,7 @@ func ensureRemote(remote entity.FlatpakRemote) error {
 		return nil
 	}
 
-	internal.Logger.Info().Str("name", remote.Name).Msg("Adding flatpak remote")
+	internal.Logger.Debug().Str("name", remote.Name).Msg("Adding flatpak remote")
 	cmd := fmt.Sprintf("%s remote-add %s %s", flatpakExec, remote.Name, remote.Url)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
@@ -143,6 +143,9 @@ func flatpakInstall(config entity.Config) error {
 	var flatpakErr []error
 	for _, pkg := range config.Flatpak.Packages {
 		err = installFlatpak(config.Settings, pkg, config.Flatpak.Remotes)
+		if err != nil {
+			internal.Logger.Warn().Err(err).Str("package", pkg.Name).Msg("Error installing Flatpak")
+		}
 		flatpakErr = append(flatpakErr, err)
 	}
 
