@@ -169,7 +169,7 @@ func (p Provisioner) runPostFlightTasks() error {
 }
 
 func (p Provisioner) installPackages() error {
-	internal.Logger.Info().Msg("Installing packages")
+	internal.Logger.Info().Msg("Installing/removing packages")
 
 	return installPackages(p)
 }

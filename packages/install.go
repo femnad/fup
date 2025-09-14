@@ -196,7 +196,7 @@ func (i Installer) Remove(undesired mapset.Set[string]) error {
 	}
 
 	sort.Strings(pkgToRemove)
-	internal.Logger.Info().Strs("packages", pkgToRemove).Msg("Removing")
+	internal.Logger.Debug().Strs("packages", pkgToRemove).Msg("Removing")
 
 	removeCmd := []string{i.Pkg.PkgExec()}
 	removeCmd = append(removeCmd, i.Pkg.RemoveCmd()...)
