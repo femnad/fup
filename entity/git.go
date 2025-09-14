@@ -127,7 +127,7 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 		opt.ReferenceName = plumbing.ReferenceName(ref)
 	}
 
-	internal.Logger.Info().Str("name", repo.Name).Msg("Cloning repo")
+	internal.Logger.Debug().Str("name", repo.Name).Msg("Cloning repo")
 
 	_, err = os.Stat(onePasswordSocket)
 	if err == nil {

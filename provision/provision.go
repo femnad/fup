@@ -245,7 +245,7 @@ func (p Provisioner) flatpakInstall() error {
 
 	_, err := common.Which("flatpak")
 	if err != nil {
-		internal.Logger.Warn().Err(err).Msg("Flatpak is not installed")
+		internal.Logger.Trace().Msg("Flatpak is not installed")
 		return nil
 	}
 
