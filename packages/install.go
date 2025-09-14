@@ -64,7 +64,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 	}
 
 	sort.Strings(missingPkgs)
-	internal.Logger.Info().Strs("packages", missingPkgs).Msg("Installing")
+	internal.Logger.Debug().Strs("packages", missingPkgs).Msg("Installing")
 
 	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
 	installCmd = append(installCmd, missingPkgs...)
@@ -149,7 +149,7 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	})
 
 	sort.Strings(urls)
-	internal.Logger.Info().Strs("packages", urls).Msg("Installing remote")
+	internal.Logger.Debug().Strs("packages", urls).Msg("Installing remote")
 
 	return i.Pkg.RemoteInstall(pkgs)
 }
