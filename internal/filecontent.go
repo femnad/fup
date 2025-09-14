@@ -275,6 +275,7 @@ func WriteContent(file ManagedFile) (bool, error) {
 	if err != nil {
 		return changed, err
 	}
+	changed = true
 
 	if mode == 0 {
 		mode = defaultFileMode
