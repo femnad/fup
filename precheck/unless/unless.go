@@ -82,7 +82,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	}
 
 	if err != nil {
-		internal.Logger.Trace().Err(err).Str("cmd", unlessCmd).Str("stderr", out.Stderr).Msg(
+		internal.Logger.Trace().Str("cmd", unlessCmd).Str("stderr", out.Stderr).Msg(
 			"Command returned error")
 		// Command wasn't successfully run, should not skip.
 		return false

@@ -17,6 +17,7 @@ import (
 type PkgManager interface {
 	ListPkgsHeader() string
 	PkgExec() string
+	PkgInstallArgs() []string
 	PkgEnv() map[string]string
 	PkgNameSeparator() string
 	PreserveEnv() bool
@@ -67,6 +68,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 	internal.Logger.Debug().Strs("packages", missingPkgs).Msg("Installing")
 
 	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
+	installCmd = append(installCmd, i.Pkg.PkgInstallArgs()...)
 	installCmd = append(installCmd, missingPkgs...)
 	return i.maybeRunWithSudo(installCmd...)
 }

@@ -19,6 +19,10 @@ func (Dnf) PkgExec() string {
 	return "dnf"
 }
 
+func (Dnf) PkgInstallArgs() []string {
+	return []string{}
+}
+
 func (Dnf) PkgEnv() map[string]string {
 	return nil
 }

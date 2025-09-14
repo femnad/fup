@@ -29,6 +29,10 @@ func (Apt) PkgExec() string {
 	return "apt"
 }
 
+func (Apt) PkgInstallArgs() []string {
+	return []string{"-U"}
+}
+
 func (Apt) PkgEnv() map[string]string {
 	return map[string]string{
 		"DEBIAN_FRONTEND": "noninteractive",
