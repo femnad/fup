@@ -3,6 +3,7 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path"
 
@@ -27,7 +28,7 @@ func ensureRemote(remote entity.FlatpakRemote) error {
 		return nil
 	}
 
-	internal.Log.Infof("Adding flatpak remote %s", remote.Name)
+	slog.Info("Adding flatpak remote", "name", remote.Name)
 	cmd := fmt.Sprintf("%s remote-add %s %s", flatpakExec, remote.Name, remote.Url)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
@@ -83,7 +84,7 @@ func ensureInstalled(pkg entity.FlatpakPkg) error {
 		return nil
 	}
 
-	internal.Log.Infof("Installing flatpak package %s", pkg.Name)
+	slog.Info("Installing flatpak package", "name", pkg.Name)
 	cmd := fmt.Sprintf("%s install %s %s -y", flatpakExec, pkg.Remote, pkg.Name)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
@@ -136,7 +137,7 @@ func installFlatpak(stg settings.Settings, pkg entity.FlatpakPkg, remotes []enti
 func flatpakInstall(config entity.Config) error {
 	_, err := common.Which(flatpakExec)
 	if err != nil {
-		internal.Log.Debug("skipping installing flatpak packages as flatpak is not available")
+		slog.Debug("skipping installing flatpak packages as flatpak is not available")
 		return nil
 	}
 

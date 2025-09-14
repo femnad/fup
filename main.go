@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/alexflint/go-arg"
@@ -19,12 +20,9 @@ const (
 
 type ApplyCmd struct {
 	Provisioners   []string `arg:"-p,--provisioners" help:"List of provisioners to run"`
-	LogFile        string   `arg:"--logfile" default:"~/.local/share/fup/fup.log" help:"Log file path"`
-	LogLevel       int      `arg:"-l,--loglevel" default:"4" help:"Log level as integer, 0 least, 5 most"`
-	NoLogs         bool     `arg:"-n,--nologs" help:"Don't write logs to a file"`
+	LogLevel       int      `arg:"-l,--loglevel" default:"2" help:"Log level as integer, 0 least, 3 most"`
 	PrintConfig    bool     `arg:"-r,--print-config" help:"Print final config and exit"`
 	ValidateConfig bool     `arg:"-c,--validate-config" help:"Validate config and exit"`
-	DebugToStderr  bool     `arg:"-b,--debug-to-stderr" help:"Write logs to stderr"`
 }
 
 type VersionLookupCmd struct {
@@ -49,7 +47,7 @@ func (args) Version() string {
 func printConfig(configFile string) {
 	out, err := base.FinalizeConfig(configFile)
 	if err != nil {
-		internal.Log.Errorf("error printing config from %s: %v", configFile, err)
+		slog.Error("error printing config", "file", configFile, "error", err)
 		os.Exit(1)
 	}
 
@@ -59,14 +57,10 @@ func printConfig(configFile string) {
 
 func apply(parsed args) {
 	applyCfg := parsed.Apply
-	logFile := internal.ExpandUser(applyCfg.LogFile)
-	if applyCfg.NoLogs {
-		logFile = ""
-	}
-	internal.InitLogging(applyCfg.LogLevel, logFile, applyCfg.DebugToStderr)
+	internal.InitLogging(applyCfg.LogLevel)
 
 	cfg := parsed.File
-	internal.Log.Debugf("Reading config file %s", cfg)
+	slog.Debug("Reading config file", "path", cfg)
 
 	if applyCfg.PrintConfig {
 		printConfig(cfg)
@@ -83,7 +77,7 @@ func apply(parsed args) {
 
 	p, err := provision.NewProvisioner(config, applyCfg.Provisioners)
 	if err != nil {
-		internal.Log.Errorf("error building provisioner: %v", err)
+		slog.Error("error building provisioner", "error", err)
 		return
 	}
 

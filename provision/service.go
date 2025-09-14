@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path"
 	"strings"
@@ -115,7 +116,7 @@ func writeTimerTmpl(s entity.Service) (string, error) {
 }
 
 func runSystemctlCmd(cmd string, service entity.Service) error {
-	internal.Log.Debugf("running systemctl command %s for service %s", cmd, service.Name)
+	slog.Debug("running systemctl command", "cmd", cmd, "service", service.Name)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: service.System})
 	return err
 }
@@ -150,7 +151,7 @@ func maybeRestart(s entity.Service, unitType string) error {
 		return err
 	}
 
-	internal.Log.Debugf("restarting active service %s due to service file content changes", s.Name)
+	slog.Debug("restarting active service due to service file content changes", "name", s.Name)
 
 	cmd = systemctlCmd("restart", s.Name, unitType, !s.System)
 	return marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: s.System})
@@ -269,7 +270,7 @@ func maybePersistTimer(s entity.Service) (bool, error) {
 }
 
 func reload(s entity.Service, unitType string) error {
-	internal.Log.Infof("Reloading unit files for %s", s.Name)
+	slog.Info("Reloading unit files", "name", s.Name)
 	c := systemctlCmd("daemon-reload", "", unitType, !s.System)
 	return runSystemctlCmd(c, s)
 }
@@ -375,7 +376,7 @@ func ensureServiceState(s entity.Service, actionStr, unitType string) error {
 
 	caser := cases.Title(language.Und)
 	verb := caser.String(action.logVerb)
-	internal.Log.Infof("%s service %s", verb, s.Name)
+	slog.Info("Ensuring service state", "name", s.Name, "state", verb)
 
 	return runSystemctlCmd(actuateCmd, s)
 }
@@ -455,14 +456,14 @@ func maybeStop(s entity.Service) error {
 	}
 	err := ensureServiceState(s, "stop", "service")
 	if err != nil {
-		internal.Log.Errorf("error stopping service %s, %v", s.Name, err)
+		slog.Error("error stopping service", "name", s.Name, "error", err)
 		return err
 	}
 
 	if s.Timer != nil {
 		err = ensureServiceState(s, "stop", "timer")
 		if err != nil {
-			internal.Log.Errorf("error stopping timer %s, %v", s.Name, err)
+			slog.Error("error stopping timer", "name", s.Name, "error", err)
 			return err
 		}
 	}
@@ -476,14 +477,14 @@ func maybeDisable(s entity.Service) error {
 	}
 	err := ensureServiceState(s, "disable", "service")
 	if err != nil {
-		internal.Log.Errorf("error disabling service %s, %v", s.Name, err)
+		slog.Error("error disabling service", "name", s.Name, "error", err)
 		return err
 	}
 
 	if s.Timer != nil {
 		err = ensureServiceState(s, "disable", "timer")
 		if err != nil {
-			internal.Log.Errorf("error disabling timer %s, %v", s.Name, err)
+			slog.Error("error disabling timer", "name", s.Name, "error", err)
 			return err
 		}
 	}
@@ -493,7 +494,7 @@ func maybeDisable(s entity.Service) error {
 
 func initService(s entity.Service, cfg entity.Config) error {
 	if !when.ShouldRun(s) {
-		internal.Log.Debugf("Skipping initializing %s as when condition %s evaluated to false", s.Name, s.When)
+		slog.Debug("Skipping initializing as condition evaluated to false", "name", s.Name, "when", s.When)
 		return nil
 	}
 
@@ -510,25 +511,25 @@ func initService(s entity.Service, cfg entity.Config) error {
 	name := s.Name
 	s, err = expandService(s, cfg)
 	if err != nil {
-		internal.Log.Errorf("error expanding service %s: %v", name, err)
+		slog.Error("error expanding service", "name", name, "error", err)
 		return err
 	}
 
 	err = persist(s)
 	if err != nil {
-		internal.Log.Errorf("error persisting service %s: %v", name, err)
+		slog.Error("error persisting service", "name", name, "error", err)
 		return err
 	}
 
 	err = enable(s)
 	if err != nil {
-		internal.Log.Errorf("error enabling service %s: %v", name, err)
+		slog.Error("error enabling service", "name", name, "error", err)
 		return err
 	}
 
 	err = start(s)
 	if err != nil {
-		internal.Log.Errorf("error starting service %s: %v", name, err)
+		slog.Error("error starting service", "name", name, "error", err)
 		return err
 	}
 

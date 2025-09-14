@@ -1,8 +1,10 @@
 package provision
 
 import (
+	"log/slog"
+	"strings"
+
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
 )
 
@@ -14,7 +16,8 @@ func evalFacts(config entity.Config) error {
 		}
 
 		if !ok {
-			internal.Log.Warningf("Hint for fact `%s`: %s", hint.Fact, hint.Message)
+			fact := strings.Replace(hint.Fact, "\"", "`", -1)
+			slog.Warn("Hint", "fact", fact, "message", hint.Message)
 		}
 	}
 

@@ -3,12 +3,12 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
 	precheck "github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/run"
 	"github.com/femnad/fup/settings"
@@ -47,23 +47,23 @@ func goInstall(pkg entity.GoPkg, s settings.Settings) error {
 	name := pkg.Name()
 
 	if precheck.ShouldSkip(pkg, s) {
-		internal.Log.Debugf("Skipping go install for %s", name)
+		slog.Debug("Skipping go install", "name", name)
 		return nil
 	}
 
-	internal.Log.Infof("Installing Go package %s", name)
+	slog.Info("Installing Go package", "name", name)
 
 	qualifiedName, err := qualifyPkg(pkg, s)
 	if err != nil {
-		internal.Log.Errorf("Error in installing Go package %s: %v", name, err)
+		slog.Error("Error installing Go package", "name", name, "error", err)
 		return err
 	}
 
 	cmd := fmt.Sprintf("go install %s", qualifiedName)
-	resp, err := run.Cmd(s, marecmd.Input{Command: cmd})
+	_, err = run.Cmd(s, marecmd.Input{Command: cmd})
 
 	if err != nil {
-		internal.Log.Errorf("error in installing go package %s: %v, output: %s", name, err, resp.Stderr)
+		slog.Error("Error installing Go package", "name", name, "error", err)
 		return err
 	}
 

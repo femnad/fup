@@ -12,7 +12,7 @@ require (
 	github.com/femnad/mare v0.14.0
 	github.com/gabriel-vasile/mimetype v1.4.10
 	github.com/go-git/go-git/v5 v5.16.2
-	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/lmittmann/tint v1.1.2
 	github.com/ulikunitz/xz v0.5.15
 	golang.org/x/text v0.29.0
 	gopkg.in/yaml.v3 v3.0.1

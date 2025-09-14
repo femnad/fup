@@ -4,15 +4,17 @@ import (
 	"archive/tar"
 	"errors"
 	"fmt"
-	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
-	"github.com/femnad/fup/remote"
 	"io"
+	"log/slog"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/femnad/fup/entity"
+	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/remote"
 )
 
 var (
@@ -128,11 +130,11 @@ func extractArchive(archive entity.Archive) error {
 
 	archiveURL := archive.URL
 	if skip {
-		internal.Log.Debugf("Skipping extracting archive %s", archiveURL)
+		slog.Debug("Skipping extracting archive", "url", archiveURL)
 		return nil
 	}
 
-	internal.Log.Infof("Extracting archive %s", archiveURL)
+	slog.Info("Extracting archive", "url", archiveURL)
 
 	response, err := remote.ReadResponseBody(archiveURL)
 	if err != nil {

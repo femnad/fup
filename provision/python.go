@@ -3,6 +3,7 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"path"
 
 	marecmd "github.com/femnad/mare/cmd"
@@ -43,16 +44,16 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 	}
 
 	if unless.ShouldSkip(pkg, cfg.Settings) {
-		internal.Log.Debugf("skipping pip install for %s", pkg.Name())
+		slog.Debug("skipping pip install", "name", pkg.Name())
 		return nil
 	}
 
-	internal.Log.Infof("Installing Python package %s", pkg.Name())
+	slog.Info("Installing Python package %s", "name", pkg.Name())
 
 	cmd := fmt.Sprintf("virtualenv %s", venvDir)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
 	if err != nil {
-		internal.Log.Errorf("error creating virtualenv for package %s: %v", name, err)
+		slog.Error("error creating virtualenv for package", "name", name, "error", err)
 		return err
 	}
 
@@ -63,14 +64,15 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 
 	err = pipInstall(venvPip, name, version)
 	if err != nil {
-		internal.Log.Errorf("error installing pip package %s: %v", name, err)
+		slog.Error("error installing pip package", "name", name, "error", err)
 		return err
 	}
 
 	for _, req := range pkg.Reqs {
 		err = pipInstall(venvPip, req, "")
 		if err != nil {
-			internal.Log.Errorf("error installing required pip package %s for %s: %v", req, name, err)
+			slog.Error("error installing required pip package", "dependency", req, "package", name, "error",
+				err)
 			return err
 		}
 	}
@@ -84,7 +86,8 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 		linkTarget := path.Join(venvDir, "bin", link)
 		err = common.Symlink(linkName, linkTarget)
 		if err != nil {
-			internal.Log.Errorf("error linking from %s to %s for pkg %s: %v", linkName, linkTarget, name, err)
+			slog.Error("error creating symlink", "link", linkName, "target", linkTarget, "package", name,
+				"error", err)
 			return err
 		}
 	}

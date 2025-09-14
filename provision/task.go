@@ -2,35 +2,35 @@ package provision
 
 import (
 	"errors"
-	"fmt"
+	"log/slog"
 
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 )
 
+const (
+	hintBase = "Hint for running task"
+)
+
 func runTask(task entity.Task, cfg entity.Config) error {
 	name := task.Name()
-	hintMsg := ""
-	if task.Hint != "" {
-		hintMsg = fmt.Sprintf("Hint for running task `%s`: %s", name, task.Hint)
-	}
 
 	if !when.ShouldRun(task) {
-		if hintMsg != "" && !unless.ShouldSkip(task, cfg.Settings) {
-			internal.Log.Warning(hintMsg)
+		if task.Hint != "" && !unless.ShouldSkip(task, cfg.Settings) {
+			slog.Warn(hintBase, "name", name, "task", task.Hint)
 		}
-		internal.Log.Debugf("Skipping running task %s as when condition %s evaluated to false", name, task.When)
+		slog.Debug("Skipping running task as condition evaluated to false", "name", name, "when", task.When)
 		return nil
 	}
 
 	if unless.ShouldSkip(task, cfg.Settings) {
-		internal.Log.Debugf("Skipping running task %s as unless condition %s evaluated to true", name, task.Unless)
+		slog.Debug("Skipping running task as condition evaluated to true", "name", name, "unless",
+			task.Unless)
 		return nil
 	}
 
-	internal.Log.Infof("Running task: %s", name)
+	slog.Info("Running task", "name", name)
 	return task.Run(cfg)
 }
 

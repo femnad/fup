@@ -3,11 +3,11 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/packages"
 	"github.com/femnad/fup/precheck"
 	"github.com/femnad/fup/precheck/when"
@@ -149,12 +149,12 @@ func installPackages(p Provisioner) error {
 
 	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
 	if err != nil {
-		internal.Log.Errorf("error installing remote packages: %v", err)
+		slog.Error("error installing remote packages", "error", err)
 		pkgErrs = append(pkgErrs, err)
 	}
 
 	if err = p.Packager.ensurePackages(p.Config.Packages); err != nil {
-		internal.Log.Errorf("error installing packages: %v", err)
+		slog.Error("error installing packages", "error", err)
 		pkgErrs = append(pkgErrs, err)
 	}
 

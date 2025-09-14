@@ -3,6 +3,7 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
@@ -59,7 +60,7 @@ func ensureGroups(groups []entity.DirGroup) error {
 func ensureDirs(config entity.Config) error {
 	err := ensureGroups(config.Dirs)
 	if err != nil {
-		internal.Log.Errorf("error ensuring dirs: %v", err)
+		slog.Error("error ensuring dirs", "error", err)
 		return err
 	}
 

@@ -3,11 +3,11 @@ package provision
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
 )
 
 type Provisioner struct {
@@ -141,13 +141,13 @@ func (p Provisioner) Apply() error {
 }
 
 func (p Provisioner) AddOSRepos() error {
-	internal.Log.Notice("Adding OS repos")
+	slog.Info("Adding OS repos")
 
 	return addRepos(p.Config)
 }
 
 func (p Provisioner) ensureReleases() error {
-	internal.Log.Notice("Downloading releases")
+	slog.Info("Downloading releases")
 
 	if p.Config.Settings.ReleaseDir == "" {
 		return errors.New("empty release directory")
@@ -157,95 +157,95 @@ func (p Provisioner) ensureReleases() error {
 }
 
 func (p Provisioner) runPreflightTasks() error {
-	internal.Log.Notice("Running preflight tasks")
+	slog.Info("Running preflight tasks")
 
 	return runTasks(p.Config, p.Config.PreflightTasks)
 }
 
 func (p Provisioner) runPostFlightTasks() error {
-	internal.Log.Notice("Running postflight tasks")
+	slog.Info("Running postflight tasks")
 
 	return runTasks(p.Config, p.Config.PostflightTasks)
 }
 
 func (p Provisioner) installPackages() error {
-	internal.Log.Notice("Installing packages")
+	slog.Info("Installing packages")
 
 	return installPackages(p)
 }
 
 func (p Provisioner) rustInstall() error {
-	internal.Log.Noticef("Installing Rust packages")
+	slog.Info("Installing Rust packages")
 
 	return cargoInstallPkgs(p.Config)
 }
 
 func (p Provisioner) githubUserKey() error {
-	internal.Log.Noticef("Adding GitHub user keys")
+	slog.Info("Adding GitHub user keys")
 
 	return addGithubUserKeys(p.Config)
 }
 
 func (p Provisioner) goInstall() error {
-	internal.Log.Noticef("Installing Go packages")
+	slog.Info("Installing Go packages")
 
 	return goInstallPkgs(p.Config)
 }
 
 func (p Provisioner) acceptHostKeys() error {
-	internal.Log.Noticef("Adding known hosts")
+	slog.Info("Adding known hosts")
 
 	return acceptHostKeys(p.Config)
 }
 
 func (p Provisioner) initServices() error {
-	internal.Log.Noticef("Initializing services")
+	slog.Info("Initializing services")
 
 	return initServices(p.Config)
 }
 
 func (p Provisioner) pythonInstall() error {
-	internal.Log.Notice("Installing Python packages")
+	slog.Info("Installing Python packages")
 
 	return pythonInstallPkgs(p.Config)
 }
 
 func (p Provisioner) runTasks() error {
-	internal.Log.Noticef("Running tasks")
+	slog.Info("Running tasks")
 
 	return runTasks(p.Config, p.Config.Tasks)
 }
 
 func (p Provisioner) applyTemplates() error {
-	internal.Log.Noticef("Applying templates")
+	slog.Info("Applying templates")
 
 	return applyTemplates(p.Config)
 }
 
 func (p Provisioner) ensureDirs() error {
-	internal.Log.Noticef("Creating desired dirs")
+	slog.Info("Creating desired dirs")
 
 	return ensureDirs(p.Config)
 }
 
 func (p Provisioner) ensureLines() error {
-	internal.Log.Noticef("Ensuring lines in files")
+	slog.Info("Ensuring lines in files")
 
 	return ensureLines(p.Config)
 }
 
 func (p Provisioner) extractArchive() error {
-	internal.Log.Noticef("Extracting archives")
+	slog.Info("Extracting archives")
 
 	return extractArchives(p.Config)
 }
 
 func (p Provisioner) flatpakInstall() error {
-	internal.Log.Noticef("Installing flatpak packages")
+	slog.Info("Installing flatpak packages")
 
 	_, err := common.Which("flatpak")
 	if err != nil {
-		internal.Log.Debug("Skipping Flatpak packages installation as Flatpak is not available")
+		slog.Debug("Skipping Flatpak packages installation as Flatpak is not available")
 		return nil
 	}
 
@@ -253,19 +253,19 @@ func (p Provisioner) flatpakInstall() error {
 }
 
 func (p Provisioner) snapInstall() error {
-	internal.Log.Noticef("Installing snap packages")
+	slog.Info("Installing snap packages")
 
 	return snapInstall(p.Config)
 }
 
 func (p Provisioner) sshClone() error {
-	internal.Log.Noticef("Cloning repos via SSH")
+	slog.Info("Cloning repos via SSH")
 
 	return sshClone(p.Config)
 }
 
 func (p Provisioner) userInGroup() error {
-	internal.Log.Noticef("Ensuring user is in desired groups")
+	slog.Info("Ensuring user is in desired groups")
 
 	return userInGroup(p.Config)
 }

@@ -2,6 +2,7 @@ package unless
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -55,7 +56,7 @@ func doPostProcOutput(unless Unless, output string) (string, error) {
 		return "", err
 	}
 
-	internal.Log.Debugf("postproc returned `%s` for `%s`", postProcResult, unless)
+	slog.Debug("postproc output`", "unless", unless, "result", postProcResult)
 	return postProcResult, nil
 }
 
@@ -82,38 +83,38 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	out, err = run.Cmd(s, marecmd.Input{Command: unlessCmd, Pwd: pwd, Shell: unless.Shell})
 
 	if unless.ExitCode != 0 {
-		internal.Log.Debugf("Command %s exited with code: %d, skip when: %d", unlessCmd, out.Code,
-			unless.ExitCode)
+		slog.Debug("Command execution complete", "cmd", unlessCmd, "actual", out.Code,
+			"expected", unless.ExitCode)
 		return out.Code == unless.ExitCode
 	}
 
 	if err != nil {
-		internal.Log.Debugf("Command %s returned error: %v, output: %s", unlessCmd, err, out.Stderr)
+		slog.Debug("Command returned error", "cmd", unlessCmd, "error", err, "stderr", out.Stderr)
 		// Command wasn't successfully run, should not skip.
 		return false
 	}
 
 	name := unlessable.Name()
 	if !unlessable.KeepUpToDate() {
-		internal.Log.Debugf("Not checking version for %s as it doesn't need to be kept up-to-date", name)
+		slog.Debug("Not checking version for as it doesn't need to be kept up-to-date", "name", name)
 		return true
 	}
 
 	version, err := unlessable.LookupVersion(s)
 	if err != nil {
-		internal.Log.Errorf("Error determining desired version for %s: %v", name, err)
+		slog.Error("Error determining desired version", "name", name, "error", err)
 		return false
 	}
 
 	if version == "" {
 		// No version specification, but command has succeeded so should skip the operation.
-		internal.Log.Debugf("%s has no version specification, assuming operation should be skipped", name)
+		slog.Debug("No version specification, assuming operation should be skipped", "name", name)
 		return true
 	}
 
 	postProc, err := postProcOutput(unless, out.Stdout)
 	if err != nil {
-		internal.Log.Errorf("Error running postproc function for %s: %v", name, err)
+		slog.Error("Error running postproc function", "name", name, "error", err)
 		// Post processor function failed, best not to skip the operation.
 		return false
 	}
@@ -123,7 +124,8 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 	}
 
 	if postProc != version {
-		internal.Log.Debugf("%s: existing version `%s`, required version `%s`", name, postProc, version)
+		slog.Debug("Actual and desired version mismatch", "name", name, "actual", postProc,
+			"desired", version)
 		return false
 	}
 
@@ -134,7 +136,7 @@ func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string
 	lookup := map[string]string{}
 	version, err := unlessable.LookupVersion(s)
 	if err != nil {
-		internal.Log.Errorf("Error resolving stat %s: %v", stat, err)
+		slog.Error("Error resolving stat", "stat", stat, "error", err)
 		return stat
 	}
 
@@ -149,7 +151,7 @@ func resolveStat(stat string, unlessable Unlessable, s settings.Settings) string
 }
 
 func sudoStat(target string) bool {
-	internal.Log.Debugf("Trying to access %s with elevated privileges", target)
+	slog.Debug("Trying access with elevated privileges", "target", target)
 
 	statCmd := fmt.Sprintf("stat %s", target)
 	out, cmdErr := marecmd.Run(marecmd.Input{Command: statCmd, Sudo: true})
@@ -164,7 +166,7 @@ func sudoStat(target string) bool {
 }
 
 func fileExists(target string) bool {
-	internal.Log.Debugf("Checking existence of %s", target)
+	slog.Debug("Checking file existence", "path", target)
 
 	_, err := os.Stat(target)
 	if err == nil {

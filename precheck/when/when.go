@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"text/template"
 
-	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck"
 )
 
@@ -43,7 +43,7 @@ func ShouldRun(whenable Whenable) bool {
 
 	shouldRun, err := EvalStatement(statement)
 	if err != nil {
-		internal.Log.Warningf("error evaluating statement %s: %v", statement, err)
+		slog.Warn("error evaluating check", "statement", statement, "error", err)
 		return false
 	}
 

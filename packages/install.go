@@ -2,6 +2,7 @@ package packages
 
 import (
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 
@@ -64,7 +65,7 @@ func (i Installer) Install(desired mapset.Set[string]) error {
 	}
 
 	sort.Strings(missingPkgs)
-	internal.Log.Infof("Packages to install: %s", strings.Join(missingPkgs, " "))
+	slog.Info("Packages to install", "names", strings.Join(missingPkgs, " "))
 
 	installCmd := []string{i.Pkg.PkgExec(), "install", "-y"}
 	installCmd = append(installCmd, missingPkgs...)
@@ -149,7 +150,7 @@ func (i Installer) RemoteInstall(desired mapset.Set[entity.RemotePackage], s set
 	})
 
 	sort.Strings(urls)
-	internal.Log.Infof("Remote packages to install: %s", strings.Join(urls, " "))
+	slog.Info("Remote packages to install", "urls", strings.Join(urls, " "))
 
 	return i.Pkg.RemoteInstall(pkgs)
 }
@@ -194,7 +195,7 @@ func (i Installer) Remove(undesired mapset.Set[string]) error {
 	}
 
 	sort.Strings(pkgToRemove)
-	internal.Log.Infof("Packages to remove: %s", strings.Join(pkgToRemove, " "))
+	slog.Info("Packages to remove", "names", strings.Join(pkgToRemove, " "))
 
 	removeCmd := []string{i.Pkg.PkgExec()}
 	removeCmd = append(removeCmd, i.Pkg.RemoveCmd()...)

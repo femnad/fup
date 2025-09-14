@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log/slog"
+	"os/exec"
+
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
-	"github.com/femnad/fup/internal"
-	"os/exec"
 )
 
 const knownHostsFile = "~/.ssh/known_hosts"
@@ -50,7 +51,7 @@ func addKnownHosts(hosts []string) error {
 func acceptHostKeys(config entity.Config) error {
 	err := addKnownHosts(config.AcceptHostKeys)
 	if err != nil {
-		internal.Log.Errorf("error accepting host keys: %v", err)
+		slog.Error("error accepting host keys", "error", err)
 		return err
 	}
 
