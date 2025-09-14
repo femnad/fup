@@ -28,7 +28,7 @@ jobs:
 
       - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
-      - run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update'
+      - run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
 
   fedora-test:
     name: Run remote config test with Fedora Lima machine
@@ -49,4 +49,4 @@ jobs:
 
       - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
-      - run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update'
+      - run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
