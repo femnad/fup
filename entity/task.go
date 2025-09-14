@@ -2,7 +2,6 @@ package entity
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/femnad/fup/common"
@@ -81,7 +80,7 @@ func fileCmd(step Step, cfg Config) error {
 
 func download(step Step, cfg Config) error {
 	url, path := step.Url, ExpandSettings(cfg.Settings, step.Target)
-	slog.Debug("Downloading", "url", url, "path", path)
+	internal.Logger.Debug().Str("url", url).Str("path", path).Msg("Downloading")
 	return remote.Download(url, path)
 }
 
@@ -188,7 +187,7 @@ func (t Task) RunWhen() string {
 
 func runStep(step Step, cfg Config) error {
 	if unless.ShouldSkip(step, cfg.Settings) {
-		slog.Debug("skipping step due to precheck", "name", step.StepName)
+		internal.Logger.Trace().Str("name", step.StepName).Msg("Skipping step due to precheck")
 		return nil
 	}
 
@@ -220,7 +219,8 @@ func (t Task) Run(cfg Config) error {
 	for _, step := range t.Steps {
 		err := runStep(step, cfg)
 		if err != nil {
-			slog.Error("error running task", "name", t.Name(), "error", err)
+			internal.Logger.Error().Err(err).Str("task", t.Name()).Str("step", step.String()).Msg(
+				"Error running task")
 			return err
 		}
 	}

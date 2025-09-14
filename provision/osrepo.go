@@ -2,9 +2,9 @@ package provision
 
 import (
 	"errors"
-	"log/slog"
 
 	"github.com/femnad/fup/entity"
+	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 )
@@ -37,11 +37,11 @@ func addRepos(config entity.Config) error {
 		if exists {
 			continue
 		}
-		slog.Info("Adding repo", "name", repo.Name())
+		internal.Logger.Debug().Str("name", repo.Name()).Msg("Adding repo")
 
 		err = repo.Install()
 		if err != nil {
-			slog.Error("Error installing repo", "name", repo.Name(), "error", err)
+			internal.Logger.Error().Err(err).Str("name", repo.Name()).Msg("Error installing repo")
 			errs = append(errs, err)
 			continue
 		}

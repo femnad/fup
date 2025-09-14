@@ -3,7 +3,6 @@ package provision
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
@@ -21,7 +20,7 @@ func installSnap(snap entity.Snap) error {
 		return nil
 	}
 
-	slog.Info("Installing snap", "name", snap.Name)
+	internal.Logger.Debug().Str("name", snap.Name).Msg("Installing snap")
 	cmd := fmt.Sprintf("snap install %s", snap.Name)
 	if snap.Classic {
 		cmd += " --classic"
@@ -29,7 +28,7 @@ func installSnap(snap entity.Snap) error {
 
 	err := internal.MaybeRunWithSudo(cmd)
 	if err != nil {
-		slog.Error("error installing snap", "name", snap.Name, "error", err)
+		internal.Logger.Error().Err(err).Str("name", snap.Name).Msg("Error installing snap")
 		return err
 	}
 
@@ -41,12 +40,12 @@ func uninstallSnap(snap entity.Snap) error {
 		return nil
 	}
 
-	slog.Info("Uninstalling snap", "name", snap.Name)
+	internal.Logger.Info().Str("name", snap.Name).Msg("Uninstalling snap")
 	cmd := fmt.Sprintf("snap remove %s", snap.Name)
 
 	err := internal.MaybeRunWithSudo(cmd)
 	if err != nil {
-		slog.Error("error uninstalling snap", "name", snap.Name, "error", err)
+		internal.Logger.Error().Err(err).Str("name", snap.Name).Msg("Error uninstalling snap")
 		return err
 	}
 
@@ -56,7 +55,7 @@ func uninstallSnap(snap entity.Snap) error {
 func snapInstall(config entity.Config) error {
 	_, err := common.Which("snap")
 	if err != nil {
-		slog.Debug("skipping installing snap packages as snap is not available")
+		internal.Logger.Trace().Msg("Snap is not installed")
 		return nil
 	}
 

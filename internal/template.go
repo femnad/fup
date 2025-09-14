@@ -3,7 +3,6 @@ package internal
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 	"math"
 	"strings"
 	"text/template"
@@ -136,7 +135,7 @@ func RunTemplateFn(input, tmplFn string) (string, error) {
 	var out bytes.Buffer
 	err = parsed.Execute(&out, ctx)
 	if err != nil {
-		slog.Error("error executing function on input", "fn", tmplFn, "input", input, "err", err)
+		Logger.Error().Err(err).Str("fn", tmplFn).Str("input", input).Msg("Error executing template function")
 		return "", err
 	}
 

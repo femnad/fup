@@ -1,37 +1,22 @@
 package internal
 
 import (
-	"log/slog"
 	"os"
 	"time"
 
-	"github.com/lmittmann/tint"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var (
-	levelMapping = map[int]slog.Level{
-		0: slog.LevelError,
-		1: slog.LevelWarn,
-		2: slog.LevelInfo,
-		3: slog.LevelDebug,
-	}
+	Logger zerolog.Logger
 )
 
-func InitLogging(level int) {
-	logLevel, ok := levelMapping[level]
-	if !ok {
-		if level > 3 {
-			logLevel = slog.LevelDebug
-		} else {
-			logLevel = slog.LevelInfo
-		}
+func InitLogging(level string) {
+	parsedLevel, err := zerolog.ParseLevel(level)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Invalid log level")
 	}
 
-	base := slog.New(
-		tint.NewHandler(os.Stderr, &tint.Options{
-			Level:      logLevel,
-			TimeFormat: time.DateTime,
-		}),
-	)
-	slog.SetDefault(base)
+	Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.DateTime}).Level(parsedLevel)
 }

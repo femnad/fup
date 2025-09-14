@@ -3,7 +3,6 @@ package settings
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 	"os"
 	"regexp"
 	"sort"
@@ -111,7 +110,7 @@ func Expand(s string, lookup map[string]string) string {
 func addHostFacts(lookup map[string]string, factMap FactMap) map[string]string {
 	hostName, err := os.Hostname()
 	if err != nil {
-		slog.Error("error determining hostname", "error", err)
+		internal.Logger.Error().Err(err).Msg("Error determining hostname")
 		return lookup
 	}
 	lookup["hostname"] = hostName
@@ -132,7 +131,7 @@ func addHostFacts(lookup map[string]string, factMap FactMap) map[string]string {
 			var cmp *regexp.Regexp
 			cmp, err = regexp.Compile(regex)
 			if err != nil {
-				slog.Error("ignoring regexp in host fact", "error", err)
+				internal.Logger.Error().Err(err).Str("regex", regex).Msg("Ignoring regexp")
 				continue
 			}
 			if cmp.MatchString(hostName) {

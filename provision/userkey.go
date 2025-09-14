@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 	"path"
 
@@ -29,7 +28,7 @@ func ensureUserKeys(user string) error {
 	url := fmt.Sprintf("https://api.github.com/users/%s/keys", user)
 	resp, err := remote.ReadResponseBody(url)
 	if err != nil {
-		slog.Error("error reading user keys", "url", url, "error", err)
+		internal.Logger.Error().Err(err).Str("url", url).Msg("Error fetching keys")
 		return err
 	}
 	defer resp.Body.Close()
@@ -99,7 +98,7 @@ func addGithubUserKeys(config entity.Config) error {
 
 	err := ensureUserKeys(user)
 	if err != nil {
-		slog.Error("error ensuring GitHub keys", "user", user, "error", err)
+		internal.Logger.Error().Stack().Err(err).Msg("Error ensuring Github user keys")
 		return err
 	}
 

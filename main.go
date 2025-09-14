@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"log/slog"
 	"os"
 
 	"github.com/alexflint/go-arg"
@@ -20,7 +19,7 @@ const (
 
 type ApplyCmd struct {
 	Provisioners   []string `arg:"-p,--provisioners" help:"List of provisioners to run"`
-	LogLevel       int      `arg:"-l,--loglevel" default:"2" help:"Log level as integer, 0 least, 3 most"`
+	LogLevel       string   `arg:"-l,--loglevel" default:"debug" help:"Log level: trace, debug, info, warn, error, fatal, panic"`
 	PrintConfig    bool     `arg:"-r,--print-config" help:"Print final config and exit"`
 	ValidateConfig bool     `arg:"-c,--validate-config" help:"Validate config and exit"`
 }
@@ -47,7 +46,7 @@ func (args) Version() string {
 func printConfig(configFile string) {
 	out, err := base.FinalizeConfig(configFile)
 	if err != nil {
-		slog.Error("error printing config", "file", configFile, "error", err)
+		internal.Logger.Error().Str("file", configFile).Err(err).Msg("Error printing config")
 		os.Exit(1)
 	}
 
@@ -60,7 +59,7 @@ func apply(parsed args) {
 	internal.InitLogging(applyCfg.LogLevel)
 
 	cfg := parsed.File
-	slog.Debug("Reading config file", "path", cfg)
+	internal.Logger.Trace().Str("path", cfg).Msg("Reading config file")
 
 	if applyCfg.PrintConfig {
 		printConfig(cfg)
@@ -77,7 +76,7 @@ func apply(parsed args) {
 
 	p, err := provision.NewProvisioner(config, applyCfg.Provisioners)
 	if err != nil {
-		slog.Error("error building provisioner", "error", err)
+		internal.Logger.Error().Err(err).Msg("Error creating provisioner")
 		return
 	}
 

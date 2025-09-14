@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/url"
 	"os"
 	"path"
@@ -92,7 +91,7 @@ func downloadRelease(release entity.Release, s settings.Settings) (string, error
 	if releaseURL == "" {
 		return "", fmt.Errorf("no URL given for release %v", release)
 	}
-	slog.Info("Downloading release", "name", release.Name(), "url", releaseURL)
+	internal.Logger.Debug().Str("name", release.Name()).Str("url", releaseURL).Msg("Downloading release")
 
 	response, err := remote.ReadResponseBody(releaseURL)
 	if err != nil {
@@ -135,7 +134,8 @@ func processDownload(release entity.Release, s settings.Settings) (info ReleaseI
 	}
 
 	if release.Cleanup {
-		slog.Debug("Purging directory", "path", absTarget)
+		internal.Logger.Trace().Str("name", release.Name()).Str("target", absTarget).Msg(
+			"Purging directory")
 		err = os.RemoveAll(absTarget)
 		if err != nil {
 			return info, fmt.Errorf("error cleaning up dir %s before extraction: %v", absTarget, err)
@@ -682,14 +682,14 @@ func performExecutions(eCtx executionCtx, spec entity.ExecuteSpec) error {
 			pwd = internal.ExpandUser(pwd)
 		}
 		if pwd == "" {
-			slog.Debug("Running command", "cmd", cmd)
+			internal.Logger.Trace().Str("command", cmd).Msg("Running command")
 		} else {
-			slog.Debug("Running command under path", "cmd", cmd, "path", pwd)
+			internal.Logger.Trace().Str("command", cmd).Str("path", pwd).Msg("Running command under path")
 		}
 
 		err := marecmd.RunErrOnly(marecmd.Input{Command: cmd, Pwd: pwd, Shell: true, Sudo: spec.Sudo})
 		if err != nil {
-			slog.Error("error running post download command", "error", err)
+			internal.Logger.Error().Err(err).Str("cmd", cmd).Msg("Error executing command")
 			return err
 		}
 	}
@@ -704,7 +704,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	}
 
 	if !when.ShouldRun(release) {
-		slog.Debug("Skipping extracting release due to condition", "url", releaseURL, "when", release.When)
+		internal.Logger.Trace().Str("url", releaseURL).Str("when", release.When).Msg("Skipping download")
 		return nil
 	}
 
@@ -718,7 +718,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	}
 
 	if unless.ShouldSkip(release, s) {
-		slog.Debug("Skipping download", "url", releaseURL)
+		internal.Logger.Trace().Str("url", releaseURL).Str("when", release.Unless.String()).Msg("Skipping download")
 		return nil
 	}
 
@@ -735,7 +735,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 
 	info, err := Extract(release, s)
 	if err != nil {
-		slog.Error("Error downloading release", "url", releaseURL, "error", err)
+		internal.Logger.Error().Err(err).Str("url", releaseURL).Msg("Error downloading release")
 		return err
 	}
 
@@ -747,7 +747,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	for _, symlink := range release.ExpandSymlinks(info.execCandidate) {
 		err = createSymlink(symlink, target, s.GetBinPath())
 		if err != nil {
-			slog.Error("error creating symlink for release", "url", releaseURL, "error", err)
+			internal.Logger.Error().Err(err).Str("url", releaseURL).Msg("Error creating symlink")
 			return err
 		}
 	}
@@ -822,7 +822,7 @@ func ensureReleases(config entity.Config) error {
 	for _, release := range releases {
 		err = ensureRelease(release, config.Settings)
 		if err != nil {
-			slog.Error("Error ensuring release", "name", release.Name(), "error", err)
+			internal.Logger.Error().Err(err).Str("name", release.Name()).Msg("Error ensuring release")
 		}
 		releaseErrs = append(releaseErrs, err)
 	}

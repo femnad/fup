@@ -3,7 +3,6 @@ package provision
 import (
 	"bytes"
 	"errors"
-	"log/slog"
 	"net/url"
 	"os"
 	"path"
@@ -108,7 +107,7 @@ func applyTemplates(config entity.Config) error {
 	for _, tmpl := range config.Templates {
 		err := applyTemplate(tmpl, config)
 		if err != nil {
-			slog.Error("error applying template with destination", "destination", tmpl.Dest, "error", err)
+			internal.Logger.Error().Err(err).Str("destination", tmpl.Dest).Msg("Error applying template")
 		}
 		tmplErr = append(tmplErr, err)
 	}

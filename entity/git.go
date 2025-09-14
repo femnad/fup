@@ -3,7 +3,6 @@ package entity
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/url"
 	"os"
 	"path"
@@ -89,7 +88,7 @@ func update(repo Repo, cloneDir string) error {
 		return err
 	}
 
-	slog.Info("Updating repo", "name", repo.Name)
+	internal.Logger.Info().Str("name", repo.Name).Msg("Updating repo")
 
 	err = w.Pull(&git.PullOptions{RemoteName: defaultRemote})
 	if errors.Is(err, git.NoErrAlreadyUpToDate) {
@@ -128,7 +127,7 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 		opt.ReferenceName = plumbing.ReferenceName(ref)
 	}
 
-	slog.Info("Cloning repo", "name", repo.Name)
+	internal.Logger.Info().Str("name", repo.Name).Msg("Cloning repo")
 
 	_, err = os.Stat(onePasswordSocket)
 	if err == nil {
@@ -157,7 +156,7 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 			return remoteErr
 		}
 
-		slog.Debug("Fetching remote", "remote", remote, "url", remoteUrl, "repo", repo.Name)
+		internal.Logger.Trace().Str("remote", remote).Str("url", remoteUrl).Msg("Fetching remote")
 		remoteErr = r.Fetch(&git.FetchOptions{
 			RemoteName: remote,
 		})

@@ -2,9 +2,9 @@ package provision
 
 import (
 	"errors"
-	"log/slog"
 
 	"github.com/femnad/fup/entity"
+	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/unless"
 	"github.com/femnad/fup/precheck/when"
 )
@@ -18,19 +18,18 @@ func runTask(task entity.Task, cfg entity.Config) error {
 
 	if !when.ShouldRun(task) {
 		if task.Hint != "" && !unless.ShouldSkip(task, cfg.Settings) {
-			slog.Warn(hintBase, "name", name, "task", task.Hint)
+			internal.Logger.Warn().Str("name", name).Str("task", task.Hint).Msg(hintBase)
 		}
-		slog.Debug("Skipping running task as condition evaluated to false", "name", name, "when", task.When)
+		internal.Logger.Trace().Str("name", name).Str("when", task.When).Msg("Skipping task")
 		return nil
 	}
 
 	if unless.ShouldSkip(task, cfg.Settings) {
-		slog.Debug("Skipping running task as condition evaluated to true", "name", name, "unless",
-			task.Unless)
+		internal.Logger.Trace().Str("name", name).Msg("Skipping task")
 		return nil
 	}
 
-	slog.Info("Running task", "name", name)
+	internal.Logger.Info().Str("name", name).Msg("Running task")
 	return task.Run(cfg)
 }
 

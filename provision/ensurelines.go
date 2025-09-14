@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"path"
 	"regexp"
@@ -201,7 +200,8 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 	target := internal.ExpandUser(line.File)
 	if !when.ShouldRun(line) {
 		whenText := strings.Replace(line.When, "\"", "`", -1)
-		slog.Debug("Skipping changes", "target", target, "when", whenText)
+		internal.Logger.Trace().Str("target", target).Str("when", whenText).Str("file", line.File).Msg(
+			"Skipping line")
 		return nil
 	}
 
@@ -222,7 +222,7 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 
 	tmpPath := tmpFile.Name()
 	if !result.changed {
-		slog.Debug("Not modifying file as no changes were found", "target", target)
+		internal.Logger.Trace().Str("target", target).Msg("Not modifying file as no changes were found")
 		err = os.Remove(tmpPath)
 		if err != nil {
 			return err
@@ -246,7 +246,8 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return nil
 	}
 
-	slog.Debug("Executing step after modifying", "step", executeAfter.Name(), "target", target)
+	internal.Logger.Trace().Str("step", executeAfter.Name()).Str("target", target).Msg(
+		"Executing cmd for step")
 	return executeAfter.Run(config)
 }
 
@@ -254,7 +255,7 @@ func ensureLines(config entity.Config) error {
 	for _, line := range config.EnsureLines {
 		err := ensureLine(config, line)
 		if err != nil {
-			slog.Error("error ensuring lines in file", "error", err)
+			internal.Logger.Error().Err(err).Str("file", line.File).Msg("Error ensuring line in file")
 			return err
 		}
 	}

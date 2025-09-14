@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"path"
 	"strings"
@@ -116,7 +115,7 @@ func writeTimerTmpl(s entity.Service) (string, error) {
 }
 
 func runSystemctlCmd(cmd string, service entity.Service) error {
-	slog.Debug("running systemctl command", "cmd", cmd, "service", service.Name)
+	internal.Logger.Trace().Str("cmd", cmd).Str("service", service.Name).Msg("Running systemctl")
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: service.System})
 	return err
 }
@@ -151,8 +150,7 @@ func maybeRestart(s entity.Service, unitType string) error {
 		return err
 	}
 
-	slog.Debug("restarting active service due to service file content changes", "name", s.Name)
-
+	internal.Logger.Trace().Str("name", s.Name).Msg("Restarting service due to file content changes")
 	cmd = systemctlCmd("restart", s.Name, unitType, !s.System)
 	return marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: s.System})
 }
@@ -270,7 +268,7 @@ func maybePersistTimer(s entity.Service) (bool, error) {
 }
 
 func reload(s entity.Service, unitType string) error {
-	slog.Info("Reloading unit files", "name", s.Name)
+	internal.Logger.Info().Str("name", s.Name).Msg("Reloading unit files")
 	c := systemctlCmd("daemon-reload", "", unitType, !s.System)
 	return runSystemctlCmd(c, s)
 }
@@ -376,7 +374,7 @@ func ensureServiceState(s entity.Service, actionStr, unitType string) error {
 
 	caser := cases.Title(language.Und)
 	verb := caser.String(action.logVerb)
-	slog.Info("Ensuring service state", "name", s.Name, "state", verb)
+	internal.Logger.Debug().Str("name", s.Name).Str("state", verb).Msg("Ensuring service state")
 
 	return runSystemctlCmd(actuateCmd, s)
 }
@@ -456,14 +454,14 @@ func maybeStop(s entity.Service) error {
 	}
 	err := ensureServiceState(s, "stop", "service")
 	if err != nil {
-		slog.Error("error stopping service", "name", s.Name, "error", err)
+		internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error ensuring service state")
 		return err
 	}
 
 	if s.Timer != nil {
 		err = ensureServiceState(s, "stop", "timer")
 		if err != nil {
-			slog.Error("error stopping timer", "name", s.Name, "error", err)
+			internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error stopping timer")
 			return err
 		}
 	}
@@ -477,14 +475,14 @@ func maybeDisable(s entity.Service) error {
 	}
 	err := ensureServiceState(s, "disable", "service")
 	if err != nil {
-		slog.Error("error disabling service", "name", s.Name, "error", err)
+		internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error disabling service")
 		return err
 	}
 
 	if s.Timer != nil {
 		err = ensureServiceState(s, "disable", "timer")
 		if err != nil {
-			slog.Error("error disabling timer", "name", s.Name, "error", err)
+			internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error disabling timer")
 			return err
 		}
 	}
@@ -494,7 +492,8 @@ func maybeDisable(s entity.Service) error {
 
 func initService(s entity.Service, cfg entity.Config) error {
 	if !when.ShouldRun(s) {
-		slog.Debug("Skipping initializing as condition evaluated to false", "name", s.Name, "when", s.When)
+		internal.Logger.Trace().Str("name", s.Name).Str("when", s.When).Msg(
+			"Skipping service initialization")
 		return nil
 	}
 
@@ -511,25 +510,25 @@ func initService(s entity.Service, cfg entity.Config) error {
 	name := s.Name
 	s, err = expandService(s, cfg)
 	if err != nil {
-		slog.Error("error expanding service", "name", name, "error", err)
+		internal.Logger.Error().Str("name", name).Err(err).Msg("Error expanding service")
 		return err
 	}
 
 	err = persist(s)
 	if err != nil {
-		slog.Error("error persisting service", "name", name, "error", err)
+		internal.Logger.Error().Str("name", name).Err(err).Msg("Error persisting service")
 		return err
 	}
 
 	err = enable(s)
 	if err != nil {
-		slog.Error("error enabling service", "name", name, "error", err)
+		internal.Logger.Error().Str("name", name).Err(err).Msg("Error enabling service")
 		return err
 	}
 
 	err = start(s)
 	if err != nil {
-		slog.Error("error starting service", "name", name, "error", err)
+		internal.Logger.Error().Str("name", name).Err(err).Msg("Error starting service")
 		return err
 	}
 

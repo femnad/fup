@@ -3,7 +3,6 @@ package provision
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"os/user"
 
 	marecmd "github.com/femnad/mare/cmd"
@@ -23,7 +22,7 @@ func addUserToGroup(user, group string) error {
 		return err
 	}
 
-	slog.Info("Adding user to group", "user", user, "group", group)
+	internal.Logger.Info().Str("user", user).Str("group", group).Msg("Adding user to group")
 	usermod := fmt.Sprintf("usermod -aG %s %s", group, user)
 	err = marecmd.RunErrOnly(marecmd.Input{Command: usermod, Sudo: !isRoot})
 	if err != nil {
@@ -45,7 +44,7 @@ func groupAdd(group entity.Group) error {
 	}
 	cmd += " " + group.Name
 
-	slog.Info("Creating group", "name", group.Name)
+	internal.Logger.Info().Str("group", group.Name).Msg("Creating group")
 	err = marecmd.RunErrOnly(marecmd.Input{Command: cmd, Sudo: !isRoot})
 	return err
 }
@@ -134,7 +133,7 @@ func ensureUserInGroups(userGroupSpecs entity.UserInGroupSpec) error {
 func userInGroup(config entity.Config) error {
 	err := ensureUserInGroups(config.UserInGroup)
 	if err != nil {
-		slog.Error("error ensuring user in groups", "error", err)
+		internal.Logger.Error().Err(err).Msg("Error ensuring user in groups")
 		return err
 	}
 

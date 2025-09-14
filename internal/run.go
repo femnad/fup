@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"path"
 
@@ -15,7 +14,7 @@ func maybeWarnPasswordRequired(cmdStr string) {
 		return
 	}
 
-	slog.Warn("Sudo authentication required for escalating privileges to run command", "cmd", cmdStr)
+	Logger.Warn().Str("cmd", cmdStr).Msg("Sudo authentication required for escalating privileges")
 }
 
 func needsSudoForPath(dst string) (bool, error) {

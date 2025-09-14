@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"path"
 	"regexp"
@@ -130,11 +129,11 @@ func extractArchive(archive entity.Archive) error {
 
 	archiveURL := archive.URL
 	if skip {
-		slog.Debug("Skipping extracting archive", "url", archiveURL)
+		internal.Logger.Trace().Str("url", archiveURL).Msg("Skipping archive")
 		return nil
 	}
 
-	slog.Info("Extracting archive", "url", archiveURL)
+	internal.Logger.Info().Str("url", archiveURL).Msg("Extracting archive")
 
 	response, err := remote.ReadResponseBody(archiveURL)
 	if err != nil {

@@ -3,9 +3,9 @@ package provision
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 
+	"github.com/femnad/fup/internal"
 	marecmd "github.com/femnad/mare/cmd"
 
 	"github.com/femnad/fup/common"
@@ -48,23 +48,23 @@ func crateArgs(pkg entity.CargoPkg) ([]string, error) {
 
 func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 	if unless.ShouldSkip(pkg, s) {
-		slog.Debug("skipping cargo install", "crate", pkg.Crate)
+		internal.Logger.Trace().Str("crate", pkg.Crate).Msg("Skipping Cargo install")
 		return nil
 	}
 
 	if !when.ShouldRun(pkg) {
-		slog.Debug("skipping cargo install", "crate", pkg.Crate)
+		internal.Logger.Trace().Str("crate", pkg.Crate).Str("when", pkg.When).Msg("Skipping Cargo install")
 		return nil
 	}
 
 	name := pkg.Crate
-	slog.Info("Installing cargo package", "name", name)
+	internal.Logger.Info().Str("crate", pkg.Crate).Msg("Installing Cargo crate")
 
 	installCmd := []string{"cargo", "install"}
 
 	crate, err := crateArgs(pkg)
 	if err != nil {
-		slog.Error("error getting crate name", "crate", name, "error", err)
+		internal.Logger.Error().Err(err).Str("crate", name).Msg("Error getting create name")
 		return err
 	}
 	installCmd = append(installCmd, crate...)
@@ -76,7 +76,7 @@ func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 	cmd := strings.Join(installCmd, " ")
 	_, err = run.Cmd(s, marecmd.Input{Command: cmd})
 	if err != nil {
-		slog.Error("error installing cargo package", "name", name, "error", err)
+		internal.Logger.Error().Err(err).Str("name", name).Msg("Error installing cargo package")
 		return err
 	}
 

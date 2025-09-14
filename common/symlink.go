@@ -2,9 +2,10 @@ package common
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"path"
+
+	"github.com/femnad/fup/internal"
 )
 
 const (
@@ -32,7 +33,7 @@ func Symlink(symlinkName, symlinkTarget string) error {
 
 	exists, update := shouldUpdateSymlink(symlinkName, symlinkTarget)
 	if !update {
-		slog.Debug("Symlink already exists", "name", symlinkName)
+		internal.Logger.Trace().Str("symlink", symlinkName).Msg("Symlink already exists")
 		return nil
 	}
 
@@ -42,7 +43,7 @@ func Symlink(symlinkName, symlinkTarget string) error {
 		return fmt.Errorf("error creating symlink dir %s: %v", symlinkDir, err)
 	}
 
-	slog.Debug("Creating symlink", "target", symlinkTarget, "name", symlinkName)
+	internal.Logger.Trace().Str("name", symlinkName).Str("target", symlinkTarget).Msg("Creating symlink")
 	if exists {
 		if err = os.Remove(symlinkName); err != nil {
 			return fmt.Errorf("error removing existing symlink %s: %v", symlinkName, err)
