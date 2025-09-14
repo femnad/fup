@@ -199,7 +199,7 @@ func replace(file string, tmpFile *os.File, line entity.LineInFile) (result ensu
 func ensureLine(config entity.Config, line entity.LineInFile) error {
 	target := internal.ExpandUser(line.File)
 	if !when.ShouldRun(line) {
-		whenText := strings.Replace(line.When, "\"", "`", -1)
+		whenText := internal.PrettyLogStr(line.When)
 		internal.Logger.Trace().Str("target", target).Str("when", whenText).Str("file", line.File).Msg(
 			"Skipping line")
 		return nil

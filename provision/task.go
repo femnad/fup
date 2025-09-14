@@ -20,7 +20,8 @@ func runTask(task entity.Task, cfg entity.Config) error {
 		if task.Hint != "" && !unless.ShouldSkip(task, cfg.Settings) {
 			internal.Logger.Warn().Str("name", name).Str("task", task.Hint).Msg(hintBase)
 		}
-		internal.Logger.Trace().Str("name", name).Str("when", task.When).Msg("Skipping task")
+		whenText := internal.PrettyLogStr(task.When)
+		internal.Logger.Trace().Str("name", name).Str("when", whenText).Msg("Skipping task")
 		return nil
 	}
 

@@ -265,7 +265,7 @@ func (p Provisioner) sshClone() error {
 }
 
 func (p Provisioner) userInGroup() error {
-	internal.Logger.Info().Msg("Ensuring group is in desired groups")
+	internal.Logger.Info().Msg("Ensuring user is in desired groups")
 
 	return userInGroup(p.Config)
 }

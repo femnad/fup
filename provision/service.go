@@ -492,7 +492,8 @@ func maybeDisable(s entity.Service) error {
 
 func initService(s entity.Service, cfg entity.Config) error {
 	if !when.ShouldRun(s) {
-		internal.Logger.Trace().Str("name", s.Name).Str("when", s.When).Msg(
+		whenText := internal.PrettyLogStr(s.When)
+		internal.Logger.Trace().Str("name", s.Name).Str("when", whenText).Msg(
 			"Skipping service initialization")
 		return nil
 	}

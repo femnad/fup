@@ -1,8 +1,6 @@
 package provision
 
 import (
-	"strings"
-
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/precheck/when"
@@ -16,7 +14,7 @@ func evalFacts(config entity.Config) error {
 		}
 
 		if !ok {
-			fact := strings.Replace(hint.Fact, "\"", "`", -1)
+			fact := internal.PrettyLogStr(hint.Fact)
 			internal.Logger.Warn().Str("hint", fact).Msg(hint.Message)
 		}
 	}
