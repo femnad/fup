@@ -133,7 +133,7 @@ func extractArchive(archive entity.Archive) error {
 		return nil
 	}
 
-	internal.Logger.Info().Str("url", archiveURL).Msg("Extracting archive")
+	internal.Logger.Debug().Str("url", archiveURL).Msg("Extracting archive")
 
 	response, err := remote.ReadResponseBody(archiveURL)
 	if err != nil {

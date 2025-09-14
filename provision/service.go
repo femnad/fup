@@ -268,7 +268,7 @@ func maybePersistTimer(s entity.Service) (bool, error) {
 }
 
 func reload(s entity.Service, unitType string) error {
-	internal.Logger.Info().Str("name", s.Name).Msg("Reloading unit files")
+	internal.Logger.Trace().Str("name", s.Name).Msg("Reloading unit files")
 	c := systemctlCmd("daemon-reload", "", unitType, !s.System)
 	return runSystemctlCmd(c, s)
 }

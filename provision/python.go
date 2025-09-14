@@ -47,7 +47,7 @@ func pythonInstall(pkg entity.PythonPkg, cfg entity.Config) error {
 		return nil
 	}
 
-	internal.Logger.Info().Str("package", name).Msg("Installing Python package")
+	internal.Logger.Debug().Str("package", name).Msg("Installing Python package")
 
 	cmd := fmt.Sprintf("virtualenv %s", venvDir)
 	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})

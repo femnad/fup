@@ -51,7 +51,7 @@ func goInstall(pkg entity.GoPkg, s settings.Settings) error {
 		return nil
 	}
 
-	internal.Logger.Info().Str("name", name).Msg("Installing Go package")
+	internal.Logger.Debug().Str("name", name).Msg("Installing Go package")
 
 	qualifiedName, err := qualifyPkg(pkg, s)
 	if err != nil {

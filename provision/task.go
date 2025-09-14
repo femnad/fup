@@ -30,7 +30,7 @@ func runTask(task entity.Task, cfg entity.Config) error {
 		return nil
 	}
 
-	internal.Logger.Info().Str("name", name).Msg("Running task")
+	internal.Logger.Debug().Str("name", name).Msg("Running task")
 	return task.Run(cfg)
 }
 
