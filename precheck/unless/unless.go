@@ -29,7 +29,10 @@ func (u Unless) String() string {
 
 	s := u.Cmd
 	if u.Post != "" {
-		s += " | " + u.Post
+		if s != "" {
+			s += " "
+		}
+		s += "| " + u.Post
 	}
 	return s
 }

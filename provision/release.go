@@ -718,7 +718,7 @@ func ensureRelease(release entity.Release, s settings.Settings) error {
 	}
 
 	if unless.ShouldSkip(release, s) {
-		internal.Logger.Trace().Str("url", releaseURL).Str("when", release.Unless.String()).Msg("Skipping download")
+		internal.Logger.Trace().Str("url", releaseURL).Str("unless", release.Unless.String()).Msg("Skipping download")
 		return nil
 	}
 
