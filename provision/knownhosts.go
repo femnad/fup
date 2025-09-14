@@ -22,7 +22,7 @@ func addKnownHost(host string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf(stderr.String())
+		return fmt.Errorf("error adding known host, stderr %s: %v", stderr.String(), err)
 	}
 
 	scanner := bufio.NewScanner(&stdout)

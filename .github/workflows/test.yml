@@ -46,7 +46,7 @@ jobs:
 
       - name: Provision
         run: |
-          ~/go/bin/fup apply -f tests/config/test.yml -l 0 -n -b
+          ~/go/bin/fup apply -f tests/config/test.yml -l trace
 
       - name: Verify
         run: |
@@ -91,7 +91,7 @@ jobs:
 
       - name: Provision
         run: |
-          ~/go/bin/fup apply -f https://raw.githubusercontent.com/femnad/fup/${{ steps.get-branch.outputs.branch }}/tests/config/test-remote.yml -l 0 -n -b
+          ~/go/bin/fup apply -f https://raw.githubusercontent.com/femnad/fup/${{ steps.get-branch.outputs.branch }}/tests/config/test-remote.yml -l trace
 
       - name: Verify
         run: |

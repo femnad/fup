@@ -19,7 +19,7 @@ func Test_writeTmpl(t *testing.T) {
 		{
 			name: "Basic service",
 			args: args{s: entity.Service{
-				Unit: entity.Unit{
+				Unit: &entity.Unit{
 					Desc: "Test",
 					Exec: "test"},
 			},
@@ -37,7 +37,7 @@ WantedBy=default.target
 		{
 			name: "Service with options",
 			args: args{s: entity.Service{
-				Unit: entity.Unit{
+				Unit: &entity.Unit{
 					Desc: "Test",
 					Exec: "test",
 					Options: map[string]string{
@@ -60,7 +60,7 @@ WantedBy=default.target
 		},
 		{
 			name: "Service with wanted by",
-			args: args{s: entity.Service{Unit: entity.Unit{
+			args: args{s: entity.Service{Unit: &entity.Unit{
 				Desc:     "Test",
 				Exec:     "test",
 				WantedBy: "sleep",
@@ -77,7 +77,7 @@ WantedBy=sleep.target
 		},
 		{
 			name: "Service with before",
-			args: args{s: entity.Service{Unit: entity.Unit{
+			args: args{s: entity.Service{Unit: &entity.Unit{
 				Desc:   "Test",
 				Exec:   "test",
 				Before: "sleep",
