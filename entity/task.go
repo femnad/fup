@@ -80,7 +80,7 @@ func fileCmd(step Step, cfg Config) error {
 
 func download(step Step, cfg Config) error {
 	url, path := step.Url, ExpandSettings(cfg.Settings, step.Target)
-	internal.Logger.Debug().Str("url", url).Str("path", path).Msg("Downloading")
+	internal.Logger.Trace().Str("url", url).Str("path", path).Msg("Downloading")
 	return remote.Download(url, path)
 }
 

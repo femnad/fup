@@ -58,7 +58,7 @@ func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 	}
 
 	name := pkg.Crate
-	internal.Logger.Info().Str("crate", pkg.Crate).Msg("Installing Cargo crate")
+	internal.Logger.Debug().Str("crate", pkg.Crate).Msg("Installing Cargo crate")
 
 	installCmd := []string{"cargo", "install"}
 
