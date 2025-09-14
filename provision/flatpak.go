@@ -29,7 +29,7 @@ func ensureRemote(remote entity.FlatpakRemote) error {
 
 	internal.Logger.Debug().Str("name", remote.Name).Msg("Adding flatpak remote")
 	cmd := fmt.Sprintf("%s remote-add %s %s", flatpakExec, remote.Name, remote.Url)
-	err := marecmd.RunErrOnly(marecmd.Input{Command: cmd})
+	err := internal.MaybeRunWithSudo(cmd)
 	if err != nil {
 		return fmt.Errorf("error adding flatpak remote %s with URL %s: %v", remote.Name, remote.Url, err)
 	}
