@@ -246,7 +246,7 @@ func persistUnit(s entity.Service) (restart bool, err error) {
 	if restart && !internal.IsHomePath(serviceFilePath) {
 		err = maybeRunRestoreCon(serviceFilePath)
 		if err != nil {
-			return
+			return restart, err
 		}
 	}
 
