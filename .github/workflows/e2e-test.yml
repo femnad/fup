@@ -26,9 +26,11 @@ jobs:
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
 
-      - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
+      - uses: Setup SSH
+        run: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
-      - run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
+      - name: Provision VM
+        run: ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace'
 
   fedora-test:
     name: Run remote config test with Fedora Lima machine
@@ -47,6 +49,8 @@ jobs:
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://fedora
 
-      - uses: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
+      - name: Setup SSH
+        run: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
-      - run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
+      - run: Provision VM
+        name: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
