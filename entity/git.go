@@ -180,6 +180,8 @@ func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 		return nil
 	}
 
+	internal.Logger.Debug().Str("name", repo.Name).Msg("Cloning repo via SSH")
+
 	modifiedEnv := make(map[string]string)
 	newEnv := make(map[string]bool)
 	for k, v := range cloneEnv {
