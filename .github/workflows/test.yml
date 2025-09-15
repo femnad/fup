@@ -75,16 +75,16 @@ jobs:
 
       - name: Get branch
         id: get-branch
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          event="${{ github.event_name }}"
-          head_ref="${{ github.head_ref }}"
-          ref_name="${{ github.ref_name }}"
-
-          if [ "$event" = 'pull_request' ]
+          if [ "$EVENT" = 'pull_request' ]
           then
-            branch="$head_ref"
+            branch="$HEAD_REF"
           else
-            branch="$ref_name"
+            branch="$REF_NAME"
           fi
 
           echo "branch=${branch}" >> "$GITHUB_OUTPUT"
