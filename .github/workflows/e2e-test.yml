@@ -10,7 +10,7 @@ on:
 
 jobs:
   ubuntu-test:
-    name: Run remote config test with Ubuntu systemd container
+    name: Run remote config test with Ubuntu Lima machine
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
