@@ -8,6 +8,10 @@ on:
   workflow_dispatch:
     inputs:
 
+concurrency:
+  group: run-tests
+  cancel-in-progress: false
+
 jobs:
   test:
     name: Run unit and integration tests
