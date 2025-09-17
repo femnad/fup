@@ -52,5 +52,5 @@ jobs:
       - name: Setup SSH
         run: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
-      - run: Provision VM
-        name: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
+      - name: Provision VM
+        run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
