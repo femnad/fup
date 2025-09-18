@@ -141,6 +141,10 @@ func writeUnitFile(file, content string) (bool, error) {
 }
 
 func maybeRestart(s entity.Service, unitType string) error {
+	if s.Unit.Type == oneshotService {
+		return nil
+	}
+
 	cmd := systemctlCmd("is-active", s.Name, unitType, !s.System)
 	out, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd})
 	if err != nil {
