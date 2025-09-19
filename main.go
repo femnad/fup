@@ -8,6 +8,8 @@ import (
 	"github.com/alexflint/go-arg"
 
 	"github.com/femnad/fup/base"
+	basecmd "github.com/femnad/fup/cmd/base"
+	"github.com/femnad/fup/cmd/printspec"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
 	"github.com/femnad/fup/provision"
@@ -19,7 +21,6 @@ const (
 
 type ApplyCmd struct {
 	Provisioners   []string `arg:"-p,--provisioners" help:"List of provisioners to run"`
-	LogLevel       string   `arg:"-l,--loglevel" default:"debug" help:"Log level: trace, debug, info, warn, error, fatal, panic"`
 	PrintConfig    bool     `arg:"-r,--print-config" help:"Print final config and exit"`
 	ValidateConfig bool     `arg:"-c,--validate-config" help:"Validate config and exit"`
 }
@@ -33,10 +34,17 @@ type VersionLookupCmd struct {
 	Query       string `arg:"positional,required" help:"Version lookup query"`
 }
 
+type VersionPrintSpecCmd struct {
+	Owner string `arg:"positional,required" help:"Repo owner"`
+	Repo  string `arg:"positional,required" help:"Repo name"`
+}
+
 type args struct {
-	Apply         *ApplyCmd         `arg:"subcommand:apply" help:"Apply a configuration"`
-	VersionLookup *VersionLookupCmd `arg:"subcommand:lookup" help:"Lookup a version based on a URL and query"`
-	File          string            `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml" help:"Config file path"`
+	Apply            *ApplyCmd            `arg:"subcommand:apply" help:"Apply a configuration"`
+	LogLevel         string               `arg:"-l,--loglevel" default:"debug" help:"Log level: trace, debug, info, warn, error, fatal, panic"`
+	VersionPrintSpec *VersionPrintSpecCmd `arg:"subcommand:github-spec" help:"Print a GitHub release spec based on a URL"`
+	VersionLookup    *VersionLookupCmd    `arg:"subcommand:lookup" help:"Lookup a version based on a URL and query"`
+	File             string               `arg:"-f,--file,env:FUP_CONFIG" default:"~/.config/fup/fup.yml" help:"Config file path"`
 }
 
 func (args) Version() string {
@@ -56,7 +64,7 @@ func printConfig(configFile string) {
 
 func apply(parsed args) {
 	applyCfg := parsed.Apply
-	internal.InitLogging(applyCfg.LogLevel)
+	internal.InitLogging(parsed.LogLevel)
 
 	cfg := parsed.File
 	internal.Logger.Trace().Str("path", cfg).Msg("Reading config file")
@@ -107,6 +115,15 @@ func lookup(parsed args) {
 	fmt.Println(out)
 }
 
+func printSpec(parsed args) {
+	input := printspec.Input{
+		Input: basecmd.Input{LogLevel: parsed.LogLevel},
+		Owner: parsed.VersionPrintSpec.Owner,
+		Repo:  parsed.VersionPrintSpec.Repo,
+	}
+	printspec.PrintSpec(input)
+}
+
 func main() {
 	var parsed args
 	p := arg.MustParse(&parsed)
@@ -116,6 +133,8 @@ func main() {
 		apply(parsed)
 	case parsed.VersionLookup != nil:
 		lookup(parsed)
+	case parsed.VersionPrintSpec != nil:
+		printSpec(parsed)
 	}
 	if p.Subcommand() == nil {
 		p.Fail("Missing subcommand")
