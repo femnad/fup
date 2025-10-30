@@ -27,7 +27,7 @@ jobs:
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
 
       - name: Provision VM
-        run: ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace'
+        run: ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace -r ${{ github.ref_name }}'
 
   fedora-test:
     name: Run remote config test with Fedora Lima machine
@@ -47,4 +47,4 @@ jobs:
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://fedora
 
       - name: Provision VM
-        run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
+        run: ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace -r ${{ github.ref_name }}'
