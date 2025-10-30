@@ -26,9 +26,6 @@ jobs:
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
 
-      - name: Setup SSH
-        run: lima-vm/lima-actions/ssh@55627e31b78637bf254a8b2a14da8ea7d12564e5 # v1.1.0
-
       - name: Provision VM
         run: ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace'
 
@@ -48,9 +45,6 @@ jobs:
 
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://fedora
-
-      - name: Setup SSH
-        run: lima-vm/lima-actions/ssh@55627e31b78637bf254a8b2a14da8ea7d12564e5 # v1.1.0
 
       - name: Provision VM
         run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
