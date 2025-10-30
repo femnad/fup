@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: lima-vm/lima-actions/setup@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
+      - uses: lima-vm/lima-actions/setup@55627e31b78637bf254a8b2a14da8ea7d12564e5 # v1.1.0
         id: lima-actions-setup
 
       - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -26,9 +26,6 @@ jobs:
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
 
-      - name: Setup SSH
-        run: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
-
       - name: Provision VM
         run: ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace'
 
@@ -38,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: lima-vm/lima-actions/setup@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
+      - uses: lima-vm/lima-actions/setup@55627e31b78637bf254a8b2a14da8ea7d12564e5 # v1.1.0
         id: lima-actions-setup
 
       - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
@@ -48,9 +45,6 @@ jobs:
 
       - name: Setup lima
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://fedora
-
-      - name: Setup SSH
-        run: lima-vm/lima-actions/ssh@03b96d61959e83b2c737e44162c3088e81de0886 # v1.0.1
 
       - name: Provision VM
         run: ssh lima-default 'curl -L fcd.url.lol/p | bash -sx -- --no-update -l trace'
