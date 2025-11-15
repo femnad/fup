@@ -9,13 +9,14 @@ import (
 
 type CargoPkg struct {
 	unless.BasicUnlessable
-	Bins    bool          `yaml:"bins"`
-	Crate   string        `yaml:"name"`
-	Ref     string        `yaml:"ref"`
-	Tag     string        `yaml:"tag"`
-	Unless  unless.Unless `yaml:"unless"`
-	Version string        `yaml:"version"`
-	When    string        `yaml:"when"`
+	Binaries []string      `yaml:"binaries"`
+	Bins     bool          `yaml:"bins"`
+	Crate    string        `yaml:"name"`
+	Ref      string        `yaml:"ref"`
+	Tag      string        `yaml:"tag"`
+	Unless   unless.Unless `yaml:"unless"`
+	Version  string        `yaml:"version"`
+	When     string        `yaml:"when"`
 }
 
 func (c CargoPkg) DefaultVersionCmd() string {

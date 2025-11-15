@@ -73,6 +73,10 @@ func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 		installCmd = append(installCmd, "--bins")
 	}
 
+	if len(pkg.Binaries) > 0 {
+		installCmd = append(installCmd, pkg.Binaries...)
+	}
+
 	cmd := strings.Join(installCmd, " ")
 	_, err = run.Cmd(s, marecmd.Input{Command: cmd})
 	if err != nil {
