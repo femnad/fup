@@ -28,7 +28,12 @@ jobs:
 
       - name: Provision VM
         run: |
-          branch=$(echo '${{ github.head_ref }}' | cut -d '/' -f 2-)
+          if [ '${{ github.event_name }}' = 'workflow_dispatch' ]
+          then
+            branch=main
+          else
+            branch=$(echo '${{ github.head_ref }}' | cut -d '/' -f 2-)
+          fi
           ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace -r '"$branch"
 
   fedora-test:
