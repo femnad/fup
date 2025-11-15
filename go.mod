@@ -14,8 +14,8 @@ require (
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/rs/zerolog v1.34.0
 	github.com/ulikunitz/xz v0.5.15
+	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/text v0.29.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -52,4 +52,5 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.34.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

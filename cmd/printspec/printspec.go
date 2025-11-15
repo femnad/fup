@@ -11,7 +11,7 @@ import (
 	"github.com/femnad/fup/cmd/base"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 var (
