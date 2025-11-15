@@ -13,7 +13,7 @@ jobs:
     name: Get lima command
     runs-on: ubuntu-latest
     outputs:
-      cmd: steps.lima.outputs.cmd
+      cmd: ${{ steps.lima.outputs.cmd }}
 
     steps:
       - name: Get branch
