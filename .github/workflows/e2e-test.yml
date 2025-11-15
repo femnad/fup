@@ -11,18 +11,21 @@ on:
 jobs:
   lima:
     name: Get lima command
+    runs-on: ubuntu-latest
     outputs:
       cmd: steps.lima.outputs.cmd
 
     steps:
       - name: Get branch
         id: lima
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           if [ '${{ github.event_name }}' = 'workflow_dispatch' ]
           then
             branch=main
           else
-            branch=$(echo '${{ github.head_ref }}' | cut -d '/' -f 2-)
+            branch=$(echo "$HEAD_REF" | cut -d '/' -f 2-)
           fi
 
           cmd="ssh lima-default 'curl -L fcd.url.lol/p | bash -s -- --no-update -l trace -r $branch'"
@@ -48,7 +51,7 @@ jobs:
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
 
       - name: Provision VM
-        run: ${{ needs.get-lima-command.outputs.cmd }}
+        run: ${{ needs.lima.outputs.cmd }}
 
   fedora-test:
     name: Run remote config test with Fedora Lima machine
@@ -70,4 +73,4 @@ jobs:
         run: limactl start --plain --name=default --cpus=2 --memory=2 template://fedora
 
       - name: Provision VM
-        run: ${{ needs.get-lima-command.outputs.cmd }}
+        run: ${{ needs.lima.outputs.cmd }}
