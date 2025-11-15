@@ -1,17 +1,15 @@
 module github.com/femnad/fup
 
-go 1.24.0
-
-toolchain go1.24.7
+go 1.25.0
 
 require (
 	github.com/alexflint/go-arg v1.6.0
-	github.com/antchfx/htmlquery v1.3.4
-	github.com/cli/go-gh/v2 v2.12.0
+	github.com/antchfx/htmlquery v1.3.5
+	github.com/cli/go-gh/v2 v2.13.0
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/femnad/mare v0.14.0
-	github.com/gabriel-vasile/mimetype v1.4.10
-	github.com/go-git/go-git/v5 v5.16.2
+	github.com/gabriel-vasile/mimetype v1.4.11
+	github.com/go-git/go-git/v5 v5.16.3
 	github.com/rs/zerolog v1.34.0
 	github.com/ulikunitz/xz v0.5.15
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
@@ -23,7 +21,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/alexflint/go-scalar v1.2.0 // indirect
-	github.com/antchfx/xpath v1.3.3 // indirect
+	github.com/antchfx/xpath v1.3.5 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/cli/shurcooL-graphql v0.0.4 // indirect
