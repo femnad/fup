@@ -34,7 +34,13 @@ func crateArgs(pkg entity.CargoPkg) ([]string, error) {
 		return nil, fmt.Errorf("error getting repo name for %s: %v", name, err)
 	}
 
-	args := []string{"--git", name, crate}
+	args := []string{"--git", name}
+	if len(pkg.Binaries) == 0 {
+		args = append(args, crate)
+	} else {
+		args = append(args, pkg.Binaries...)
+	}
+
 	ref := pkg.Ref
 	tag := pkg.Tag
 	if ref != "" {

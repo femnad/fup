@@ -12,7 +12,7 @@ type Dnf struct {
 }
 
 func (Dnf) ListPkgsHeader() string {
-	return "Installed Packages"
+	return "Installed packages"
 }
 
 func (Dnf) PkgExec() string {
