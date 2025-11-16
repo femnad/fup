@@ -92,7 +92,7 @@ func (d DnfRepo) RunWhen() string {
 }
 
 func (i installer) installCorePlugins() error {
-	cmd := fmt.Sprintf("dnf install -y %s", pluginsCore)
+	cmd := fmt.Sprintf("dnf install -qy %s", pluginsCore)
 	return i.runMaybeSudo(cmd)
 }
 

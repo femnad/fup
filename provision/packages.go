@@ -149,11 +149,12 @@ func installPackages(p Provisioner) error {
 
 	err := p.Packager.installRemotePackages(p.Config.RemotePackages, p.Config.Settings)
 	if err != nil {
-		internal.Logger.Error().Err(err).Msg("Error installing packages")
+		internal.Logger.Error().Err(err).Msg("Error installing remote packages")
 		pkgErrs = append(pkgErrs, err)
 	}
 
-	if err = p.Packager.ensurePackages(p.Config.Packages); err != nil {
+	err = p.Packager.ensurePackages(p.Config.Packages)
+	if err != nil {
 		internal.Logger.Error().Err(err).Msg("Error installing packages")
 		pkgErrs = append(pkgErrs, err)
 	}

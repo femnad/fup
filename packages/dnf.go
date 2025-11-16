@@ -20,7 +20,7 @@ func (Dnf) PkgExec() string {
 }
 
 func (Dnf) PkgInstallArgs() []string {
-	return []string{}
+	return []string{"-q"}
 }
 
 func (Dnf) PkgEnv() map[string]string {
@@ -53,7 +53,7 @@ func (Dnf) RemoteInstall(pkgs []entity.RemotePackage) error {
 	}
 
 	if len(regularUrls) > 0 {
-		cmd := fmt.Sprintf("dnf install -y %s", strings.Join(regularUrls, " "))
+		cmd := fmt.Sprintf("dnf install -qy %s", strings.Join(regularUrls, " "))
 		err := internal.MaybeRunWithSudo(cmd)
 		if err != nil {
 			return err
@@ -61,7 +61,7 @@ func (Dnf) RemoteInstall(pkgs []entity.RemotePackage) error {
 	}
 
 	if len(skipScriptUrls) > 0 {
-		cmd := fmt.Sprintf("dnf install -y --setopt=tsflags=noscripts %s", strings.Join(skipScriptUrls, " "))
+		cmd := fmt.Sprintf("dnf install -qy --setopt=tsflags=noscripts %s", strings.Join(skipScriptUrls, " "))
 		err := internal.MaybeRunWithSudo(cmd)
 		if err != nil {
 			return err
