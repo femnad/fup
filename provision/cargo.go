@@ -40,6 +40,9 @@ func crateArgs(pkg entity.CargoPkg) ([]string, error) {
 	} else {
 		args = append(args, pkg.Binaries...)
 	}
+	if pkg.Bins {
+		args = append(args, "--bins")
+	}
 
 	ref := pkg.Ref
 	tag := pkg.Tag
@@ -74,14 +77,6 @@ func cargoInstall(pkg entity.CargoPkg, s settings.Settings) error {
 		return err
 	}
 	installCmd = append(installCmd, crate...)
-
-	if pkg.Bins {
-		installCmd = append(installCmd, "--bins")
-	}
-
-	if len(pkg.Binaries) > 0 {
-		installCmd = append(installCmd, pkg.Binaries...)
-	}
 
 	cmd := strings.Join(installCmd, " ")
 	_, err = run.Cmd(s, marecmd.Input{Command: cmd})
