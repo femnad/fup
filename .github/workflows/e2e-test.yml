@@ -9,68 +9,32 @@ on:
     inputs:
 
 jobs:
-  lima:
-    name: Get lima command
+  debian:
+    name: Debian Lima VM
     runs-on: ubuntu-latest
-    outputs:
-      cmd: ${{ steps.lima.outputs.cmd }}
-
     steps:
-      - name: Get branch
-        id: lima
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          if [ '${{ github.event_name }}' = 'workflow_dispatch' ]
-          then
-            branch=main
-          else
-            branch=$(echo "$HEAD_REF" | cut -d '/' -f 2-)
-          fi
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-          cmd="ssh lima-default 'curl -L fcd.url.lol/h | bash -s -- --no-update -l trace -r $branch'"
-          echo "cmd=$cmd" | tee -a "$GITHUB_OUTPUT"
-
-  ubuntu-test:
-    name: Run remote config test with Ubuntu Lima machine
-    runs-on: ubuntu-latest
-    needs:
-      - lima
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - uses: lima-vm/lima-actions/setup@55627e31b78637bf254a8b2a14da8ea7d12564e5 # v1.1.0
-        id: lima-actions-setup
-
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: ./.github/actions/lima
         with:
-          path: ~/.cache/lima
-          key: lima-${{ steps.lima-actions-setup.outputs.version }}
+          template: debian
 
-      - name: Setup lima
-        run: limactl start --plain --name=default --cpus=2 --memory=2 template://ubuntu
-
-      - name: Provision VM
-        run: ${{ needs.lima.outputs.cmd }}
-
-  fedora-test:
-    name: Run remote config test with Fedora Lima machine
+  fedora:
+    name: Fedora Lima VM
     runs-on: ubuntu-latest
-    needs:
-      - lima
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - uses: lima-vm/lima-actions/setup@55627e31b78637bf254a8b2a14da8ea7d12564e5 # v1.1.0
-        id: lima-actions-setup
-
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      - uses: ./.github/actions/lima
         with:
-          path: ~/.cache/lima
-          key: lima-${{ steps.lima-actions-setup.outputs.version }}
+          template: fedora
 
-      - name: Setup lima
-        run: limactl start --plain --name=default --cpus=2 --memory=2 template://fedora
+  ubuntu:
+    name: Ubuntu Lima VM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - name: Provision VM
-        run: ${{ needs.lima.outputs.cmd }}
+      - uses: ./.github/actions/lima
+        with:
+          template: ubuntu
