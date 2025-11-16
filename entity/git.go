@@ -199,6 +199,9 @@ func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 	}
 
 	cloneErr := clone(repo, repoUrl, cloneDir)
+	if cloneErr != nil {
+		internal.Logger.Error().Err(err).Str("name", repo.Name).Msg("Error cloning repo")
+	}
 
 	for k := range newEnv {
 		err = os.Unsetenv(k)

@@ -100,7 +100,7 @@ func shouldSkip(unlessable Unlessable, s settings.Settings) bool {
 
 	version, err := unlessable.LookupVersion(s)
 	if err != nil {
-		internal.Logger.Error().Err(err).Str("name", name).Msg("Error determining up desired version")
+		internal.Logger.Error().Err(err).Str("name", name).Msg("Error determining desired version")
 		return false
 	}
 
