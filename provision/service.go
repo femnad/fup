@@ -395,7 +395,7 @@ func enable(s entity.Service) error {
 		}
 	}
 
-	if s.Timer != nil {
+	if s.Timer != nil || s.Type == "timer" {
 		return ensureServiceState(s, "enable", "timer")
 	}
 
