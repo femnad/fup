@@ -126,11 +126,11 @@ func newPackager() (packager, error) {
 }
 
 func (p packager) ensurePackages(spec entity.PackageSpec) error {
-	pkgToInstall := p.determiner.matchingPkg(spec, true)
-	installErr := p.installer.Install(pkgToInstall)
-
 	pkgToRemove := p.determiner.matchingPkg(spec, false)
 	removeErr := p.installer.Remove(pkgToRemove)
+
+	pkgToInstall := p.determiner.matchingPkg(spec, true)
+	installErr := p.installer.Install(pkgToInstall)
 
 	return errors.Join(installErr, removeErr)
 }
