@@ -24,7 +24,9 @@ type VersionLookupSpec struct {
 	GetRedirect   bool     `yaml:"get_redirect"`
 	GetFirst      bool     `yaml:"get_first"`
 	GetLast       bool     `yaml:"get_last"`
+	GetByIndex    bool     `yaml:"get_by_index"`
 	GithubRepo    string   `yaml:"github_repo"`
+	Index         int      `yaml:"index"`
 	MatchRegex    string   `yaml:"match_regex"`
 	PostProc      string   `yaml:"post_proc"`
 	Query         string   `yaml:"query"`
@@ -67,8 +69,16 @@ func resolveQuery(spec VersionLookupSpec) (string, error) {
 	}
 
 	numNodes := len(nodes)
+	if len(nodes) == 0 {
+		return "", fmt.Errorf("no nodes are matched by the query %s", query)
+	}
+
 	for i, node := range nodes {
 		if node == nil {
+			continue
+		}
+
+		if spec.GetByIndex && i != spec.Index {
 			continue
 		}
 
