@@ -383,12 +383,16 @@ func ensureServiceState(s entity.Service, actionStr, unitType string) error {
 	return runSystemctlCmd(actuateCmd, s)
 }
 
+func shouldEnsureState(s entity.Service) bool {
+	return s.Unit != nil && s.Unit.Type != oneshotService || s.DontTemplate
+}
+
 func enable(s entity.Service) error {
 	if s.DontEnable {
 		return nil
 	}
 
-	if s.Unit != nil && s.Unit.Type != oneshotService {
+	if shouldEnsureState(s) {
 		err := ensureServiceState(s, "enable", "service")
 		if err != nil {
 			return err
@@ -407,7 +411,7 @@ func start(s entity.Service) error {
 		return nil
 	}
 
-	if s.Unit != nil && s.Unit.Type != oneshotService {
+	if shouldEnsureState(s) {
 		err := ensureServiceState(s, "start", "service")
 		if err != nil {
 			return err
