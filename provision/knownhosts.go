@@ -4,28 +4,22 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os/exec"
 
 	"github.com/femnad/fup/common"
 	"github.com/femnad/fup/entity"
 	"github.com/femnad/fup/internal"
+	marecmd "github.com/femnad/mare/cmd"
 )
 
 const knownHostsFile = "~/.ssh/known_hosts"
 
 func addKnownHost(host string) error {
-	cmd := exec.Command("ssh-keyscan", host)
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
+	out, err := marecmd.RunFmtErr(marecmd.Input{Command: fmt.Sprintf("ssh-keyscan %s", host)})
 	if err != nil {
-		return fmt.Errorf("error adding known host, stderr %s: %v", stderr.String(), err)
+		return fmt.Errorf("error adding known host, stderr %s: %v", err)
 	}
 
-	scanner := bufio.NewScanner(&stdout)
+	scanner := bufio.NewScanner(bytes.NewBuffer([]byte(out.Stdout)))
 	scanner.Split(bufio.ScanLines)
 	var hostKeys []string
 
