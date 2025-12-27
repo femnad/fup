@@ -16,7 +16,7 @@ const knownHostsFile = "~/.ssh/known_hosts"
 func addKnownHost(host string) error {
 	out, err := marecmd.RunFmtErr(marecmd.Input{Command: fmt.Sprintf("ssh-keyscan %s", host)})
 	if err != nil {
-		return fmt.Errorf("error adding known host, stderr %s: %v", err)
+		return fmt.Errorf("error adding known host: %v", err)
 	}
 
 	scanner := bufio.NewScanner(bytes.NewBuffer([]byte(out.Stdout)))
