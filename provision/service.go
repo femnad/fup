@@ -353,6 +353,10 @@ func actuate(s entity.Service, action systemdAction, unitType string) (string, e
 }
 
 func ensureServiceState(s entity.Service, actionStr, unitType string) error {
+	if s.Type != unitType {
+		return nil
+	}
+
 	action, ok := actions[actionStr]
 	if !ok {
 		return fmt.Errorf("no such action: %s", actionStr)
