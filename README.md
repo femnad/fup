@@ -1,5 +1,7 @@
 # fup
 
+hi
+
 A simple-minded workstation initializer.
 
 ## Why?
