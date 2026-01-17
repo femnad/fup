@@ -353,7 +353,7 @@ func actuate(s entity.Service, action systemdAction, unitType string) (string, e
 }
 
 func ensureServiceState(s entity.Service, actionStr, unitType string) error {
-	if s.Type != unitType {
+	if s.Type != "" && s.Type != unitType {
 		return nil
 	}
 
