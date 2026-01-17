@@ -21,12 +21,12 @@ type Service struct {
 	DontStart    bool   `yaml:"dont_start"`
 	DontTemplate bool   `yaml:"dont_template"`
 	Disable      bool   `yaml:"disable"`
+	Kind         string `yaml:"kind"`
 	Name         string `yaml:"name"`
 	System       bool   `yaml:"system"`
 	Stop         bool   `yaml:"stop"`
 	Unit         *Unit  `yaml:"unit,omitempty"`
 	Timer        *Timer `yaml:"timer,omitempty"`
-	Type         string `yaml:"type"`
 	When         string `yaml:"when"`
 }
 

@@ -81,7 +81,7 @@ func writeTmpl(s entity.Service) (string, error) {
 		options[k] = os.ExpandEnv(v)
 	}
 	if s.Unit.Type != "" {
-		options["Type"] = s.Unit.Type
+		options["Kind"] = s.Unit.Type
 	}
 	s.Unit.Options = options
 
@@ -322,7 +322,7 @@ func persist(s entity.Service) error {
 	return nil
 }
 
-func systemctlCmd(action, target, unitType string, user bool) string {
+func systemctlCmd(action, target, unitKind string, user bool) string {
 	var maybeUser string
 	var maybeTarget string
 
@@ -330,13 +330,13 @@ func systemctlCmd(action, target, unitType string, user bool) string {
 		maybeUser = "--user "
 	}
 	if target != "" {
-		maybeTarget = fmt.Sprintf(" %s.%s", target, unitType)
+		maybeTarget = fmt.Sprintf(" %s.%s", target, unitKind)
 	}
 
 	return fmt.Sprintf("systemctl %s%s%s", maybeUser, action, maybeTarget)
 }
 
-func check(s entity.Service, action systemdAction, unitType string) (string, bool, error) {
+func check(s entity.Service, action systemdAction, unitKind string) (string, bool, error) {
 	var negated bool
 
 	checkAction := action.checkCmd
@@ -345,24 +345,25 @@ func check(s entity.Service, action systemdAction, unitType string) (string, boo
 		checkAction = strings.TrimLeft(checkAction, negationPrefix)
 	}
 
-	return systemctlCmd(checkAction, s.Name, unitType, !s.System), negated, nil
+	return systemctlCmd(checkAction, s.Name, unitKind, !s.System), negated, nil
 }
 
 func actuate(s entity.Service, action systemdAction, unitType string) (string, error) {
 	return systemctlCmd(action.actuateCmd, s.Name, unitType, !s.System), nil
 }
 
-func ensureServiceState(s entity.Service, actionStr, unitType string) error {
-	if s.Type != "" && s.Type != unitType {
-		return nil
-	}
-
+func ensureServiceState(s entity.Service, actionStr string) error {
 	action, ok := actions[actionStr]
 	if !ok {
 		return fmt.Errorf("no such action: %s", actionStr)
 	}
 
-	checkCmd, negated, err := check(s, action, unitType)
+	kind := s.Kind
+	if kind == "" {
+		kind = "service"
+	}
+
+	checkCmd, negated, err := check(s, action, kind)
 	if err != nil {
 		return err
 	}
@@ -375,55 +376,42 @@ func ensureServiceState(s entity.Service, actionStr, unitType string) error {
 		return nil
 	}
 
-	actuateCmd, err := actuate(s, action, unitType)
+	actuateCmd, err := actuate(s, action, kind)
 	if err != nil {
 		return err
 	}
 
 	caser := cases.Title(language.Und)
 	verb := caser.String(action.logVerb)
-	internal.Logger.Debug().Str("name", s.Name).Str("state", verb).Msg("Ensuring service state")
+	internal.Logger.Debug().Str("name", s.Name).Str("state", verb).Str("type", s.Kind).Msg(
+		"Ensuring service state")
 
 	return runSystemctlCmd(actuateCmd, s)
 }
 
 func shouldEnsureState(s entity.Service) bool {
-	return s.Unit != nil && s.Unit.Type != oneshotService || s.DontTemplate
+	if s.Unit != nil && s.Unit.Type == oneshotService {
+		return false
+	}
+
+	return s.DontTemplate || s.Timer != nil
 }
 
 func enable(s entity.Service) error {
-	if s.DontEnable {
+	if s.DontEnable || s.Stop {
 		return nil
 	}
 
-	if shouldEnsureState(s) {
-		err := ensureServiceState(s, "enable", "service")
-		if err != nil {
-			return err
-		}
-	}
-
-	if s.Timer != nil || s.Type == "timer" {
-		return ensureServiceState(s, "enable", "timer")
-	}
-
-	return nil
+	return ensureServiceState(s, "enable")
 }
 
 func start(s entity.Service) error {
-	if s.DontStart {
+	if s.DontStart || s.Stop {
 		return nil
 	}
 
 	if shouldEnsureState(s) {
-		err := ensureServiceState(s, "start", "service")
-		if err != nil {
-			return err
-		}
-	}
-
-	if s.Timer != nil {
-		return ensureServiceState(s, "start", "timer")
+		return ensureServiceState(s, "start")
 	}
 
 	return nil
@@ -464,18 +452,11 @@ func maybeStop(s entity.Service) error {
 	if !s.Stop {
 		return nil
 	}
-	err := ensureServiceState(s, "stop", "service")
+
+	err := ensureServiceState(s, "stop")
 	if err != nil {
 		internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error ensuring service state")
 		return err
-	}
-
-	if s.Timer != nil {
-		err = ensureServiceState(s, "stop", "timer")
-		if err != nil {
-			internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error stopping timer")
-			return err
-		}
 	}
 
 	return nil
@@ -485,18 +466,11 @@ func maybeDisable(s entity.Service) error {
 	if !s.Disable {
 		return nil
 	}
-	err := ensureServiceState(s, "disable", "service")
+
+	err := ensureServiceState(s, "disable")
 	if err != nil {
 		internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error disabling service")
 		return err
-	}
-
-	if s.Timer != nil {
-		err = ensureServiceState(s, "disable", "timer")
-		if err != nil {
-			internal.Logger.Error().Err(err).Str("name", s.Name).Msg("Error disabling timer")
-			return err
-		}
 	}
 
 	return nil

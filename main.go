@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	version = "0.44.2"
+	version = "0.45.0"
 )
 
 type ApplyCmd struct {
