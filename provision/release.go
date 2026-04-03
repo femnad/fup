@@ -366,7 +366,7 @@ func getReleaseInfo(release entity.Release, entries []archiveEntry) (info Releas
 		}
 
 		prefix = strings.TrimPrefix(prefix, "./")
-		hasRootDir = strings.Index(prefix, "/") > -1
+		hasRootDir = strings.Contains(prefix, "/")
 		if root == "." {
 			target = prefix
 		} else {

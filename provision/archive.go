@@ -23,7 +23,7 @@ var (
 		"xz":  xzMimeType,
 		"tar": tarMimeType,
 	}
-	tarFileRegex = regexp.MustCompile(".*\\.tar(\\.(bz2|gz|xz))?")
+	tarFileRegex = regexp.MustCompile(`.*\.tar(\.(bz2|gz|xz))?`)
 )
 
 func extractTar(reader *tar.Reader, outputPath string, fileSet mapset.Set[string]) error {
