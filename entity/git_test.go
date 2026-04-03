@@ -21,6 +21,7 @@ func Test_processUrl(t *testing.T) {
 			want: cloneRef{
 				url:  "https://github.com/foo/bar.git",
 				base: "bar",
+				org:  "foo",
 			},
 		},
 		{
@@ -29,6 +30,7 @@ func Test_processUrl(t *testing.T) {
 			want: cloneRef{
 				url:  "https://github.com/foo/bar.git",
 				base: "bar",
+				org:  "foo",
 			},
 		},
 		{
@@ -37,6 +39,7 @@ func Test_processUrl(t *testing.T) {
 			want: cloneRef{
 				url:  "git@github.com:foo/bar.git",
 				base: "bar",
+				org:  "foo",
 			},
 		},
 		{
@@ -45,6 +48,7 @@ func Test_processUrl(t *testing.T) {
 			want: cloneRef{
 				url:  "git@github.com:foo/bar.git",
 				base: "bar",
+				org:  "foo",
 			},
 		},
 	}
