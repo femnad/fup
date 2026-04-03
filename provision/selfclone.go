@@ -10,11 +10,7 @@ import (
 func cloneRepos(repos []entity.Repo, s settings.Settings) error {
 	var errs []error
 	for _, repo := range repos {
-		path := s.CloneDir
-		if repo.Path != "" {
-			path = repo.Path
-		}
-		err := entity.CloneUnderPath(repo, path, s.CloneEnv)
+		err := entity.CloneUnderPath(repo, repo.Path, s)
 		errs = append(errs, err)
 	}
 

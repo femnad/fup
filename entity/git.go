@@ -13,6 +13,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 
 	"github.com/femnad/fup/internal"
+	"github.com/femnad/fup/settings"
 )
 
 const (
@@ -170,13 +171,21 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 	return nil
 }
 
-func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
+func CloneUnderPath(repo Repo, pathOverride string, settings settings.Settings) error {
+	cloneEnv := settings.CloneEnv
 	ref, err := processUrl(repo.Name)
 	if err != nil {
 		return err
 	}
 
-	cloneDir := internal.ExpandUser(path.Join(dir, ref.org, ref.base))
+	var cloneDir string
+	if pathOverride != "" {
+		cloneDir = path.Join(pathOverride, ref.base)
+	} else {
+		cloneDir = path.Join(settings.CloneDir, ref.org, ref.base)
+	}
+	cloneDir = internal.ExpandUser(cloneDir)
+
 	_, err = os.Stat(cloneDir)
 	if err == nil {
 		return nil
