@@ -31,7 +31,6 @@ type Settings struct {
 	HostFacts     FactMap           `yaml:"host_facts,omitempty"`
 	Internal      InternalSettings
 	ReleaseDir    string            `yaml:"release_dir,omitempty"`
-	SSHCloneDir   string            `yaml:"ssh_clone_dir,omitempty"`
 	TemplateDir   string            `yaml:"template_dir,omitempty"`
 	UseGHClient   bool              `yaml:"use_github_cli,omitempty"`
 	Versions      map[string]string `yaml:"versions,omitempty"`

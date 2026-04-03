@@ -29,6 +29,7 @@ var (
 type cloneRef struct {
 	url  string
 	base string
+	org  string
 }
 
 func processUrl(repoUrl string) (cloneRef, error) {
@@ -42,6 +43,7 @@ func processUrl(repoUrl string) (cloneRef, error) {
 	repoBase := components[numComponents-1]
 	repoBase = strings.TrimSuffix(repoBase, gitRepoSuffix)
 	ref.base = repoBase
+	ref.org = components[numComponents-2]
 
 	if strings.HasPrefix(repoUrl, gitClonePrefix) {
 		ref.url = repoUrl
@@ -169,12 +171,12 @@ func clone(repo Repo, repoUrl cloneRef, cloneDir string) error {
 }
 
 func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
-	repoUrl, err := processUrl(repo.Name)
+	ref, err := processUrl(repo.Name)
 	if err != nil {
 		return err
 	}
 
-	cloneDir := internal.ExpandUser(path.Join(dir, repoUrl.base))
+	cloneDir := internal.ExpandUser(path.Join(dir, ref.org, ref.base))
 	_, err = os.Stat(cloneDir)
 	if err == nil {
 		return nil
@@ -198,7 +200,7 @@ func CloneUnderPath(repo Repo, dir string, cloneEnv map[string]string) error {
 		}
 	}
 
-	cloneErr := clone(repo, repoUrl, cloneDir)
+	cloneErr := clone(repo, ref, cloneDir)
 	if cloneErr != nil {
 		internal.Logger.Error().Err(err).Str("name", repo.Name).Msg("Error cloning repo")
 	}

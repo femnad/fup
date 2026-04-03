@@ -10,7 +10,7 @@ import (
 func cloneRepos(repos []entity.Repo, s settings.Settings) error {
 	var errs []error
 	for _, repo := range repos {
-		path := s.SSHCloneDir
+		path := s.CloneDir
 		if repo.Path != "" {
 			path = repo.Path
 		}
