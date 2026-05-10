@@ -241,14 +241,17 @@ func ensureLine(config entity.Config, line entity.LineInFile) error {
 		return fmt.Errorf("error renaming %s to %s: %v", tmpPath, target, err)
 	}
 
-	executeAfter := line.RunAfter
-	if executeAfter.Name() == "" {
-		return nil
+	for _, runStep := range line.RunAfter {
+		name := runStep.Name()
+		internal.Logger.Trace().Str("step", name).Str("target", target).Msg(
+			"Executing cmd for step")
+		err = runStep.Run(config)
+		if err != nil {
+			return err
+		}
 	}
 
-	internal.Logger.Trace().Str("step", executeAfter.Name()).Str("target", target).Msg(
-		"Executing cmd for step")
-	return executeAfter.Run(config)
+	return nil
 }
 
 func ensureLines(config entity.Config) error {

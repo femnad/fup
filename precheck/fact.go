@@ -181,16 +181,6 @@ func statOk(path string) (bool, error) {
 	return err == nil, nil
 }
 
-func negate(fn func(string) (bool, error)) func(string) (bool, error) {
-	return func(in string) (bool, error) {
-		out, err := fn(in)
-		if err != nil {
-			return false, err
-		}
-		return !out, nil
-	}
-}
-
 var FactFns = template.FuncMap{
 	"env":       hasEnv,
 	"hostname":  hostname,

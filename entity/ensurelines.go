@@ -14,7 +14,7 @@ type LineInFile struct {
 	Lines    []string      `yaml:"lines"`
 	Name     string        `yaml:"name"`
 	Replace  []Replacement `yaml:"replace"`
-	RunAfter Step          `yaml:"run_after"`
+	RunAfter []Step        `yaml:"run_after"`
 	When     string        `yaml:"when"`
 }
 
