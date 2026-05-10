@@ -94,6 +94,15 @@ func hasPkgMgr(pkgMgr string) (bool, error) {
 	return false, nil
 }
 
+func hostname(desired string) (bool, error) {
+	got, err := os.Hostname()
+	if err != nil {
+		return false, err
+	}
+
+	return got == desired, nil
+}
+
 func isA(matcher string) (bool, error) {
 	matchFn, ok := matchers[matcher]
 	if !ok {
@@ -183,17 +192,19 @@ func negate(fn func(string) (bool, error)) func(string) (bool, error) {
 }
 
 var FactFns = template.FuncMap{
-	"env":       hasEnv,
-	"is":        isA,
-	"notOs":     negate(isOs),
-	"ok":        isOk,
-	"os":        isOs,
-	"output":    hasOutput,
-	"pkg":       hasPkgMgr,
-	"stat":      statOk,
-	"version":   isOsVersion,
-	"versionGe": osVersionGe,
-	"versionGt": osVersionGt,
-	"versionLe": osVersionLe,
-	"versionLt": osVersionLt,
+	"env":         hasEnv,
+	"hostname":    hostname,
+	"notHostname": negate(hostname),
+	"is":          isA,
+	"notOs":       negate(isOs),
+	"ok":          isOk,
+	"os":          isOs,
+	"output":      hasOutput,
+	"pkg":         hasPkgMgr,
+	"stat":        statOk,
+	"version":     isOsVersion,
+	"versionGe":   osVersionGe,
+	"versionGt":   osVersionGt,
+	"versionLe":   osVersionLe,
+	"versionLt":   osVersionLt,
 }
