@@ -78,6 +78,8 @@ func applyTemplate(tmpl entity.Template, config entity.Config) error {
 		return nil
 	}
 
+	internal.Logger.Trace().Str("destination", tmpl.Dest).Msg("Applying template")
+
 	templateContent, err := getTemplateContent(config, tmpl)
 	if err != nil {
 		return err
@@ -94,9 +96,22 @@ func applyTemplate(tmpl entity.Template, config entity.Config) error {
 		return err
 	}
 
-	_, err = internal.WriteContent(internal.ManagedFile{Path: tmpl.Dest, Content: tmplBuffer.String()})
+	content := tmplBuffer.String()
+	if tmpl.ExpandUser {
+		content = internal.ExpandUserAll(content)
+	}
+
+	_, err = internal.WriteContent(internal.ManagedFile{Path: tmpl.Dest, Content: content})
 	if err != nil {
 		return err
+	}
+
+	for _, step := range tmpl.RunAfter {
+		err = step.Run(config)
+		if err != nil {
+			internal.Logger.Error().Err(err).Interface("step", step).Msg("Error running step after template")
+			return err
+		}
 	}
 
 	return nil

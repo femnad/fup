@@ -22,6 +22,10 @@ func ExpandUser(path string) string {
 	return strings.Replace(path, "~", os.Getenv("HOME"), 1)
 }
 
+func ExpandUserAll(path string) string {
+	return strings.Replace(path, "~", os.Getenv("HOME"), -1)
+}
+
 func SetFromList[T comparable](items []T) mapset.Set[T] {
 	set := mapset.NewSet[T]()
 	for _, item := range items {
