@@ -109,6 +109,7 @@ func NewProvisioner(cfg entity.Config, filter []string) (Provisioner, error) {
 		{"go", p.goInstall},
 		{"python", p.pythonInstall},
 		{"rust", p.rustInstall},
+		{"uv", p.uvTools},
 		{"clone", p.sshClone},
 		{"task", p.runTasks},
 		{"template", p.applyTemplates},
@@ -262,6 +263,12 @@ func (p Provisioner) sshClone() error {
 	internal.Logger.Info().Msg("Cloning repos via SSH")
 
 	return sshClone(p.Config)
+}
+
+func (p Provisioner) uvTools() error {
+	internal.Logger.Info().Msg("Installing uv tools")
+
+	return uvInstallTools(p.Config)
 }
 
 func (p Provisioner) userInGroup() error {

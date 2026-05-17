@@ -109,7 +109,7 @@ func applyTemplate(tmpl entity.Template, config entity.Config) error {
 	for _, step := range tmpl.RunAfter {
 		err = step.Run(config)
 		if err != nil {
-			internal.Logger.Error().Err(err).Interface("step", step).Msg("Error running step after template")
+			internal.Logger.Error().Err(err).Str("step", step.Name()).Msg("Error running step after template")
 			return err
 		}
 	}

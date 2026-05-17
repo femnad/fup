@@ -32,6 +32,7 @@ type Config struct {
 	Tasks           []Task            `yaml:"task"`
 	Templates       []Template        `yaml:"template"`
 	UserInGroup     UserInGroupSpec   `yaml:"user_group"`
+	UvTools         []UvTool          `yaml:"uv"`
 }
 
 type UserGroupSpec struct {
