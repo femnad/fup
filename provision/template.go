@@ -101,9 +101,13 @@ func applyTemplate(tmpl entity.Template, config entity.Config) error {
 		content = internal.ExpandUserAll(content)
 	}
 
-	_, err = internal.WriteContent(internal.ManagedFile{Path: tmpl.Dest, Content: content})
+	updated, err := internal.WriteContent(internal.ManagedFile{Path: tmpl.Dest, Content: content})
 	if err != nil {
 		return err
+	}
+
+	if !updated {
+		return nil
 	}
 
 	for _, step := range tmpl.RunAfter {
