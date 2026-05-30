@@ -80,7 +80,11 @@ func download(step Step, cfg Config) error {
 	return remote.Download(url, path)
 }
 
-func pipInstall(step Step, _ Config) error {
+func pipInstall(step Step, cfg Config) error {
+	if unless.ShouldSkip(step, cfg.Settings) {
+		return nil
+	}
+
 	pipBin, err := common.Which("pip")
 	if err != nil {
 		return err
