@@ -80,6 +80,15 @@ func download(step Step, cfg Config) error {
 	return remote.Download(url, path)
 }
 
+func pipInstall(step Step, _ Config) error {
+	pipBin, err := common.Which("pip")
+	if err != nil {
+		return err
+	}
+
+	return internal.PipInstall(pipBin, step.Target, "", true)
+}
+
 func rename(step Step, cfg Config) error {
 	src := ExpandSettings(cfg.Settings, step.Src)
 	target := ExpandSettings(cfg.Settings, step.Target)
@@ -96,6 +105,8 @@ func getStepFunction(step Step) (func(Step, Config) error, error) {
 		return fileCmd, nil
 	case "git":
 		return runGitClone, nil
+	case "pip":
+		return pipInstall, nil
 	case "rename":
 		return rename, nil
 	case "shell":
@@ -127,9 +138,11 @@ type Step struct {
 	// For rename and symlink
 	Src      string `yaml:"src"`
 	StepName string `yaml:"name"`
-	// For download, file, link and rename
+	// For download, file, link, pip and rename
 	Target string        `yaml:"target"`
 	Unless unless.Unless `yaml:"unless"`
+	// For pip
+	User bool `yaml:"user"`
 	// For file
 	Validate string `yaml:"validate"`
 	// For download
