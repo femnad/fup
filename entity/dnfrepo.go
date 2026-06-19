@@ -49,12 +49,12 @@ type repoSpec struct {
 
 type DnfRepo struct {
 	unless.BasicUnlessable
-	RepoName string   `yaml:"name"`
-	Packages []string `yaml:"packages"`
-	Repo     string   `yaml:"repo"`
-	RepoSpec repoSpec `yaml:"repo_spec"`
-	Url      []string `yaml:"url"`
-	When     string   `yaml:"when"`
+	RepoName string     `yaml:"name"`
+	Packages []string   `yaml:"packages"`
+	Repo     string     `yaml:"repo"`
+	RepoSpec []repoSpec `yaml:"repo_spec"`
+	Url      []string   `yaml:"url"`
+	When     string     `yaml:"when"`
 }
 
 func (d DnfRepo) DefaultVersionCmd() string {
@@ -129,13 +129,32 @@ func (i installer) releasePackagesInstall(url []string, osId string) error {
 	return i.runMaybeSudo(cmd)
 }
 
-func writeRepoSpec(spec repoSpec) error {
+func checkValidity(spec repoSpec) error {
+	if spec.Description == "" {
+		return fmt.Errorf("no description provided")
+	}
+	if spec.URL == "" {
+		return fmt.Errorf("repo url is required")
+	}
+	if spec.GPGKey == "" {
+		return fmt.Errorf("repo GPG key is required")
+	}
+
+	return nil
+}
+
+func writeRepoSpec(name string, spec repoSpec) error {
+	err := checkValidity(spec)
+	if err != nil {
+		return err
+	}
+
 	tmpl, err := template.New("repo").Parse(repoFileTemplate)
 	if err != nil {
 		return err
 	}
 
-	repoFile := path.Join("/etc/yum.repos.d", fmt.Sprintf("%s.repo", spec.Name))
+	repoFile := path.Join("/etc/yum.repos.d", fmt.Sprintf("%s.repo", name))
 	if _, err = os.Stat(repoFile); err == nil {
 		return nil
 	}
@@ -159,7 +178,7 @@ func writeRepoSpec(spec repoSpec) error {
 		User:    "root",
 		Group:   "root",
 	})
-	return nil
+	return err
 }
 
 func (d DnfRepo) Exists() (bool, error) {
@@ -190,8 +209,15 @@ func (d DnfRepo) Install() error {
 	}
 
 	empty := repoSpec{}
-	if d.RepoSpec != empty {
-		return writeRepoSpec(d.RepoSpec)
+	for _, spec := range d.RepoSpec {
+		if spec == empty {
+			continue
+		}
+
+		err = writeRepoSpec(d.Name(), spec)
+		if err != nil {
+			return err
+		}
 	}
 
 	i := installer{isRoot: isRoot}
@@ -208,5 +234,5 @@ func (d DnfRepo) Install() error {
 		return i.releasePackagesInstall(d.Url, osId)
 	}
 
-	return fmt.Errorf("unable to determine install method for repo %+v", d)
+	return nil
 }
