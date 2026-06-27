@@ -394,7 +394,11 @@ func shouldEnsureState(s entity.Service) bool {
 		return false
 	}
 
-	return s.DontTemplate || s.Timer != nil
+	if s.DontTemplate || s.Timer != nil {
+		return false
+	}
+
+	return true
 }
 
 func enable(s entity.Service) error {
