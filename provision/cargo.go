@@ -44,10 +44,10 @@ func crateArgs(pkg entity.CargoPkg) ([]string, error) {
 		args = append(args, "--bins")
 	}
 
-	ref := pkg.Ref
+	branch := pkg.Branch
 	tag := pkg.Tag
-	if ref != "" {
-		args = append(args, []string{"--ref", ref}...)
+	if branch != "" {
+		args = append(args, []string{"--branch", branch}...)
 	} else if tag != "" {
 		args = append(args, []string{"--tag", tag}...)
 	}

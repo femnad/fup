@@ -11,8 +11,8 @@ type CargoPkg struct {
 	unless.BasicUnlessable
 	Binaries []string      `yaml:"binaries"`
 	Bins     bool          `yaml:"bins"`
+	Branch   string        `yaml:"branch"`
 	Crate    string        `yaml:"name"`
-	Ref      string        `yaml:"ref"`
 	Tag      string        `yaml:"tag"`
 	Unless   unless.Unless `yaml:"unless"`
 	Version  string        `yaml:"version"`
