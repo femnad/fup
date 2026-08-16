@@ -81,7 +81,7 @@ func writeTmpl(s entity.Service) (string, error) {
 		options[k] = os.ExpandEnv(v)
 	}
 	if s.Unit.Type != "" {
-		options["Kind"] = s.Unit.Type
+		options["Type"] = s.Unit.Type
 	}
 	s.Unit.Options = options
 
@@ -358,12 +358,12 @@ func ensureServiceState(s entity.Service, actionStr string) error {
 		return fmt.Errorf("no such action: %s", actionStr)
 	}
 
-	kind := s.Kind
-	if kind == "" {
-		kind = "service"
+	serviceType := s.Type
+	if serviceType == "" {
+		serviceType = "service"
 	}
 
-	checkCmd, negated, err := check(s, action, kind)
+	checkCmd, negated, err := check(s, action, serviceType)
 	if err != nil {
 		return err
 	}
@@ -376,14 +376,14 @@ func ensureServiceState(s entity.Service, actionStr string) error {
 		return nil
 	}
 
-	actuateCmd, err := actuate(s, action, kind)
+	actuateCmd, err := actuate(s, action, serviceType)
 	if err != nil {
 		return err
 	}
 
 	caser := cases.Title(language.Und)
 	verb := caser.String(action.logVerb)
-	internal.Logger.Debug().Str("name", s.Name).Str("state", verb).Str("type", s.Kind).Msg(
+	internal.Logger.Debug().Str("name", s.Name).Str("state", verb).Str("type", s.Type).Msg(
 		"Ensuring service state")
 
 	return runSystemctlCmd(actuateCmd, s)

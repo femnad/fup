@@ -21,7 +21,7 @@ type Service struct {
 	DontStart    bool   `yaml:"dont_start"`
 	DontTemplate bool   `yaml:"dont_template"`
 	Disable      bool   `yaml:"disable"`
-	Kind         string `yaml:"kind"`
+	Type         string `yaml:"kind"`
 	Name         string `yaml:"name"`
 	System       bool   `yaml:"system"`
 	Stop         bool   `yaml:"stop"`
