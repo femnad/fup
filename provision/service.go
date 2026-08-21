@@ -45,6 +45,9 @@ const (
 	serviceExecLineStart = "ExecStart="
 	svcTmpl              = `[Unit]
 Description={{ .Unit.Desc }}
+{{- if .Unit.After }}
+After={{ .Unit.After }}.target
+{{- end }}
 {{- if .Unit.Before}}
 Before={{ .Unit.Before }}.target
 {{- end }}

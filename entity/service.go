@@ -1,6 +1,7 @@
 package entity
 
 type Unit struct {
+	After       string            `yaml:"after"`
 	Before      string            `yaml:"before"`
 	Desc        string            `yaml:"desc"`
 	Environment map[string]string `yaml:"env"`
