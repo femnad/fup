@@ -151,7 +151,8 @@ func maybeRestart(s entity.Service, unitType string) error {
 	cmd := systemctlCmd("is-active", s.Name, unitType, !s.System)
 	out, err := marecmd.RunFmtErr(marecmd.Input{Command: cmd})
 	if err != nil {
-		if strings.TrimSpace(out.Stdout) == "inactive" {
+		trimmed := strings.TrimSpace(out.Stdout)
+		if trimmed == "inactive" || trimmed == "failed" {
 			return nil
 		}
 		return err
@@ -443,7 +444,12 @@ func expandService(s entity.Service, cfg entity.Config) (entity.Service, error) 
 		return s, err
 	}
 
-	tokens = append([]string{baseExec}, tokens[1:]...)
+	var expandedArgs []string
+	for _, token := range tokens[1:] {
+		expandedArgs = append(expandedArgs, internal.ExpandUser(token))
+	}
+
+	tokens = append([]string{baseExec}, expandedArgs...)
 	s.Unit.Exec = strings.Join(tokens, " ")
 
 	env := s.Unit.Environment
